@@ -53,11 +53,12 @@ function App() {
       );
 
       const searchLocation = searchResponse.data;
+      console.log(searchResponse);
       setSearchedLocation({
         latitude: searchLocation[0].lat,
         longitude: searchLocation[0].lon,
+        name: searchLocation[0].name,
       });
-      setCityName(searchedLocation[0].name);
     } catch (error) {
       console.error("Error searching for the city:", error.message);
       setError("City search failed. Please try again.");
@@ -65,6 +66,13 @@ function App() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (searchedLocation && searchedLocation.length > 0) {
+      setCityName(searchedLocation[0].name);
+    }
+    console.log(searchedLocation);
+  }, [searchedLocation]);
 
   return (
     <Container>
@@ -87,7 +95,6 @@ function App() {
             currentLocation={
               searchedLocation?.latitude ? searchedLocation : currentLocation
             }
-            cityName={cityName}
           />
         </Col>
         <Col>
@@ -95,7 +102,7 @@ function App() {
             currentLocation={
               searchedLocation?.latitude ? searchedLocation : currentLocation
             }
-            cityName={cityName}
+            cityName={searchedLocation?.name}
           />
         </Col>
         <Col>
@@ -103,7 +110,6 @@ function App() {
             currentLocation={
               searchedLocation?.latitude ? searchedLocation : currentLocation
             }
-            cityName={cityName}
           />
         </Col>
       </Row>

@@ -29,7 +29,6 @@ const DailyForecast = ({ currentLocation }) => {
             dailyWeatherData?.timelines?.daily?.slice(1, 5) || [];
 
           setNext4DaysForecast(next4DaysData);
-          console.log("data from next4DaysData" + next4DaysData);
 
           // const existingEntries = existingEntriesResponse.data;
 
@@ -62,10 +61,6 @@ const DailyForecast = ({ currentLocation }) => {
     // Call the async function
     fetchData();
   }, [currentLocation]);
-
-  useEffect(() => {
-    console.log(next4DaysForecast);
-  }, [next4DaysForecast]);
 
   return (
     <div>

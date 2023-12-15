@@ -60,10 +60,6 @@ const HourlyForecast = ({ currentLocation }) => {
     fetchDataAndPost();
   }, [currentLocation]);
 
-  useEffect(() => {
-    console.log(next4HoursForecast);
-  }, [next4HoursForecast]);
-
   return (
     <div>
       <p>Hourly Forecast</p>

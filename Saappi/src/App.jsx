@@ -75,18 +75,23 @@ function App() {
   }, [searchedLocation]);
 
   return (
-    <Container>
-      <Row>
-        <p>Nav</p>
-        <input
-          type="text"
-          placeholder="City,Country"
-          value={searchCity}
-          onChange={(e) => setSearchCity(e.target.value)}
-        />
-        <button type="button" onClick={handleSearch} disabled={loading}>
-          Search
-        </button>
+    <Container class="text-center m-3">
+      <Row className="mb-5">
+        <Col></Col>
+        <Col>
+          <h1 className="fw-bold">Sääppi</h1>
+        </Col>
+        <Col>
+          <input
+            type="text"
+            placeholder="City,Country"
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
+          />
+          <button type="button" onClick={handleSearch} disabled={loading}>
+            Search
+          </button>
+        </Col>
       </Row>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <Row>
@@ -102,7 +107,7 @@ function App() {
             currentLocation={
               searchedLocation?.latitude ? searchedLocation : currentLocation
             }
-            cityName={searchedLocation?.name}
+            cityName={searchedLocation?.name || cityName}
           />
         </Col>
         <Col>

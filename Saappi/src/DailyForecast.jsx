@@ -3,6 +3,7 @@ import axios from "axios";
 import { getIcon } from "./WeatherIcons";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import "./DailyForecast.css";
 
 const DailyForecast = ({ currentLocation }) => {
   const [next4DaysForecast, setNext4DaysForecast] = useState([]);
@@ -64,19 +65,21 @@ const DailyForecast = ({ currentLocation }) => {
 
   return (
     <div>
-      <p>Daily Forecast</p>
-      {next4DaysForecast.map((dayData, index) => (
-        <Col key={index}>
-          <p>{`${formatDay(new Date(dayData.time))}`}</p>
-          <img
-            src={getIcon(dayData.values.weatherCodeMin)}
-            alt="Weather Icon"
-          />
-          <p>{`${Math.round(dayData.values.temperatureMin)} ... ${Math.round(
-            dayData.values.temperatureMax
-          )}°C`}</p>
-        </Col>
-      ))}
+      <Row>
+        {next4DaysForecast.map((dayData, index) => (
+          <Col key={index}>
+            <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>
+            <img
+              className="dailyIcons"
+              src={getIcon(dayData.values.weatherCodeMin)}
+              alt="Weather Icon"
+            />
+            <p className="fs-6 mt-2">{`${Math.round(
+              dayData.values.temperatureMin
+            )}...${Math.round(dayData.values.temperatureMax)}°C`}</p>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 };

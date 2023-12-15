@@ -3,6 +3,7 @@ import axios from "axios";
 import { getIcon } from "./WeatherIcons";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import "./HourlyForecast.css";
 
 const HourlyForecast = ({ currentLocation }) => {
   const [next4HoursForecast, setNext4HoursForecast] = useState([]);
@@ -62,14 +63,21 @@ const HourlyForecast = ({ currentLocation }) => {
 
   return (
     <div>
-      <p>Hourly Forecast</p>
-      {next4HoursForecast.map((hourData, index) => (
-        <Col key={index}>
-          <p>{`${new Date(hourData.time).getHours()}`}</p>
-          <img src={getIcon(hourData.values.weatherCode)} alt="Weather Icon" />
-          <p>{`${Math.round(hourData.values.temperature)}°C`}</p>
-        </Col>
-      ))}
+      <Row>
+        {next4HoursForecast.map((hourData, index) => (
+          <Col key={index}>
+            <p className="fs-5">{`${new Date(hourData.time).getHours()}`}</p>
+            <img
+              className="hourlyIcons"
+              src={getIcon(hourData.values.weatherCode)}
+              alt="Weather Icon"
+            />
+            <p className="mt-2">{`${Math.round(
+              hourData.values.temperature
+            )}°C`}</p>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 };

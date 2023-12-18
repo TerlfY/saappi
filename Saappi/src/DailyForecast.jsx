@@ -65,21 +65,27 @@ const DailyForecast = ({ currentLocation }) => {
 
   return (
     <div>
-      <Row>
-        {next4DaysForecast.map((dayData, index) => (
-          <Col key={index}>
-            <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>
+      {next4DaysForecast.map((dayData, index) => (
+        <Row key={index} className="d-flex">
+          <Col>
+            <p className="fs-5 m-3">{`${formatDay(new Date(dayData.time))}`}</p>
+          </Col>
+
+          <Col>
             <img
-              className="dailyIcons"
+              className="dailyIcons m-3"
               src={getIcon(dayData.values.weatherCodeMin)}
               alt="Weather Icon"
             />
-            <p className="fs-6 mt-2">{`${Math.round(
+          </Col>
+
+          <Col>
+            <p className="fs-5 m-3">{`${Math.round(
               dayData.values.temperatureMin
             )}...${Math.round(dayData.values.temperatureMax)}°C`}</p>
           </Col>
-        ))}
-      </Row>
+        </Row>
+      ))}
     </div>
   );
 };

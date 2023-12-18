@@ -63,8 +63,13 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
       {Object.keys(currentWeather).length > 0 && (
         <div>
           <h2>{cityName}</h2>
-          <img src={getIcon(currentWeather.data.values.weatherCode)}></img>
-          <p>{`${Math.round(currentWeather.data.values.temperature)}°C`}</p>
+          <img
+            className="m-5"
+            src={getIcon(currentWeather.data.values.weatherCode)}
+          ></img>
+          <p className="fs-4">{`${Math.round(
+            currentWeather.data.values.temperature
+          )}°C`}</p>
         </div>
       )}
     </Container>

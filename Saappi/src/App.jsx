@@ -53,7 +53,6 @@ function App() {
       );
 
       const searchLocation = searchResponse.data;
-      console.log(searchResponse);
       setSearchedLocation({
         latitude: searchLocation[0].lat,
         longitude: searchLocation[0].lon,
@@ -71,38 +70,57 @@ function App() {
     if (searchedLocation && searchedLocation.length > 0) {
       setCityName(searchedLocation[0].name);
     }
-    console.log(searchedLocation);
   }, [searchedLocation]);
 
+  const handleEnterKey = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
-    <Container class="text-center m-3">
+    <Container className="mx-auto text-center m-4">
+      {/* Header */}
       <Row className="mb-5">
-        <Col></Col>
-        <Col>
+        {/* Darkmode under this */}
+
+        <Col md={6}>
           <h1 className="fw-bold">Sääppi</h1>
         </Col>
-        <Col>
-          <input
-            type="text"
-            placeholder="City,Country"
-            value={searchCity}
-            onChange={(e) => setSearchCity(e.target.value)}
-          />
-          <button type="button" onClick={handleSearch} disabled={loading}>
-            Search
-          </button>
+
+        {/* Search */}
+        <Col md={6}>
+          <Row>
+            <Col>
+              <input
+                type="text"
+                placeholder="City, Country"
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                onKeyPress={handleEnterKey}
+              />
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleSearch}
+                disabled={loading}
+              >
+                Search
+              </button>
+            </Col>
+          </Row>
         </Col>
       </Row>
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* Weather modules */}
       <Row>
-        <Col>
-          <HourlyForecast
-            currentLocation={
-              searchedLocation?.latitude ? searchedLocation : currentLocation
-            }
-          />
-        </Col>
-        <Col>
+        <Col
+          md={{ order: 2, span: 4 }}
+          xs={{ order: 1, span: 12 }}
+          id="current-section"
+          className="justify-content-center"
+        >
           <CurrentWeather
             currentLocation={
               searchedLocation?.latitude ? searchedLocation : currentLocation
@@ -110,7 +128,24 @@ function App() {
             cityName={searchedLocation?.name || cityName}
           />
         </Col>
-        <Col>
+        <Col
+          md={{ order: 1, span: 4 }}
+          xs={{ order: 2, span: 12 }}
+          id="hourly-section"
+          className="justify-content-center"
+        >
+          <HourlyForecast
+            currentLocation={
+              searchedLocation?.latitude ? searchedLocation : currentLocation
+            }
+          />
+        </Col>
+        <Col
+          md={{ order: 3, span: 4 }}
+          xs={{ order: 3, span: 12 }}
+          id="daily-section"
+          className="justify-content-center"
+        >
           <DailyForecast
             currentLocation={
               searchedLocation?.latitude ? searchedLocation : currentLocation

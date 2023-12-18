@@ -1,0 +1,69 @@
+#hourly-section {
+  background-color: rgba(237, 237, 237, 0.549);
+  border-radius: 10px;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  height: 70vh;
+}
+
+#current-section {
+  background-color: #dfe9f1d2;
+  border-radius: 10px;
+  box-shadow: 5px 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  height: 70vh;
+}
+
+#daily-section {
+  background-color: rgba(237, 237, 237, 0.705);
+  border-radius: 10px;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  height: 70vh;
+}
+
+/* Mobile-specific styles for #hourly-section */
+@media (max-width: 767px) {
+  #hourly-section {
+    /* Mobile-specific styles go here */
+    background-color: rgba(
+      237,
+      237,
+      237,
+      0.549
+    ); /* your mobile background color */
+    height: 20vh; /* your mobile height *;
+    /* Add any other mobile-specific styles */
+  }
+}
+
+@media (max-width: 767px) {
+  #daily-section {
+    /* Mobile-specific styles go here */
+    background-color: rgba(
+      237,
+      237,
+      237,
+      0.549
+    ); /* your mobile background color */
+    height: 35vh; /* your mobile height *;
+      /* Add any other mobile-specific styles */
+  }
+}
+
+@media (max-width: 767px) {
+  #current-section {
+    /* Mobile-specific styles go here */
+    background-color: rgba(
+      237,
+      237,
+      237,
+      0.549
+    ); /* your mobile background color */
+    height: 40vh; /* your mobile height *;
+        /* Add any other mobile-specific styles */
+  }
+}

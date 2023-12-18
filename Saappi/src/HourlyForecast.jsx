@@ -63,21 +63,51 @@ const HourlyForecast = ({ currentLocation }) => {
 
   return (
     <div>
-      <Row>
+      {/* Mobile layout (visible on extra small and small devices) */}
+      <Row id="hourly-mobile" className="align-items-center d-md-none">
         {next4HoursForecast.map((hourData, index) => (
           <Col key={index}>
-            <p className="fs-5">{`${new Date(hourData.time).getHours()}`}</p>
-            <img
-              className="hourlyIcons"
-              src={getIcon(hourData.values.weatherCode)}
-              alt="Weather Icon"
-            />
-            <p className="mt-2">{`${Math.round(
-              hourData.values.temperature
-            )}°C`}</p>
+            <Col>
+              <p className="fs-6 m-3">{`${new Date(
+                hourData.time
+              ).getHours()}`}</p>
+              <img
+                className="hourlyIcons m-2"
+                src={getIcon(hourData.values.weatherCode)}
+                alt="Weather Icon"
+              />
+              <p className="fs-6 m-3">{`${Math.round(
+                hourData.values.temperature
+              )}°C`}</p>
+            </Col>
           </Col>
         ))}
       </Row>
+
+      {/* Desktop layout (visible on medium devices and above) */}
+      {next4HoursForecast.map((hourData, index) => (
+        <Row key={index} className="d-flex">
+          <Col md={4} className="d-none d-md-flex">
+            <p className="fs-5 m-3">{`${new Date(
+              hourData.time
+            ).getHours()}`}</p>
+          </Col>
+
+          <Col md={4} className="d-none d-md-flex">
+            <img
+              className="hourlyIcons m-2"
+              src={getIcon(hourData.values.weatherCode)}
+              alt="Weather Icon"
+            />
+          </Col>
+
+          <Col md={2} className="d-none d-md-flex">
+            <p className="fs-5 m-3">{`${Math.round(
+              hourData.values.temperature
+            )}°C`}</p>
+          </Col>
+        </Row>
+      ))}
     </div>
   );
 };

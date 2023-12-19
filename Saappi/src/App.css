@@ -29,14 +29,8 @@
 @media (max-width: 767px) {
   #hourly-section {
     /* Mobile-specific styles go here */
-    background-color: rgba(
-      241,
-      241,
-      241,
-      0.549
-    ); /* your mobile background color */
+    background-color: rgba(241, 241, 241, 0.201);
     box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-
     height: auto;
   }
 }
@@ -44,33 +38,17 @@
 @media (max-width: 767px) {
   #daily-section {
     /* Mobile-specific styles go here */
-    background-color: rgba(
-      237,
-      237,
-      237,
-      0.549
-    ); /* your mobile background color */
+    background-color: rgba(241, 241, 241, 0.201);
     height: auto;
     box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-
-    /* your mobile height *;
-      /* Add any other mobile-specific styles */
   }
 }
 
 @media (max-width: 767px) {
   #current-section {
     /* Mobile-specific styles go here */
-    background-color: rgba(
-      237,
-      237,
-      237,
-      0.549
-    ); /* your mobile background color */
+    background-color: rgba(241, 241, 241, 0.201);
     height: auto;
     box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-
-    /* your mobile height *;
-        /* Add any other mobile-specific styles */
   }
 }

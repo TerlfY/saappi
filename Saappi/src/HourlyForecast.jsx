@@ -67,7 +67,10 @@ const HourlyForecast = ({ currentLocation }) => {
       {/* Mobile layout (visible on extra small and small devices) */}
       <Row id="hourly-mobile" className="d-md-none my-2">
         {next4HoursForecast.map((hourData, index) => (
-          <Col key={index} className="border">
+          <Col
+            key={index}
+            className="border border-secondary border-bottom-0 border-top-0"
+          >
             <Col>
               <p className="fs-6 m-0">{`${new Date(
                 hourData.time

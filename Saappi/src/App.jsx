@@ -172,6 +172,11 @@ function App() {
           />
         </Col>
       </Row>
+      <Row>
+        <Col>
+          <p>Sami Mäkelä is the Proud Dad of Sääppi</p>
+        </Col>
+      </Row>
     </Container>
   );
 }

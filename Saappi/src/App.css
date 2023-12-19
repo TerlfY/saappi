@@ -1,5 +1,5 @@
 #hourly-section {
-  background-color: rgba(237, 237, 237, 0.549);
+  background-color: rgba(237, 237, 237, 0.147);
   border-radius: 10px;
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -8,7 +8,7 @@
 }
 
 #current-section {
-  background-color: #dfe9f1d2;
+  background-color: #dfe9f130;
   border-radius: 10px;
   box-shadow: 5px 2px 4px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -17,7 +17,7 @@
 }
 
 #daily-section {
-  background-color: rgba(237, 237, 237, 0.705);
+  background-color: rgba(237, 237, 237, 0.147);
   border-radius: 10px;
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
   display: flex;

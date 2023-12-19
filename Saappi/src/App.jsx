@@ -99,9 +99,6 @@ function App() {
         <Container>
           <Navbar.Brand>
             <h1 className="fw-bold">Sääppi</h1>
-            <div onClick={handleToggleDarkMode} style={{ cursor: "pointer" }}>
-              Dark Mode
-            </div>
           </Navbar.Brand>
           <Form className="d-flex" role="search">
             <FormControl

@@ -4,6 +4,7 @@ import { getIcon } from "./WeatherIcons";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import "./DailyForecast.css";
+import { Container } from "react-bootstrap";
 
 const DailyForecast = ({ currentLocation }) => {
   const [next4DaysForecast, setNext4DaysForecast] = useState([]);
@@ -27,7 +28,7 @@ const DailyForecast = ({ currentLocation }) => {
           const dailyWeatherData = weatherResponse.data;
 
           const next4DaysData =
-            dailyWeatherData?.timelines?.daily?.slice(1, 5) || [];
+            dailyWeatherData?.timelines?.daily?.slice(1, 7) || [];
 
           setNext4DaysForecast(next4DaysData);
 
@@ -64,29 +65,57 @@ const DailyForecast = ({ currentLocation }) => {
   }, [currentLocation]);
 
   return (
-    <div>
+    <Container>
+      {/* Mobile layout (visible on extra small and small devices) */}
+
       {next4DaysForecast.map((dayData, index) => (
-        <Row key={index} className="d-flex">
+        <Row id="daily-mobile" key={index} className="d-md-none my-2">
           <Col>
-            <p className="fs-5 m-3">{`${formatDay(new Date(dayData.time))}`}</p>
+            <p className="fs-6 mx-4">{`${formatDay(
+              new Date(dayData.time)
+            )}`}</p>
           </Col>
 
           <Col>
             <img
-              className="dailyIcons m-3"
+              className="dailyIcons mx-4"
               src={getIcon(dayData.values.weatherCodeMin)}
               alt="Weather Icon"
             />
           </Col>
 
           <Col>
-            <p className="fs-5 m-3">{`${Math.round(
+            <p className="fs-6 mx-4">{`${Math.round(
               dayData.values.temperatureMin
             )}...${Math.round(dayData.values.temperatureMax)}°C`}</p>
           </Col>
         </Row>
       ))}
-    </div>
+
+      {/* Desktop layout (visible on medium devices and above) */}
+
+      {next4DaysForecast.map((dayData, index) => (
+        <Row key={index} className="d-flex my-3 d-none d-md-flex">
+          <Col className="d-none d-md-flex">
+            <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>
+          </Col>
+
+          <Col className="d-none d-md-flex">
+            <img
+              className="dailyIcons"
+              src={getIcon(dayData.values.weatherCodeMin)}
+              alt="Weather Icon"
+            />
+          </Col>
+
+          <Col className="d-none d-md-flex">
+            <p className="fs-5">{`${Math.round(
+              dayData.values.temperatureMin
+            )}...${Math.round(dayData.values.temperatureMax)}°C`}</p>
+          </Col>
+        </Row>
+      ))}
+    </Container>
   );
 };
 

@@ -4,6 +4,7 @@ import { getIcon } from "./WeatherIcons";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
+import { Container } from "react-bootstrap";
 
 const HourlyForecast = ({ currentLocation }) => {
   const [next4HoursForecast, setNext4HoursForecast] = useState([]);
@@ -28,7 +29,7 @@ const HourlyForecast = ({ currentLocation }) => {
           const weatherResponse = await axios.request(options);
           const hourlyWeatherData = weatherResponse.data;
           const next4HoursData =
-            hourlyWeatherData?.timelines?.hourly?.slice(1, 5) || [];
+            hourlyWeatherData?.timelines?.hourly?.slice(1, 6) || [];
 
           setNext4HoursForecast(next4HoursData);
 
@@ -62,21 +63,21 @@ const HourlyForecast = ({ currentLocation }) => {
   }, [currentLocation]);
 
   return (
-    <div>
+    <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
-      <Row id="hourly-mobile" className="align-items-center d-md-none">
+      <Row id="hourly-mobile" className="d-md-none my-2">
         {next4HoursForecast.map((hourData, index) => (
-          <Col key={index}>
+          <Col key={index} className="border">
             <Col>
-              <p className="fs-6 m-3">{`${new Date(
+              <p className="fs-6 m-0">{`${new Date(
                 hourData.time
               ).getHours()}`}</p>
               <img
-                className="hourlyIcons m-2"
+                className="hourlyIcons my-1"
                 src={getIcon(hourData.values.weatherCode)}
                 alt="Weather Icon"
               />
-              <p className="fs-6 m-3">{`${Math.round(
+              <p className="fs-6 my-1">{`${Math.round(
                 hourData.values.temperature
               )}°C`}</p>
             </Col>
@@ -86,7 +87,7 @@ const HourlyForecast = ({ currentLocation }) => {
 
       {/* Desktop layout (visible on medium devices and above) */}
       {next4HoursForecast.map((hourData, index) => (
-        <Row key={index} className="d-flex">
+        <Row key={index} className="d-flex d-none d-md-flex">
           <Col md={4} className="d-none d-md-flex">
             <p className="fs-5 m-3">{`${new Date(
               hourData.time
@@ -108,7 +109,7 @@ const HourlyForecast = ({ currentLocation }) => {
           </Col>
         </Row>
       ))}
-    </div>
+    </Container>
   );
 };
 

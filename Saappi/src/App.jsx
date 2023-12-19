@@ -1,13 +1,21 @@
 import "./App.css";
 import { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Navbar,
+  Form,
+  FormControl,
+  Button,
+  Spinner,
+} from "react-bootstrap";
 import axios from "axios";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 import HourlyForecast from "./HourlyForecast";
 import CurrentWeather from "./CurrentWeather";
 import DailyForecast from "./DailyForecast";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useDarkMode } from "./DarkModeContext";
 
 function App() {
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -16,6 +24,7 @@ function App() {
   const [searchedLocation, setSearchedLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -78,48 +87,61 @@ function App() {
     }
   };
 
+  const handleToggleDarkMode = () => {
+    toggleDarkMode();
+    console.log("Dark mode toggled:", !darkMode);
+  };
+
   return (
-    <Container className="mx-auto text-center m-4">
+    <Container className={`mx-auto text-center m-4`}>
       {/* Header */}
-      <Row className="mb-5">
-        {/* Darkmode under this */}
-
-        <Col md={6}>
-          <h1 className="fw-bold">Sääppi</h1>
-        </Col>
-
-        {/* Search */}
-        <Col md={6}>
-          <Row>
-            <Col>
-              <input
-                type="text"
-                placeholder="City, Country"
-                value={searchCity}
-                onChange={(e) => setSearchCity(e.target.value)}
-                onKeyPress={handleEnterKey}
-              />
-
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleSearch}
-                disabled={loading}
-              >
+      <Navbar sticky="top">
+        <Container>
+          <Navbar.Brand>
+            <h1 className="fw-bold">Sääppi</h1>
+            <div onClick={handleToggleDarkMode} style={{ cursor: "pointer" }}>
+              Dark Mode
+            </div>
+          </Navbar.Brand>
+          <Form className="d-flex" role="search">
+            <FormControl
+              type="search"
+              placeholder="City, Country"
+              value={searchCity}
+              onChange={(e) => setSearchCity(e.target.value)}
+              onKeyDown={handleEnterKey}
+            />
+            <Button
+              variant="outline-success"
+              type="submit"
+              onClick={handleSearch}
+              disabled={loading}
+            >
+              {loading ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : null}
+              <span style={{ display: loading ? "none" : "inline" }}>
                 Search
-              </button>
-            </Col>
-          </Row>
-        </Col>
-      </Row>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+              </span>
+            </Button>
+            {error && <p style={{ color: "red" }}>{error}</p>}
+          </Form>
+        </Container>
+      </Navbar>
+
       {/* Weather modules */}
       <Row>
         <Col
           md={{ order: 2, span: 4 }}
           xs={{ order: 1, span: 12 }}
           id="current-section"
-          className="justify-content-center"
+          className="justify-content-center flex-grow-1"
         >
           <CurrentWeather
             currentLocation={
@@ -132,7 +154,7 @@ function App() {
           md={{ order: 1, span: 4 }}
           xs={{ order: 2, span: 12 }}
           id="hourly-section"
-          className="justify-content-center"
+          className="justify-content-center flex-grow-1"
         >
           <HourlyForecast
             currentLocation={
@@ -144,7 +166,7 @@ function App() {
           md={{ order: 3, span: 4 }}
           xs={{ order: 3, span: 12 }}
           id="daily-section"
-          className="justify-content-center"
+          className="flex-grow-1"
         >
           <DailyForecast
             currentLocation={

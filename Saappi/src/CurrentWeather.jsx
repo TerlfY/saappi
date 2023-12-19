@@ -62,7 +62,7 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
     <Container>
       {Object.keys(currentWeather).length > 0 && (
         <div>
-          <h2>{cityName}</h2>
+          <h2 className="mt-3">{cityName}</h2>
           <img
             className="m-5"
             src={getIcon(currentWeather.data.values.weatherCode)}

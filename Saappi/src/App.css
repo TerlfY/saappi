@@ -30,13 +30,14 @@
   #hourly-section {
     /* Mobile-specific styles go here */
     background-color: rgba(
-      237,
-      237,
-      237,
+      241,
+      241,
+      241,
       0.549
     ); /* your mobile background color */
-    height: 20vh; /* your mobile height *;
-    /* Add any other mobile-specific styles */
+    box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
+
+    height: auto;
   }
 }
 
@@ -49,7 +50,10 @@
       237,
       0.549
     ); /* your mobile background color */
-    height: 35vh; /* your mobile height *;
+    height: auto;
+    box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
+
+    /* your mobile height *;
       /* Add any other mobile-specific styles */
   }
 }
@@ -63,7 +67,10 @@
       237,
       0.549
     ); /* your mobile background color */
-    height: 40vh; /* your mobile height *;
+    height: auto;
+    box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
+
+    /* your mobile height *;
         /* Add any other mobile-specific styles */
   }
 }

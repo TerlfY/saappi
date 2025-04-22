@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Specify your required Node.js version
+          node-version: "20" # Specify your required Node.js version
 
       # 2. Install dependencies
       - name: Install Dependencies
@@ -36,7 +36,6 @@ jobs:
         run: npm run build # Or 'yarn build' or your specific build command
         # Optional: Add environment variables if needed for build
         # env:
-        #   PUBLIC_URL: /${{ github.event.repository.name }} # Example for Create React App base path
 
       # 4. Configure GitHub Pages (optional but good practice)
       - name: Setup Pages

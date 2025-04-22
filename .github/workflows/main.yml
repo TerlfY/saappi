@@ -1,0 +1,62 @@
+name: Build and Deploy Node.js Project
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Specify your required Node.js version
+
+      # 2. Install dependencies
+      - name: Install Dependencies
+        run: npm install # Or 'yarn install' or 'pnpm install'
+
+      # 3. Build your project
+      - name: Build Project
+        run: npm run build # Or 'yarn build' or your specific build command
+        # Optional: Add environment variables if needed for build
+        # env:
+        #   PUBLIC_URL: /${{ github.event.repository.name }} # Example for Create React App base path
+
+      # 4. Configure GitHub Pages (optional but good practice)
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        # This helps if your framework needs base path info during build
+
+      # 5. Upload the build artifact (from the correct build output folder!)
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # IMPORTANT: Change this to your build output directory
+          path: ./dist # Or ./build, ./out, etc.
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

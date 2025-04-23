@@ -16,7 +16,7 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
             url: "https://api.tomorrow.io/v4/weather/realtime",
             params: {
               location: `${currentLocation.latitude},${currentLocation.longitude}`,
-              apikey: "DNIV2e5FiakIKzzEeR8Zsrwy77PHA0eI",
+              apikey: process.env.TOMORROW_APIKEY,
             },
             headers: { accept: "application/json" },
           };

@@ -19,7 +19,7 @@ const DailyForecast = ({ currentLocation }) => {
             params: {
               location: `${currentLocation.latitude},${currentLocation.longitude}`,
               timesteps: "1d",
-              apikey: "DNIV2e5FiakIKzzEeR8Zsrwy77PHA0eI",
+              apikey: import.meta.env.VITE_API_KEY,
             },
             headers: { accept: "application/json" },
           };

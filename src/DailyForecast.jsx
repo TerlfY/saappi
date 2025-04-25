@@ -1,127 +1,156 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { getIcon } from "./WeatherIcons";
+import { getIcon } from "./WeatherIcons"; //
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import "./DailyForecast.css";
-import { Container } from "react-bootstrap";
+import { Container, Spinner, Alert } from "react-bootstrap"; // Import Spinner and Alert
+import "./DailyForecast.css"; //
+import useWeatherData from "./useWeatherData"; // Adjust path if necessary
+import { useMemo } from "react";
 
-const DailyForecast = ({ currentLocation }) => {
-  const [next4DaysForecast, setNext4DaysForecast] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (currentLocation) {
-          const options = {
-            method: "GET",
-            url: "https://api.tomorrow.io/v4/weather/forecast",
-            params: {
-              location: `${currentLocation.latitude},${currentLocation.longitude}`,
-              timesteps: "1d",
-              apikey: import.meta.env.VITE_API_KEY,
-            },
-            headers: { accept: "application/json" },
-          };
-          // Fetch hourly weather data
-          const weatherResponse = await axios.request(options);
-          const dailyWeatherData = weatherResponse.data;
-
-          const next4DaysData =
-            dailyWeatherData?.timelines?.daily?.slice(1, 7) || [];
-
-          setNext4DaysForecast(next4DaysData);
-
-          // const existingEntries = existingEntriesResponse.data;
-
-          console.log("Weather data posted to JSON server");
-
-          // Fetch existing entries from the hourlyWeather database
-          const existingEntriesResponse = await axios.get(
-            "http://localhost:3001/dailyWeather"
-          );
-
-          const existingEntries = existingEntriesResponse.data;
-
-          // Iterate through existing entries and delete them one by one
-          for (const entry of existingEntries) {
-            await axios.delete(
-              `http://localhost:3001/dailyWeather/${entry.id}`
-            );
-          }
-          // Post new weather data to the hourlyWeather database
-          await axios.post(
-            "http://localhost:3001/dailyWeather",
-            dailyWeatherData
-          );
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    // Call the async function
-    fetchData();
-  }, [currentLocation]);
-
-  return (
-    <Container>
-      {/* Mobile layout (visible on extra small and small devices) */}
-
-      {next4DaysForecast.map((dayData, index) => (
-        <Row id="daily-mobile" key={index} className="d-md-none my-2">
-          <Col>
-            <p className="fs-6 mx-4">{`${formatDay(
-              new Date(dayData.time)
-            )}`}</p>
-          </Col>
-
-          <Col>
-            <img
-              className="dailyIcons mx-4"
-              src={getIcon(dayData.values.weatherCodeMin)}
-              alt="Weather Icon"
-            />
-          </Col>
-
-          <Col>
-            <p className="fs-6 mx-4">{`${Math.round(
-              dayData.values.temperatureMin
-            )}...${Math.round(dayData.values.temperatureMax)}°C`}</p>
-          </Col>
-        </Row>
-      ))}
-
-      {/* Desktop layout (visible on medium devices and above) */}
-
-      {next4DaysForecast.map((dayData, index) => (
-        <Row key={index} className="d-flex my-3 d-none d-md-flex">
-          <Col className="d-none d-md-flex">
-            <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>
-          </Col>
-
-          <Col className="d-none d-md-flex">
-            <img
-              className="dailyIcons"
-              src={getIcon(dayData.values.weatherCodeMin)}
-              alt="Weather Icon"
-            />
-          </Col>
-
-          <Col className="d-none d-md-flex">
-            <p className="fs-5">{`${Math.round(
-              dayData.values.temperatureMin
-            )}...${Math.round(dayData.values.temperatureMax)}°C`}</p>
-          </Col>
-        </Row>
-      ))}
-    </Container>
-  );
-};
-
+// Helper function remains the same
 const formatDay = (date) => {
   const options = { weekday: "short" };
-  return new Intl.DateTimeFormat("fi-FI", options).format(date);
+  // Using 'en-US' for broader compatibility, adjust if 'fi-FI' is essential
+  return new Intl.DateTimeFormat("en-US", options).format(date);
+};
+
+const DailyForecast = ({ currentLocation }) => {
+  //
+  // Call the custom hook for daily forecast data
+
+  const params = useMemo(
+    () => ({
+      // Memoize the params object
+      location: currentLocation
+        ? `${currentLocation.latitude},${currentLocation.longitude}`
+        : null,
+    }),
+    [currentLocation]
+  ); // Dependency: re-create only if currentLocation changes
+
+  const {
+    data: dailyData,
+    loading,
+    error,
+  } = useWeatherData("forecast", params); //
+
+  // Process the data *after* checking loading/error states and if data exists
+  // Derive the forecast array only when data is available
+  // Taking 6 days starting from the *second* day (index 1 to 6) as per original slice(1, 7)
+  const next6DaysForecast = dailyData?.timelines?.daily?.slice(1, 7) || []; //
+
+  // --- Rendering Logic ---
+
+  // 1. Handle Loading State
+  if (loading) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100%" }}
+      >
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
+
+  // 2. Handle Error State
+  if (error) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100%" }}
+      >
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
+
+  // 3. Handle No Data/Initial State or if data structure is unexpected
+  // Check specifically for the timelines array needed for mapping
+  if (!dailyData?.timelines?.daily || next6DaysForecast.length === 0) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100%" }}
+      >
+        <p>Waiting for location or daily forecast data...</p>
+      </Container>
+    );
+  }
+
+  // 4. Render Weather Data (if loading is false, no error, and data exists)
+  return (
+    <Container>
+      {/* Mobile layout */}
+      {next6DaysForecast.map(
+        (dayData, index) =>
+          // Ensure dayData and dayData.values exist before rendering row
+          dayData?.values && (
+            <Row
+              id="daily-mobile"
+              key={`mobile-${index}`}
+              className="d-md-none my-2 align-items-center"
+            >
+              {" "}
+              {/* */}
+              <Col xs={4}>
+                {" "}
+                {/* Using explicit grid columns for better alignment */}
+                <p className="fs-6 m-0 text-start ps-2">{`${formatDay(
+                  new Date(dayData.time)
+                )}`}</p>
+              </Col>
+              <Col xs={4} className="text-center">
+                <img
+                  className="dailyIcons" //
+                  src={getIcon(dayData.values.weatherCodeMin)} //
+                  alt="Weather Icon"
+                />
+              </Col>
+              <Col xs={4}>
+                <p className="fs-6 m-0 text-end pe-2">{`${Math.round(
+                  dayData.values.temperatureMin
+                )}°..${Math.round(dayData.values.temperatureMax)}°C`}</p>{" "}
+                {/* */}
+              </Col>
+            </Row>
+          )
+      )}
+
+      {/* Desktop layout */}
+      {next6DaysForecast.map(
+        (dayData, index) =>
+          // Ensure dayData and dayData.values exist before rendering row
+          dayData?.values && (
+            <Row
+              key={`desktop-${index}`}
+              className="d-flex my-3 d-none d-md-flex align-items-center"
+            >
+              {" "}
+              {/* */}
+              <Col md={4} className="d-none d-md-flex">
+                <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>{" "}
+                {/* */}
+              </Col>
+              <Col md={4} className="d-none d-md-flex justify-content-center">
+                <img
+                  className="dailyIcons" //
+                  src={getIcon(dayData.values.weatherCodeMin)} //
+                  alt="Weather Icon"
+                />
+              </Col>
+              <Col md={4} className="d-none d-md-flex">
+                <p className="fs-5">{`${Math.round(
+                  dayData.values.temperatureMin
+                )}°..${Math.round(dayData.values.temperatureMax)}°C`}</p>{" "}
+                {/* */}
+              </Col>
+            </Row>
+          )
+      )}
+    </Container>
+  );
 };
 
 export default DailyForecast;

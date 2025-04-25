@@ -1,58 +1,76 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
 import Container from "react-bootstrap/Container";
 import { getIcon } from "./WeatherIcons";
+import useWeatherData from "./useWeatherData"; // Or the correct path
 
 const CurrentWeather = ({ currentLocation, cityName }) => {
-  const [currentWeather, setCurrentWeather] = useState({});
+  const {
+    data: currentWeatherData,
+    loading,
+    error,
+  } = useWeatherData(
+    "realtime", // Endpoint string
+    {
+      // Params object
+      location: currentLocation
+        ? `${currentLocation.latitude},${currentLocation.longitude}`
+        : null, // Pass null if location isn't ready
+    }
+  );
 
-  useEffect(() => {
-    const fetchDataAndPost = async () => {
-      try {
-        // Fetch weather data when the current location is available
-        if (currentLocation) {
-          const options = {
-            method: "GET",
-            url: "https://api.tomorrow.io/v4/weather/realtime",
-            params: {
-              location: `${currentLocation.latitude},${currentLocation.longitude}`,
-              apikey: import.meta.env.VITE_API_KEY,
-            },
-            headers: { accept: "application/json" },
-          };
+  // --- Rendering Logic ---
 
-          // Fetch current weather data
-          const weatherResponse = await axios.request(options);
-          const currentWeatherData = weatherResponse.data;
+  // 1. Handle Loading State
+  if (loading) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100%" }}
+      >
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
 
-          // Set state
-          setCurrentWeather(currentWeatherData);
+  // 2. Handle Error State
+  if (error) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100%" }}
+      >
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
 
-          console.log("Weather data posted to JSON server");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    // Call the async function
-    fetchDataAndPost();
-  }, [currentLocation]);
+  // 3. Handle No Data/Initial State (before location is known or fetch completes)
+  // Check specifically for the expected data structure
+  if (!currentWeatherData?.data?.values) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100%" }}
+      >
+        <p>Waiting for location or weather data...</p>
+      </Container>
+    );
+    // Or return null, or a placeholder
+  }
 
   return (
     <Container>
-      {Object.keys(currentWeather).length > 0 && (
-        <div>
-          <h2 className="mt-3">{cityName}</h2>
-          <img
-            className="m-5"
-            src={getIcon(currentWeather.data.values.weatherCode)}
-          ></img>
-          <p className="fs-4">{`${Math.round(
-            currentWeather.data.values.temperature
-          )}°C`}</p>
-        </div>
-      )}
+      <div>
+        <h2 className="mt-3">{cityName}</h2>
+        <img
+          className="m-5"
+          src={getIcon(currentWeatherData.data.values.weatherCode)}
+        ></img>
+        <p className="fs-4">{`${Math.round(
+          currentWeatherData.data.values.temperature
+        )}°C`}</p>
+      </div>
     </Container>
   );
 };

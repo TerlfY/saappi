@@ -32,15 +32,35 @@ const useWeatherData = (endpoint, params) => {
       setData(response.data);
     } catch (err) {
       console.error("API Fetch Error:", err);
-      setError("Failed to fetch weather data. Please try again."); // Set user-friendly error
+
+      // --- Start Specific Error Handling ---
+      if (axios.isAxiosError(err) && err.response) {
+        // Check if it's an Axios error and the server responded
+        if (err.response.status === 429) {
+          // Specific message for rate limiting
+          setError("API rate limit exceeded. Please wait before trying again.");
+        } else {
+          // Other server errors (4xx, 5xx)
+          setError(
+            `Error: ${err.response.status} - ${err.response.statusText}. Please try again.`
+          );
+        }
+      } else if (err.request) {
+        // The request was made but no response was received (e.g., network error)
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        // Something else happened setting up the request
+        setError("An unexpected error occurred. Please try again.");
+      }
+      // --- End Specific Error Handling ---
     } finally {
       setLoading(false);
     }
-  }, [endpoint, params]); // Dependency array includes things that trigger refetch
+  }, [endpoint, params]); // Dependency array
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]); // useEffect depends on the memoized fetchData function
+  }, [fetchData]);
 
   return { data, loading, error };
 };

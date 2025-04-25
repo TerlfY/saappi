@@ -7,10 +7,12 @@ const useWeatherData = (endpoint, params) => {
   const [error, setError] = useState(null);
 
   const fetchData = useCallback(async () => {
+    // Check if location parameter is valid before proceeding
     if (!params?.location) {
-      // Don't fetch if location is missing
-      setData(null); // Clear data if location becomes null
-      return;
+      setData(null); // Clear data if location becomes null or invalid
+      setLoading(false); // Ensure loading is false if we don't fetch
+      setError(null); // Clear any previous error
+      return; // Stop execution if location is missing
     }
 
     setLoading(true);
@@ -30,48 +32,44 @@ const useWeatherData = (endpoint, params) => {
     try {
       const response = await axios.request(options);
       setData(response.data);
+      // Optional: Keep this log if you find it useful to see successful fetches
       console.log(
         `✅ SUCCESS fetching ${endpoint} for location:`,
         params?.location
-      ); // Log success
+      );
     } catch (err) {
-      // --- Enhanced Logging ---
-      console.error("💥 API Fetch Error Object:", err); // Keep this
-      console.log("!!! ENTERING CATCH BLOCK !!!"); // Highlight entry
+      console.error("API Fetch Error:", err); // Keep logging the actual error object
 
+      // --- Start Specific Error Handling ---
       let specificErrorMsg = "An unexpected error occurred. Please try again."; // Default message
 
       if (axios.isAxiosError(err) && err.response) {
+        // Check if it's an Axios error and the server responded
         const status = err.response.status;
-        console.log(`Error is AxiosError with response. Status: ${status}`); // Log status
         if (status === 429) {
+          // Specific message for rate limiting
           specificErrorMsg =
             "API rate limit exceeded. Please wait before trying again.";
-          console.log("Setting RATE LIMIT error message"); // Log intention
         } else {
+          // Other server errors (4xx, 5xx)
           specificErrorMsg = `Error: ${status} - ${err.response.statusText}. Please try again.`;
-          console.log("Setting OTHER server error message"); // Log intention
         }
       } else if (err.request) {
+        // The request was made but no response was received (e.g., network error)
         specificErrorMsg =
           "Network error. Please check your connection and try again.";
-        console.log("Setting NETWORK error message"); // Log intention
-      } else {
-        console.log("Setting UNEXPECTED error message (not Axios/Network)"); // Log intention
       }
+      // No need for specific logs before setError anymore
       setError(specificErrorMsg); // Set the determined error message
-      // --- End Enhanced Logging ---
+      // --- End Specific Error Handling ---
     } finally {
-      console.log("!!! ENTERING FINALLY BLOCK - Setting loading to false !!!"); // Highlight entry and action
+      // No need for the finally log anymore
       setLoading(false);
     }
-  }, [endpoint, params]);
+  }, [endpoint, params]); // Dependency array
 
   useEffect(() => {
-    // Optional: Add log to see when effect triggers
-    console.log(
-      `Effect triggered for ${endpoint}, location: ${params?.location}. Calling fetchData.`
-    );
+    // No need for the effect trigger log anymore
     fetchData();
   }, [fetchData]); // Dependency on memoized fetchData is correct
 

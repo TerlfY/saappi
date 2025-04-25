@@ -4,6 +4,7 @@ import Col from "react-bootstrap/Col";
 import { Container, Spinner, Alert } from "react-bootstrap"; // Import Spinner and Alert
 import "./DailyForecast.css"; //
 import useWeatherData from "./useWeatherData"; // Adjust path if necessary
+import { useMemo } from "react";
 
 // Helper function remains the same
 const formatDay = (date) => {
@@ -15,20 +16,22 @@ const formatDay = (date) => {
 const DailyForecast = ({ currentLocation }) => {
   //
   // Call the custom hook for daily forecast data
+
+  const params = useMemo(
+    () => ({
+      // Memoize the params object
+      location: currentLocation
+        ? `${currentLocation.latitude},${currentLocation.longitude}`
+        : null,
+    }),
+    [currentLocation]
+  ); // Dependency: re-create only if currentLocation changes
+
   const {
     data: dailyData,
     loading,
     error,
-  } = useWeatherData(
-    "forecast", // Endpoint
-    {
-      // Params
-      location: currentLocation
-        ? `${currentLocation.latitude},${currentLocation.longitude}`
-        : null,
-      timesteps: "1d", // Specify daily timestep
-    }
-  ); //
+  } = useWeatherData("forecast", params); //
 
   // Process the data *after* checking loading/error states and if data exists
   // Derive the forecast array only when data is available

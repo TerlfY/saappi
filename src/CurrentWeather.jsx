@@ -2,27 +2,32 @@ import { getIcon } from "./WeatherIcons";
 import useWeatherData from "./useWeatherData"; // Or the correct path
 import { Container, Spinner, Alert } from "react-bootstrap";
 import "./CurrentWeather.css";
+import { useMemo } from "react";
 
 const CurrentWeather = ({ currentLocation, cityName }) => {
+  const params = useMemo(
+    () => ({
+      // Memoize the params object
+      location: currentLocation
+        ? `${currentLocation.latitude},${currentLocation.longitude}`
+        : null,
+    }),
+    [currentLocation]
+  ); // Dependency: re-create only if currentLocation changes
+
   const {
     data: currentWeatherData,
     loading,
     error,
-  } = useWeatherData(
-    "realtime", // Endpoint string
-    {
-      // Params object
-      location: currentLocation
-        ? `${currentLocation.latitude},${currentLocation.longitude}`
-        : null, // Pass null if location isn't ready
-    }
-  );
+  } = useWeatherData("realtime", params);
 
   // --- Rendering Logic ---
 
+  // Corrected console.log statement
   console.log(
-    `--- CurrentWeather RENDER --- loading=<span class="math-inline">\{loading\}, error\=</span>{JSON.stringify(error)}, hasData=${!!currentWeatherData
-      ?.data?.values}`
+    `--- CurrentWeather RENDER --- loading=${loading}, error=${JSON.stringify(
+      error
+    )}, hasData=${!!currentWeatherData?.data?.values}`
   );
 
   // 1. Handle Loading State

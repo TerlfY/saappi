@@ -5,22 +5,24 @@ import "./HourlyForecast.css";
 import { Container } from "react-bootstrap";
 import useWeatherData from "./useWeatherData";
 import { Spinner, Alert } from "react-bootstrap";
+import { useMemo } from "react";
 
 const HourlyForecast = ({ currentLocation }) => {
+  const params = useMemo(
+    () => ({
+      // Memoize the params object
+      location: currentLocation
+        ? `${currentLocation.latitude},${currentLocation.longitude}`
+        : null,
+    }),
+    [currentLocation]
+  ); // Dependency: re-create only if currentLocation changes
+
   const {
     data: hourlyData,
     loading,
     error,
-  } = useWeatherData(
-    "forecast", // Endpoint
-    {
-      // Params
-      location: currentLocation
-        ? `${currentLocation.latitude},${currentLocation.longitude}`
-        : null,
-      timesteps: "1h", // Specify hourly timestep
-    }
-  );
+  } = useWeatherData("forecast", params);
 
   // Process the data *after* checking loading/error states and if data exists
   // Derive the forecast array only when data is available

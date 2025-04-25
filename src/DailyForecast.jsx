@@ -31,29 +31,6 @@ const DailyForecast = ({ currentLocation }) => {
             dailyWeatherData?.timelines?.daily?.slice(1, 7) || [];
 
           setNext4DaysForecast(next4DaysData);
-
-          // const existingEntries = existingEntriesResponse.data;
-
-          console.log("Weather data posted to JSON server");
-
-          // Fetch existing entries from the hourlyWeather database
-          const existingEntriesResponse = await axios.get(
-            "http://localhost:3001/dailyWeather"
-          );
-
-          const existingEntries = existingEntriesResponse.data;
-
-          // Iterate through existing entries and delete them one by one
-          for (const entry of existingEntries) {
-            await axios.delete(
-              `http://localhost:3001/dailyWeather/${entry.id}`
-            );
-          }
-          // Post new weather data to the hourlyWeather database
-          await axios.post(
-            "http://localhost:3001/dailyWeather",
-            dailyWeatherData
-          );
         }
       } catch (error) {
         console.error(error);

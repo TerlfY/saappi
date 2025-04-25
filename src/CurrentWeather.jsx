@@ -20,6 +20,11 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
 
   // --- Rendering Logic ---
 
+  console.log(
+    `--- CurrentWeather RENDER --- loading=<span class="math-inline">\{loading\}, error\=</span>{JSON.stringify(error)}, hasData=${!!currentWeatherData
+      ?.data?.values}`
+  );
+
   // 1. Handle Loading State
   if (loading) {
     return (

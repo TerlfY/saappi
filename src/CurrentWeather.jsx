@@ -1,6 +1,7 @@
-import Container from "react-bootstrap/Container";
 import { getIcon } from "./WeatherIcons";
 import useWeatherData from "./useWeatherData"; // Or the correct path
+import { Container, Spinner, Alert } from "react-bootstrap";
+import "./CurrentWeather.css";
 
 const CurrentWeather = ({ currentLocation, cityName }) => {
   const {

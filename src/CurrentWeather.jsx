@@ -28,25 +28,6 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
           // Set state
           setCurrentWeather(currentWeatherData);
 
-          // Fetch existing entries from the currentWeather database
-          const existingEntriesResponse = await axios.get(
-            "http://localhost:3001/currentWeather"
-          );
-          const existingEntries = existingEntriesResponse.data;
-
-          // Iterate through existing entries and delete them one by one
-          for (const entry of existingEntries) {
-            await axios.delete(
-              `http://localhost:3001/currentWeather/${entry.id}`
-            );
-          }
-
-          // Post new weather data to the currentWeather database
-          await axios.post(
-            "http://localhost:3001/currentWeather",
-            currentWeatherData
-          );
-
           console.log("Weather data posted to JSON server");
         }
       } catch (error) {

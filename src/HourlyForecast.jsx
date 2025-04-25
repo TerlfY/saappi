@@ -32,26 +32,6 @@ const HourlyForecast = ({ currentLocation }) => {
             hourlyWeatherData?.timelines?.hourly?.slice(1, 6) || [];
 
           setNext4HoursForecast(next4HoursData);
-
-          // Fetch existing entries from the hourlyWeather database
-          const existingEntriesResponse = await axios.get(
-            "http://localhost:3001/hourlyWeather"
-          );
-          const existingEntries = existingEntriesResponse.data;
-          // Iterate through existing entries and delete them one by one
-
-          for (const entry of existingEntries) {
-            await axios.delete(
-              `http://localhost:3001/hourlyWeather/${entry.id}`
-            );
-          }
-
-          // Post new weather data to the hourlyWeather database
-          await axios.post(
-            "http://localhost:3001/hourlyWeather",
-            hourlyWeatherData
-          );
-          console.log("Weather data posted to JSON server");
         }
       } catch (error) {
         console.error(error);

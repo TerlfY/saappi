@@ -53,7 +53,7 @@ const useWeatherData = (endpoint, params) => {
           // --- FIX: Assign specific object for 429 ---
           errorPayload = {
             message:
-              "API rate limit exceeded. Please wait before trying again.",
+              "API rate limit exceeded. Please try again at next full hour.",
             status: 429,
           };
         } else {

@@ -1,25 +1,15 @@
-import { getIcon } from "./WeatherIcons"; //
+import { getIcon } from "./WeatherIcons";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { Container, Spinner, Alert } from "react-bootstrap"; // Import Spinner and Alert
-import "./DailyForecast.css"; //
+import { Container, Spinner, Alert } from "react-bootstrap";
+import "./DailyForecast.css";
 
-// Helper function remains the same
 const formatDay = (date) => {
   const options = { weekday: "short" };
-  // Using 'en-US' for broader compatibility, adjust if 'fi-FI' is essential
   return new Intl.DateTimeFormat("en-US", options).format(date);
 };
 
 const DailyForecast = ({ dailyData, loading, error }) => {
-  //
-  // Call the custom hook for daily forecast data
-
-  // Process the data *after* checking loading/error states and if data exists
-  // Derive the forecast array only when data is available
-  // Taking 6 days starting from the *second* day (index 1 to 6) as per original slice(1, 7)
-  const next6DaysForecast = dailyData?.timelines?.daily?.slice(1, 7) || []; //
-
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -43,13 +33,16 @@ const DailyForecast = ({ dailyData, loading, error }) => {
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <Alert variant="danger">{error}</Alert>
+        <Alert variant="danger">
+          {error.message || "Error fetching daily forecast."}
+        </Alert>
       </Container>
     );
   }
 
   // 3. Handle No Data/Initial State or if data structure is unexpected
-  // Check specifically for the timelines array needed for mapping
+  const daysToDisplay = dailyData?.slice(1, 7) || []; // Calculate this *after* error/loading checks
+
   if (!dailyData || dailyData.length === 0) {
     return (
       <Container
@@ -65,9 +58,8 @@ const DailyForecast = ({ dailyData, loading, error }) => {
   return (
     <Container>
       {/* Mobile layout */}
-      {(dailyData.slice(1.7) || []).map(
+      {daysToDisplay.map(
         (dayData, index) =>
-          // Ensure dayData and dayData.values exist before rendering row
           dayData?.values && (
             <Row
               id="daily-mobile"
@@ -101,7 +93,7 @@ const DailyForecast = ({ dailyData, loading, error }) => {
       )}
 
       {/* Desktop layout */}
-      {(dailyData.slice(1.7) || []).map(
+      {daysToDisplay.map(
         (dayData, index) =>
           // Ensure dayData and dayData.values exist before rendering row
           dayData?.values && (
@@ -109,11 +101,8 @@ const DailyForecast = ({ dailyData, loading, error }) => {
               key={`desktop-${index}`}
               className="d-flex my-3 d-none d-md-flex align-items-center"
             >
-              {" "}
-              {/* */}
               <Col md={4} className="d-none d-md-flex">
                 <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>{" "}
-                {/* */}
               </Col>
               <Col md={4} className="d-none d-md-flex justify-content-center">
                 <img
@@ -126,7 +115,6 @@ const DailyForecast = ({ dailyData, loading, error }) => {
                 <p className="fs-5">{`${Math.round(
                   dayData.values.temperatureMin
                 )}°..${Math.round(dayData.values.temperatureMax)}°C`}</p>{" "}
-                {/* */}
               </Col>
             </Row>
           )

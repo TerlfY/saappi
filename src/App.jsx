@@ -65,7 +65,6 @@ function App() {
       location: locationToFetch
         ? `${locationToFetch.latitude},${locationToFetch.longitude}`
         : null,
-      // Add other necessary params like 'timesteps' if your hook/API requires them
     }),
     [locationToFetch]
   );
@@ -77,7 +76,6 @@ function App() {
     error: forecastError,
   } = useWeatherData("forecast", forecastParams); //
 
-  // --- Handle Search ---
   const handleSearch = async (e) => {
     // Prevent default form submission if triggered by button type="submit"
     if (e) e.preventDefault();
@@ -85,7 +83,6 @@ function App() {
       setSearchLoading(true);
       setSearchError(null);
 
-      // Consider proxying this call too
       const searchResponse = await axios.get(
         `https://nominatim.openstreetmap.org/search?q=${searchCity}&format=json`
       );
@@ -95,18 +92,17 @@ function App() {
         setSearchedLocation({
           latitude: searchResult[0].lat,
           longitude: searchResult[0].lon,
-          name: searchResult[0].display_name, // Use display_name for better formatting
+          name: searchResult[0].display_name,
         });
-        // Directly set the city name from search result
         setCityName(searchResult[0].display_name);
       } else {
         setSearchError("City not found.");
-        setSearchedLocation(null); // Clear previous search result
+        setSearchedLocation(null);
       }
     } catch (error) {
       console.error("Error searching for the city:", error.message);
       setSearchError("City search failed. Please try again.");
-      setSearchedLocation(null); // Clear previous search result on error
+      setSearchedLocation(null);
     } finally {
       setSearchLoading(false);
     }
@@ -123,7 +119,6 @@ function App() {
     console.log("Dark mode toggled:", !darkMode);
   };
 
-  // Determine the city name to display
   const displayCityName =
     searchedLocation?.name || cityName || "Loading city...";
 
@@ -174,7 +169,8 @@ function App() {
       {/* Display general forecast error if it occurs */}
       {forecastError && (
         <Alert variant="danger" className="mt-3">
-          {forecastError}
+          {forecastError.message ||
+            "An error occurred while fetching weather data."}
         </Alert>
       )}
 

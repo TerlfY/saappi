@@ -7,8 +7,6 @@ import { Spinner, Alert } from "react-bootstrap";
 
 const HourlyForecast = ({ hourlyData, loading, error }) => {
   // Process the data *after* checking loading/error states and if data exists
-  // Derive the forecast array only when data is available
-  const next5HoursForecast = hourlyData?.timelines?.hourly?.slice(1, 6) || [];
 
   // --- Rendering Logic ---
 
@@ -33,14 +31,17 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <Alert variant="danger">{error}</Alert>
+        <Alert variant="danger">
+          {error.message || "Error fetching hourly forecast."}
+        </Alert>
       </Container>
     );
   }
 
   // 3. Handle No Data/Initial State or if data structure is unexpected
   // Check specifically for the timelines array needed for mapping
-  if (!hourlyData || hourlyData.length === 0) {
+  const hoursToDisplay = hourlyData?.slice(1, 6) || [];
+  if (!hourlyData || hoursToDisplay.length === 0) {
     return (
       <Container
         className="d-flex justify-content-center align-items-center"
@@ -56,7 +57,7 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
     <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
       <Row id="hourly-mobile" className="d-md-none my-2">
-        {(hourlyData.slice(1, 6) || []).map((hourData, index) => (
+        {hoursToDisplay.map((hourData, index) => (
           <Col
             key={index}
             className="border border-secondary border-bottom-0 border-top-0"
@@ -82,7 +83,7 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
       </Row>
 
       {/* Desktop layout (visible on medium devices and above) */}
-      {(hourlyData.slice(1, 6) || []).map(
+      {hoursToDisplay.map(
         (hourData, index) =>
           // Ensure hourData and hourData.values exist before rendering row
           hourData?.values && (

@@ -1,54 +1,130 @@
-#hourly-section {
-  background-color: rgba(237, 237, 237, 0.147);
-  border-radius: 10px;
-  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  height: 70vh;
+/* Define CSS Variables for Colors */
+:root {
+  /* Light Mode Colors */
+  --bs-body-bg: #68a8e87a; /* <-- OVERRIDE Bootstrap's variable here. Set your desired light bg color */
+  --text-color-light: #212529; /* Standard dark text (Bootstrap's dark) */
+  --section-bg-light: #ffffff6f; /* White for sections */
+  --section-border-light: #dee2e6; /* Light grey border (Bootstrap's default) */
+  --link-color-light: #0d6efd; /* Standard blue link */
+  --shadow-color-light: rgba(0, 0, 0, 0.1);
+
+  /* Dark Mode Colors (will be applied via body.body-dark-mode) */
+  --bg-color-dark: #212529; /* Dark grey (Bootstrap's dark) */
+  --text-color-dark: #f8f9fa; /* Light grey text (Bootstrap's light) */
+  --section-bg-dark: #343a40; /* Slightly lighter dark grey (Bootstrap's secondary dark) */
+  --section-border-dark: #495057; /* Grey border for dark mode */
+  --link-color-dark: #6ea8fe; /* Lighter blue link for dark mode */
+  --shadow-color-dark: rgba(255, 255, 255, 0.1);
+
+  /* Transition Speed */
+  --transition-speed: 0.3s;
 }
 
-#current-section {
-  background-color: #dfe9f130;
-  border-radius: 10px;
-  box-shadow: 5px 2px 4px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  height: 70vh;
+/* Default Styles (Light Mode using variables) */
+body {
+  background-color: var(--bs-body-bg);
+  color: var(--text-color-light);
+  transition:
+    background-color var(--transition-speed) ease,
+    color var(--transition-speed) ease;
+  min-height: 100vh; /* Ensure body covers viewport height */
+  font-family: sans-serif; /* Add a default font */
 }
 
+h1,
+h2,
+p,
+label /* Add other text elements as needed */ {
+  color: inherit; /* Inherit color from body by default */
+}
+
+a {
+  color: var(--link-color-light);
+  transition: color var(--transition-speed) ease;
+}
+a:hover {
+  color: darken(var(--link-color-light), 10%); /* Slightly darken on hover */
+}
+
+#hourly-section,
+#current-section,
 #daily-section {
-  background-color: rgba(237, 237, 237, 0.147);
+  background-color: var(--section-bg-light);
+  border: 1px solid var(--section-border-light);
+  box-shadow: 1px 1px 4px var(--shadow-color-light);
   border-radius: 10px;
-  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  height: 70vh;
+  padding: 1rem; /* Add some padding */
+  margin-bottom: 1.5rem; /* Add space between sections */
+  transition:
+    background-color var(--transition-speed) ease,
+    border-color var(--transition-speed) ease,
+    box-shadow var(--transition-speed) ease;
 }
 
-/* Mobile-specific styles for #hourly-section */
-@media (max-width: 767px) {
-  #hourly-section {
-    /* Mobile-specific styles go here */
-    background-color: rgba(241, 241, 241, 0.201);
-    box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-    height: auto;
-  }
+/* --- Dark Mode Overrides --- */
+body.body-dark-mode {
+  background-color: var(--bg-color-dark);
+  color: var(--text-color-dark);
 }
 
-@media (max-width: 767px) {
-  #daily-section {
-    /* Mobile-specific styles go here */
-    background-color: rgba(241, 241, 241, 0.201);
-    height: auto;
-    box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-  }
+body.body-dark-mode a {
+  color: var(--link-color-dark);
+}
+body.body-dark-mode a:hover {
+  color: lighten(var(--link-color-dark), 10%); /* Slightly lighten on hover */
 }
 
-@media (max-width: 767px) {
-  #current-section {
-    /* Mobile-specific styles go here */
-    background-color: rgba(241, 241, 241, 0.201);
-    height: auto;
-    box-shadow: 2px 3px 4px rgba(0, 0, 0, 0.2);
-  }
+body.body-dark-mode #hourly-section,
+body.body-dark-mode #current-section,
+body.body-dark-mode #daily-section {
+  background-color: var(--section-bg-dark);
+  border-color: var(--section-border-dark);
+  box-shadow: 1px 1px 4px var(--shadow-color-dark);
 }
+
+/* --- Component Specific Overrides (Examples) --- */
+
+/* Example: Adjust Bootstrap card colors */
+body.body-dark-mode .card {
+  background-color: var(--section-bg-dark); /* Use section background */
+  border-color: var(--section-border-dark);
+  color: var(--text-color-dark); /* Ensure text inside is light */
+}
+
+/* Example: Adjust Navbar (if using react-bootstrap Navbar) */
+body.body-dark-mode .navbar {
+  /* You might need more specific selectors depending on navbar variant (light/dark) */
+  color: var(--text-dark) !important; /* Override Bootstrap */
+}
+body.body-dark-mode .navbar .navbar-brand,
+body.body-dark-mode .navbar .nav-link {
+  color: var(--text-color-dark) !important; /* Override Bootstrap link colors */
+}
+
+body.body-dark-mode .btn-outline-success {
+  color: #198754; /* Keep green text */
+  border-color: #198754;
+}
+body.body-dark-mode .btn-outline-success:hover {
+  color: #fff; /* White text on hover */
+  background-color: #198754;
+  border-color: #198754;
+}
+
+/* Example: Adjust Form Inputs */
+body.body-dark-mode .form-control {
+  background-color: #495057; /* Darker input background */
+  color: var(--text-color-dark);
+  border-color: var(--section-border-dark);
+}
+body.body-dark-mode .form-control::placeholder {
+  color: #adb5bd; /* Lighter placeholder text */
+}
+body.body-dark-mode .form-control:focus {
+  background-color: #495057;
+  color: var(--text-color-dark);
+  border-color: var(--link-color-dark); /* Use link color for focus border */
+  box-shadow: 0 0 0 0.25rem rgba(var(--link-color-dark), 0.25); /* Adjust focus shadow */
+}
+
+/* Add more specific overrides for alerts, badges, etc. as needed */

@@ -1,4 +1,3 @@
-import "./App.css";
 import { useState, useEffect, useMemo } from "react";
 import {
   Container,
@@ -18,6 +17,7 @@ import DailyForecast from "./DailyForecast";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useDarkMode } from "./DarkModeContext";
 import useWeatherData from "./useWeatherData";
+import "./App.css";
 
 function App() {
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -127,6 +127,20 @@ function App() {
   const displayCityName =
     searchedLocation?.name || cityName || "Loading city...";
 
+  useEffect(() => {
+    // Add/remove the class on the body element when darkMode changes
+    if (darkMode) {
+      document.body.classList.add("body-dark-mode");
+    } else {
+      document.body.classList.remove("body-dark-mode");
+    }
+
+    // Optional: Cleanup function to remove the class if the App component unmounts
+    return () => {
+      document.body.classList.remove("body-dark-mode");
+    };
+  }, [darkMode]); // Dependency array: run this effect when darkMode changes
+
   return (
     <Container className={`mx-auto text-center m-4`}>
       {/* Header */}
@@ -168,6 +182,13 @@ function App() {
               </Alert>
             )}
           </Form>
+          <Button
+            variant={darkMode ? "light" : "dark"}
+            onClick={toggleDarkMode}
+            className="ms-2"
+          >
+            {darkMode ? "☀️" : "🌙"}
+          </Button>
         </Container>
       </Navbar>
 

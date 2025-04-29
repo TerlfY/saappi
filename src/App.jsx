@@ -56,12 +56,13 @@ function App() {
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
--    return searchedLocation?.latitude ? searchedLocation : currentLocation;
-+    const hasValidCoords =
-+      searchedLocation &&
-+      Number.isFinite(searchedLocation.latitude) &&
-+      Number.isFinite(searchedLocation.longitude);
-+    return hasValidCoords ? searchedLocation : currentLocation;
+    if (searchedLocation) {
+      const hasValidCoords =
+        Number.isFinite(searchedLocation.latitude) &&
+        Number.isFinite(searchedLocation.longitude);
+      return hasValidCoords ? searchedLocation : currentLocation;
+    }
+    return currentLocation;
   }, [searchedLocation, currentLocation]);
   // --- Fetch Forecast Data (Hourly & Daily) ---
   const forecastParams = useMemo(

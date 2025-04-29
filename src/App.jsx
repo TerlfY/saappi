@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Container,
   Row,
@@ -9,6 +9,7 @@ import {
   FormControl,
   Button,
   Spinner,
+  Alert,
 } from "react-bootstrap";
 import axios from "axios";
 import HourlyForecast from "./HourlyForecast";
@@ -16,15 +17,16 @@ import CurrentWeather from "./CurrentWeather";
 import DailyForecast from "./DailyForecast";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useDarkMode } from "./DarkModeContext";
+import useWeatherData from "./useWeatherData";
 
 function App() {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [cityName, setCityName] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [searchedLocation, setSearchedLocation] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const { darkMode, toggleDarkMode } = useDarkMode();
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -52,34 +54,63 @@ function App() {
     }
   }, []);
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // --- Determine the location to use for weather fetching ---
+  const locationToFetch = useMemo(() => {
+    return searchedLocation?.latitude ? searchedLocation : currentLocation;
+  }, [searchedLocation, currentLocation]);
 
+  // --- Fetch Forecast Data (Hourly & Daily) ---
+  const forecastParams = useMemo(
+    () => ({
+      location: locationToFetch
+        ? `${locationToFetch.latitude},${locationToFetch.longitude}`
+        : null,
+      // Add other necessary params like 'timesteps' if your hook/API requires them
+    }),
+    [locationToFetch]
+  );
+
+  // Fetch forecast data once here
+  const {
+    data: forecastData,
+    loading: forecastLoading,
+    error: forecastError,
+  } = useWeatherData("forecast", forecastParams); //
+
+  // --- Handle Search ---
+  const handleSearch = async (e) => {
+    // Prevent default form submission if triggered by button type="submit"
+    if (e) e.preventDefault();
+    try {
+      setSearchLoading(true);
+      setSearchError(null);
+
+      // Consider proxying this call too
       const searchResponse = await axios.get(
         `https://nominatim.openstreetmap.org/search?q=${searchCity}&format=json`
       );
 
-      const searchLocation = searchResponse.data;
-      setSearchedLocation({
-        latitude: searchLocation[0].lat,
-        longitude: searchLocation[0].lon,
-        name: searchLocation[0].name,
-      });
+      const searchResult = searchResponse.data;
+      if (searchResult && searchResult.length > 0) {
+        setSearchedLocation({
+          latitude: searchResult[0].lat,
+          longitude: searchResult[0].lon,
+          name: searchResult[0].display_name, // Use display_name for better formatting
+        });
+        // Directly set the city name from search result
+        setCityName(searchResult[0].display_name);
+      } else {
+        setSearchError("City not found.");
+        setSearchedLocation(null); // Clear previous search result
+      }
     } catch (error) {
       console.error("Error searching for the city:", error.message);
-      setError("City search failed. Please try again.");
+      setSearchError("City search failed. Please try again.");
+      setSearchedLocation(null); // Clear previous search result on error
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (searchedLocation && searchedLocation.length > 0) {
-      setCityName(searchedLocation[0].name);
-    }
-  }, [searchedLocation]);
 
   const handleEnterKey = (e) => {
     if (e.key === "Enter") {
@@ -92,6 +123,10 @@ function App() {
     console.log("Dark mode toggled:", !darkMode);
   };
 
+  // Determine the city name to display
+  const displayCityName =
+    searchedLocation?.name || cityName || "Loading city...";
+
   return (
     <Container className={`mx-auto text-center m-4`}>
       {/* Header */}
@@ -100,21 +135,21 @@ function App() {
           <Navbar.Brand>
             <h1 className="fw-bold">Sääppi</h1>
           </Navbar.Brand>
-          <Form className="d-flex" role="search">
+          <Form className="d-flex" role="search" onSubmit={handleSearch}>
             <FormControl
               type="search"
               placeholder="City, Country"
               value={searchCity}
               onChange={(e) => setSearchCity(e.target.value)}
               onKeyDown={handleEnterKey}
+              aria-label="Search City"
             />
             <Button
               variant="outline-success"
               type="submit"
-              onClick={handleSearch}
-              disabled={loading}
+              disabled={searchLoading}
             >
-              {loading ? (
+              {searchLoading ? (
                 <Spinner
                   as="span"
                   animation="border"
@@ -122,15 +157,26 @@ function App() {
                   role="status"
                   aria-hidden="true"
                 />
-              ) : null}
-              <span style={{ display: loading ? "none" : "inline" }}>
-                Search
-              </span>
+              ) : (
+                <span>Search</span>
+              )}
             </Button>
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {/* Display search error near the search bar */}
+            {searchError && (
+              <Alert variant="danger" className="ms-2 mb-0 p-2">
+                {searchError}
+              </Alert>
+            )}
           </Form>
         </Container>
       </Navbar>
+
+      {/* Display general forecast error if it occurs */}
+      {forecastError && (
+        <Alert variant="danger" className="mt-3">
+          {forecastError}
+        </Alert>
+      )}
 
       {/* Weather modules */}
       <Row>
@@ -141,10 +187,8 @@ function App() {
           className="justify-content-center flex-grow-1"
         >
           <CurrentWeather
-            currentLocation={
-              searchedLocation?.latitude ? searchedLocation : currentLocation
-            }
-            cityName={searchedLocation?.name || cityName}
+            currentLocation={locationToFetch}
+            cityName={displayCityName}
           />
         </Col>
         <Col
@@ -154,9 +198,9 @@ function App() {
           className="justify-content-center flex-grow-1"
         >
           <HourlyForecast
-            currentLocation={
-              searchedLocation?.latitude ? searchedLocation : currentLocation
-            }
+            hourlyData={forecastData?.timelines?.hourly}
+            loading={forecastLoading}
+            error={forecastError}
           />
         </Col>
         <Col
@@ -166,9 +210,9 @@ function App() {
           className="flex-grow-1"
         >
           <DailyForecast
-            currentLocation={
-              searchedLocation?.latitude ? searchedLocation : currentLocation
-            }
+            dailyData={forecastData?.timelines?.daily}
+            loading={forecastLoading}
+            error={forecastError}
           />
         </Col>
       </Row>

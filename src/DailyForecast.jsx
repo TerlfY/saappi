@@ -3,8 +3,6 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Container, Spinner, Alert } from "react-bootstrap"; // Import Spinner and Alert
 import "./DailyForecast.css"; //
-import useWeatherData from "./useWeatherData"; // Adjust path if necessary
-import { useMemo } from "react";
 
 // Helper function remains the same
 const formatDay = (date) => {
@@ -13,25 +11,9 @@ const formatDay = (date) => {
   return new Intl.DateTimeFormat("en-US", options).format(date);
 };
 
-const DailyForecast = ({ currentLocation }) => {
+const DailyForecast = ({ dailyData, loading, error }) => {
   //
   // Call the custom hook for daily forecast data
-
-  const params = useMemo(
-    () => ({
-      // Memoize the params object
-      location: currentLocation
-        ? `${currentLocation.latitude},${currentLocation.longitude}`
-        : null,
-    }),
-    [currentLocation]
-  ); // Dependency: re-create only if currentLocation changes
-
-  const {
-    data: dailyData,
-    loading,
-    error,
-  } = useWeatherData("forecast", params); //
 
   // Process the data *after* checking loading/error states and if data exists
   // Derive the forecast array only when data is available
@@ -68,13 +50,13 @@ const DailyForecast = ({ currentLocation }) => {
 
   // 3. Handle No Data/Initial State or if data structure is unexpected
   // Check specifically for the timelines array needed for mapping
-  if (!dailyData?.timelines?.daily || next6DaysForecast.length === 0) {
+  if (!dailyData || dailyData.length === 0) {
     return (
       <Container
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <p>Waiting for location or daily forecast data...</p>
+        <p>Waiting for daily forecast data...</p>
       </Container>
     );
   }
@@ -83,7 +65,7 @@ const DailyForecast = ({ currentLocation }) => {
   return (
     <Container>
       {/* Mobile layout */}
-      {next6DaysForecast.map(
+      {(dailyData.slice(1.7) || []).map(
         (dayData, index) =>
           // Ensure dayData and dayData.values exist before rendering row
           dayData?.values && (
@@ -119,7 +101,7 @@ const DailyForecast = ({ currentLocation }) => {
       )}
 
       {/* Desktop layout */}
-      {next6DaysForecast.map(
+      {(dailyData.slice(1.7) || []).map(
         (dayData, index) =>
           // Ensure dayData and dayData.values exist before rendering row
           dayData?.values && (

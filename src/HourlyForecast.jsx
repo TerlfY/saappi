@@ -3,30 +3,12 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
 import { Container } from "react-bootstrap";
-import useWeatherData from "./useWeatherData";
 import { Spinner, Alert } from "react-bootstrap";
-import { useMemo } from "react";
 
-const HourlyForecast = ({ currentLocation }) => {
-  const params = useMemo(
-    () => ({
-      // Memoize the params object
-      location: currentLocation
-        ? `${currentLocation.latitude},${currentLocation.longitude}`
-        : null,
-    }),
-    [currentLocation]
-  ); // Dependency: re-create only if currentLocation changes
-
-  const {
-    data: hourlyData,
-    loading,
-    error,
-  } = useWeatherData("forecast", params);
-
+const HourlyForecast = ({ hourlyData, loading, error }) => {
   // Process the data *after* checking loading/error states and if data exists
   // Derive the forecast array only when data is available
-  const next4HoursForecast = hourlyData?.timelines?.hourly?.slice(1, 6) || [];
+  const next5HoursForecast = hourlyData?.timelines?.hourly?.slice(1, 6) || [];
 
   // --- Rendering Logic ---
 
@@ -58,13 +40,13 @@ const HourlyForecast = ({ currentLocation }) => {
 
   // 3. Handle No Data/Initial State or if data structure is unexpected
   // Check specifically for the timelines array needed for mapping
-  if (!hourlyData?.timelines?.hourly || next4HoursForecast.length === 0) {
+  if (!hourlyData || hourlyData.length === 0) {
     return (
       <Container
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <p>Waiting for location or hourly forecast data...</p>
+        <p>Waiting for hourly forecast data...</p>
       </Container>
     );
   }
@@ -74,7 +56,7 @@ const HourlyForecast = ({ currentLocation }) => {
     <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
       <Row id="hourly-mobile" className="d-md-none my-2">
-        {next4HoursForecast.map((hourData, index) => (
+        {(hourlyData.slice(1, 6) || []).map((hourData, index) => (
           <Col
             key={index}
             className="border border-secondary border-bottom-0 border-top-0"
@@ -100,7 +82,7 @@ const HourlyForecast = ({ currentLocation }) => {
       </Row>
 
       {/* Desktop layout (visible on medium devices and above) */}
-      {next4HoursForecast.map(
+      {(hourlyData.slice(1, 6) || []).map(
         (hourData, index) =>
           // Ensure hourData and hourData.values exist before rendering row
           hourData?.values && (

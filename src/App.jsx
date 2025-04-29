@@ -90,8 +90,8 @@ function App() {
       const searchResult = searchResponse.data;
       if (searchResult && searchResult.length > 0) {
         setSearchedLocation({
-          latitude: searchResult[0].lat,
-          longitude: searchResult[0].lon,
+          latitude: parseFloat(searchResult[0].lat),
+          longitude: parseFloat(searchResult[0].lon),
           name: searchResult[0].display_name,
         });
         setCityName(searchResult[0].display_name);

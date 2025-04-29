@@ -51,7 +51,9 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <Alert variant="danger">{error}</Alert>
+        <Alert variant="danger">
+          {error.message || "Error fetching daily forecast."}
+        </Alert>
       </Container>
     );
   }

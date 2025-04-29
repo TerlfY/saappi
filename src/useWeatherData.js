@@ -41,27 +41,39 @@ const useWeatherData = (endpoint, params) => {
       console.error("API Fetch Error:", err); // Keep logging the actual error object
 
       // --- Start Specific Error Handling ---
-      let specificErrorMsg = "An unexpected error occurred. Please try again."; // Default message
+      // --- FIX: Define payload object ---
+      let errorPayload = {
+        message: "An unexpected error occurred.",
+        status: null,
+      };
 
       if (axios.isAxiosError(err) && err.response) {
-        // Check if it's an Axios error and the server responded
         const status = err.response.status;
         if (status === 429) {
-          // Specific message for rate limiting
-          specificErrorMsg =
-            "API rate limit exceeded. Please wait before trying again.";
+          // --- FIX: Assign specific object for 429 ---
+          errorPayload = {
+            message:
+              "API rate limit exceeded. Please try again at next full hour.",
+            status: 429,
+          };
         } else {
-          // Other server errors (4xx, 5xx)
-          specificErrorMsg = `Error: ${status} - ${err.response.statusText}. Please try again.`;
+          // --- FIX: Assign object for other statuses ---
+          errorPayload = {
+            message: `Error: ${status} - ${err.response.statusText}. Please try again.`,
+            status: status,
+          };
         }
       } else if (err.request) {
-        // The request was made but no response was received (e.g., network error)
-        specificErrorMsg =
-          "Network error. Please check your connection and try again.";
+        // --- FIX: Assign object for network error ---
+        errorPayload = {
+          message: "Network error. Please check your connection and try again.",
+          status: null, // Or a specific code/flag for network errors if needed
+        };
       }
       // No need for specific logs before setError anymore
-      setError(specificErrorMsg); // Set the determined error message
-      // --- End Specific Error Handling ---
+
+      // --- FIX: Set the error state to the payload object ---
+      setError(errorPayload);
     } finally {
       // No need for the finally log anymore
       setLoading(false);

@@ -1,7 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { z } from "zod";
-import { weatherResponseSchema } from "./schemas";
+import { openMeteoSchema } from "./schemas";
+
+const transformOpenMeteoData = (data) => {
+  const hourly = data.hourly.time.map((time, index) => ({
+    time: time,
+    values: {
+      temperature: data.hourly.temperature_2m[index],
+      temperatureApparent: data.hourly.apparent_temperature[index],
+      humidity: data.hourly.relativehumidity_2m[index],
+      weatherCode: data.hourly.weathercode[index],
+      windSpeed: data.hourly.windspeed_10m[index], // km/h by default, might need conversion if UI expects m/s
+      uvIndex: data.hourly.uv_index[index],
+      cloudCover: data.hourly.cloudcover[index],
+    },
+  }));
+
+  const daily = data.daily.time.map((time, index) => ({
+    time: time,
+    values: {
+      temperatureMax: data.daily.temperature_2m_max[index],
+      temperatureMin: data.daily.temperature_2m_min[index],
+      weatherCode: data.daily.weathercode[index],
+      sunriseTime: data.daily.sunrise[index],
+      sunsetTime: data.daily.sunset[index],
+    },
+  }));
+
+  return {
+    timelines: {
+      hourly,
+      daily,
+    },
+    timezone: data.timezone,
+  };
+};
 
 const fetchWeather = async ({ queryKey }) => {
   const [_, endpoint, params] = queryKey;
@@ -10,27 +44,36 @@ const fetchWeather = async ({ queryKey }) => {
     return null;
   }
 
+  // Parse location "lat,lon" string
+  const [lat, lon] = params.location.split(",");
+
   const options = {
     method: "GET",
-    url: `https://api.tomorrow.io/v4/weather/${endpoint}`,
+    url: `https://api.open-meteo.com/v1/forecast`,
     params: {
-      ...params,
-      apikey: import.meta.env.VITE_API_KEY,
+      latitude: lat,
+      longitude: lon,
+      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,uv_index,cloudcover",
+      daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
+      timezone: "auto",
+      windspeed_unit: "ms", // Request m/s to match existing UI
     },
-    headers: { accept: "application/json" },
   };
 
   try {
     const response = await axios.request(options);
 
     // Validate response with Zod
-    const parsedData = weatherResponseSchema.parse(response.data);
+    const parsedData = openMeteoSchema.parse(response.data);
 
     console.log(
-      `✅ SUCCESS fetching ${endpoint} for location:`,
+      `✅ SUCCESS fetching weather for location:`,
       params?.location
     );
-    return parsedData;
+
+    // Transform to match existing app structure
+    return transformOpenMeteoData(parsedData);
+
   } catch (err) {
     console.error("API Fetch Error:", err);
 
@@ -47,18 +90,10 @@ const fetchWeather = async ({ queryKey }) => {
       console.error("Zod Validation Errors:", err.errors);
     } else if (axios.isAxiosError(err) && err.response) {
       const status = err.response.status;
-      if (status === 429) {
-        errorPayload = {
-          message:
-            "API rate limit exceeded. Please try again at next full hour.",
-          status: 429,
-        };
-      } else {
-        errorPayload = {
-          message: `Error: ${status} - ${err.response.statusText}. Please try again.`,
-          status: status,
-        };
-      }
+      errorPayload = {
+        message: `Error: ${status} - ${err.response.statusText}. Please try again.`,
+        status: status,
+      };
     } else if (err.request) {
       errorPayload = {
         message: "Network error. Please check your connection and try again.",

@@ -74,77 +74,34 @@ import LightIcePelletsIcon from "./assets/icons/large/71020_ice_pellets_light_la
 import ThunderstormIcon from "./assets/icons/large/80000_tstorm_large@2x.png";
 
 const weatherIcons = {
-  1000: { day: clearIconDay, night: clearIconNight },
-  1001: cloudyIcon,
-  1100: { day: MostlyClearIconDay, night: MostlyClearIconNight },
-  1101: { day: PartlyCloudyIconDay, night: PartlyCloudyIconNight },
-  1102: { day: MostlyCloudyIconDay, night: MostlyCloudyIconNight },
-  2000: FogIcon,
-  2100: {
-    // Light Fog
-    default: LightFogIcon,
-    variants: {
-      mostlyClear: { day: LightFogMostlyClearDay, night: LightFogMostlyClearNight },
-      partlyCloudy: { day: LightFogPartlyCloudyDay, night: LightFogPartlyCloudyNight },
-      mostlyCloudy: { day: LightFogMostlyCloudyDay, night: LightFogMostlyCloudyNight },
-    },
-  },
-  4000: {
-    // Drizzle
-    default: DrizzleIcon,
-    variants: {
-      mostlyClear: { day: DrizzleMostlyClearDay, night: DrizzleMostlyClearNight },
-      partlyCloudy: { day: DrizzlePartlyCloudyDay, night: DrizzlePartlyCloudyNight },
-      mostlyCloudy: { day: DrizzleMostlyCloudyDay, night: DrizzleMostlyCloudyNight },
-    },
-  },
-  4001: RainIcon,
-  4200: {
-    // Light Rain
-    default: LightRainIcon,
-    variants: {
-      mostlyClear: { day: LightRainMostlyClearDay, night: LightRainMostlyClearNight },
-      partlyCloudy: { day: LightRainPartlyCloudyDay, night: LightRainPartlyCloudyNight },
-      mostlyCloudy: { day: LightRainMostlyCloudyDay, night: LightRainMostlyCloudyNight },
-    },
-  },
-  4201: {
-    // Heavy Rain
-    default: HeavyRainIcon,
-    variants: {
-      mostlyClear: { day: HeavyRainMostlyClearDay, night: HeavyRainMostlyClearNight },
-      partlyCloudy: { day: HeavyRainPartlyCloudyDay, night: HeavyRainPartlyCloudyNight },
-      mostlyCloudy: { day: HeavyRainMostlyCloudyDay, night: HeavyRainMostlyCloudyNight },
-    },
-  },
-  5000: SnowIcon,
-  5001: FlurriesIcon,
-  5100: {
-    // Light Snow
-    default: LightSnowIcon,
-    variants: {
-      mostlyClear: { day: LightSnowMostlyClearDay, night: LightSnowMostlyClearNight },
-      partlyCloudy: { day: LightSnowPartlyCloudyDay, night: LightSnowPartlyCloudyNight },
-      mostlyCloudy: { day: LightSnowMostlyCloudyDay, night: LightSnowMostlyCloudyNight },
-    },
-  },
-  5101: {
-    // Heavy Snow
-    default: HeavySnowIcon,
-    variants: {
-      mostlyClear: { day: HeavySnowMostlyClearDay, night: HeavySnowMostlyClearNight },
-      partlyCloudy: { day: HeavySnowPartlyCloudyDay, night: HeavySnowPartlyCloudyNight },
-      mostlyCloudy: { day: HeavySnowMostlyCloudyDay, night: HeavySnowMostlyCloudyNight },
-    },
-  },
-  6000: FreezingDrizzleIcon,
-  6001: FreezingRainIcon,
-  6200: FreezingLightRainIcon,
-  6201: FreezingHeavyRainIcon,
-  7000: IcePelletsIcon,
-  7101: HeavyIcePelletsIcon,
-  7102: LightIcePelletsIcon,
-  8000: ThunderstormIcon,
+  0: { day: clearIconDay, night: clearIconNight }, // Clear sky
+  1: { day: clearIconDay, night: clearIconNight }, // Mainly clear
+  2: { day: PartlyCloudyIconDay, night: PartlyCloudyIconNight }, // Partly cloudy
+  3: { day: cloudyIcon, night: cloudyIcon }, // Overcast
+  45: { day: FogIcon, night: FogIcon }, // Fog
+  48: { day: FogIcon, night: FogIcon }, // Depositing rime fog
+  51: { day: LightRainIcon, night: LightRainIcon }, // Light drizzle
+  53: { day: RainIcon, night: RainIcon }, // Moderate drizzle
+  55: { day: HeavyRainIcon, night: HeavyRainIcon }, // Dense drizzle
+  56: { day: FreezingDrizzleIcon, night: FreezingDrizzleIcon }, // Light freezing drizzle
+  57: { day: FreezingRainIcon, night: FreezingRainIcon }, // Dense freezing drizzle
+  61: { day: LightRainIcon, night: LightRainIcon }, // Slight rain
+  63: { day: RainIcon, night: RainIcon }, // Moderate rain
+  65: { day: HeavyRainIcon, night: HeavyRainIcon }, // Heavy rain
+  66: { day: FreezingLightRainIcon, night: FreezingLightRainIcon }, // Light freezing rain
+  67: { day: FreezingHeavyRainIcon, night: FreezingHeavyRainIcon }, // Heavy freezing rain
+  71: { day: LightSnowIcon, night: LightSnowIcon }, // Slight snow fall
+  73: { day: SnowIcon, night: SnowIcon }, // Moderate snow fall
+  75: { day: HeavySnowIcon, night: HeavySnowIcon }, // Heavy snow fall
+  77: { day: FlurriesIcon, night: FlurriesIcon }, // Snow grains
+  80: { day: LightRainIcon, night: LightRainIcon }, // Slight rain showers
+  81: { day: RainIcon, night: RainIcon }, // Moderate rain showers
+  82: { day: HeavyRainIcon, night: HeavyRainIcon }, // Violent rain showers
+  85: { day: LightSnowIcon, night: LightSnowIcon }, // Slight snow showers
+  86: { day: HeavySnowIcon, night: HeavySnowIcon }, // Heavy snow showers
+  95: { day: ThunderstormIcon, night: ThunderstormIcon }, // Thunderstorm
+  96: { day: ThunderstormIcon, night: ThunderstormIcon }, // Thunderstorm with slight hail
+  99: { day: ThunderstormIcon, night: ThunderstormIcon }, // Thunderstorm with heavy hail
 };
 
 export function getIcon(weatherCode, isDay = true, cloudCover = null) {

@@ -32,19 +32,23 @@ const BackgroundManager = ({ weatherCode, isDay = true }) => {
         // 2000-2100: Fog
         // 8000: Thunderstorm
 
-        if (weatherCode === 1000 || weatherCode === 1100) {
+        if (weatherCode === 0 || weatherCode === 1) {
             bgClass = isDay ? "bg-clear-day" : "bg-clear-night";
-        } else if (weatherCode === 1001 || weatherCode === 1101 || weatherCode === 1102) {
+        } else if (weatherCode === 2 || weatherCode === 3) {
             bgClass = isDay ? "bg-cloudy-day" : "bg-cloudy-night";
-        } else if (weatherCode >= 4000 && weatherCode <= 4201) {
+        } else if (
+            (weatherCode >= 51 && weatherCode <= 67) ||
+            (weatherCode >= 80 && weatherCode <= 82)
+        ) {
             bgClass = isDay ? "bg-rain-day" : "bg-rain-night";
-        } else if (weatherCode >= 5000 && weatherCode <= 5101) {
+        } else if (
+            (weatherCode >= 71 && weatherCode <= 77) ||
+            (weatherCode >= 85 && weatherCode <= 86)
+        ) {
             bgClass = isDay ? "bg-snow-day" : "bg-snow-night";
-        } else if (weatherCode >= 6000 && weatherCode <= 7102) {
-            bgClass = isDay ? "bg-snow-day" : "bg-snow-night"; // Treat freezing rain/ice as snow/cold
-        } else if (weatherCode >= 2000 && weatherCode <= 2100) {
+        } else if (weatherCode === 45 || weatherCode === 48) {
             bgClass = isDay ? "bg-fog-day" : "bg-fog-night";
-        } else if (weatherCode === 8000) {
+        } else if (weatherCode >= 95 && weatherCode <= 99) {
             bgClass = isDay ? "bg-thunder-day" : "bg-thunder-night";
         }
 

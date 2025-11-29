@@ -5,7 +5,7 @@ import "./HourlyForecast.css";
 import { Container } from "react-bootstrap";
 import { Spinner, Alert } from "react-bootstrap";
 
-const HourlyForecast = ({ hourlyData, loading, error }) => {
+const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
   // Process the data *after* checking loading/error states and if data exists
 
   // --- Rendering Logic ---
@@ -52,13 +52,30 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
     );
   }
 
+  // Helper to get hour in location's timezone
+  const getLocalHour = (timeString) => {
+    if (!timezone) return new Date(timeString).getHours();
+
+    try {
+      const hourString = new Date(timeString).toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: timezone,
+      });
+      return parseInt(hourString, 10);
+    } catch (e) {
+      console.warn("Invalid timezone:", timezone);
+      return new Date(timeString).getHours();
+    }
+  };
+
   // 4. Render Weather Data (if loading is false, no error, and data exists)
   return (
     <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
       <Row id="hourly-mobile" className="d-md-none my-2">
         {hoursToDisplay.map((hourData, index) => {
-          const hour = new Date(hourData.time).getHours();
+          const hour = getLocalHour(hourData.time);
           const isDay = hour >= 6 && hour < 22;
           return (
             <Col
@@ -93,7 +110,7 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
         (hourData, index) => {
           // Ensure hourData and hourData.values exist before rendering row
           if (!hourData?.values) return null;
-          const hour = new Date(hourData.time).getHours();
+          const hour = getLocalHour(hourData.time);
           const isDay = hour >= 6 && hour < 22;
           return (
             <Row key={index} className="d-flex my-3 d-none d-md-flex">

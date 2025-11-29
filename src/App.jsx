@@ -21,6 +21,7 @@ import useGeolocation from "./useGeolocation";
 import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
 import { formatLocationName } from "./utils";
+import useTimezone from "./useTimezone";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -51,6 +52,8 @@ function App() {
     }
     return currentLocation;
   }, [searchedLocation, currentLocation]);
+
+  const { timezone } = useTimezone(locationToFetch);
 
   // --- Fetch Forecast Data (Hourly & Daily) ---
   const forecastParams = useMemo(
@@ -180,6 +183,7 @@ function App() {
             loading={forecastLoading}
             error={forecastError}
             cityName={displayCityName}
+            timezone={timezone}
           />
         </Col>
         <Col
@@ -192,6 +196,7 @@ function App() {
             hourlyData={forecastData?.timelines?.hourly}
             loading={forecastLoading}
             error={forecastError}
+            timezone={timezone}
           />
         </Col>
         <Col

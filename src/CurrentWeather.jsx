@@ -2,7 +2,7 @@ import { getIcon } from "./WeatherIcons";
 import { Container, Spinner, Alert } from "react-bootstrap";
 import "./CurrentWeather.css";
 
-const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone }) => {
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -54,7 +54,19 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName }) 
     isDay = now >= sunrise && now < sunset;
   } else {
     // Fallback if no sunrise/sunset data
-    const hour = new Date().getHours();
+    let hour = new Date().getHours();
+    if (timezone) {
+      try {
+        const hourString = new Date().toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          hour12: false,
+          timeZone: timezone,
+        });
+        hour = parseInt(hourString, 10);
+      } catch (e) {
+        console.warn("Invalid timezone:", timezone);
+      }
+    }
     isDay = hour >= 6 && hour < 22;
   }
 

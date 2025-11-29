@@ -197,6 +197,20 @@ body.body-dark-mode .suggestions-dropdown {
 }
 
 
+/* Default (Light Mode) Tooltips */
+.tooltip-inner {
+  background-color: #fff;
+  /* Solid white for readability */
+  color: var(--text-color-light);
+  border: 1px solid var(--section-border-light);
+  box-shadow: 0 2px 4px var(--shadow-color-light);
+}
+
+.tooltip-arrow::before {
+  border-top-color: var(--section-border-light);
+  border-bottom-color: var(--section-border-light);
+}
+
 /* Dark Mode for Tooltips */
 body.body-dark-mode .tooltip-inner {
   background-color: var(--section-bg-dark);

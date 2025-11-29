@@ -60,5 +60,19 @@ export const searchResultSchema = z.array(
         lat: z.string(),
         lon: z.string(),
         display_name: z.string(),
-    })
+        address: z.object({
+            city: z.string().optional(),
+            town: z.string().optional(),
+            village: z.string().optional(),
+            hamlet: z.string().optional(),
+            municipality: z.string().optional(),
+            suburb: z.string().optional(),
+            neighbourhood: z.string().optional(),
+            county: z.string().optional(),
+            province: z.string().optional(),
+            region: z.string().optional(),
+            state: z.string().optional(),
+            country: z.string().optional(),
+        }).passthrough().optional(),
+    }).passthrough()
 );

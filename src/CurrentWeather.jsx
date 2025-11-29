@@ -1,8 +1,9 @@
 import { getIcon } from "./WeatherIcons";
-import { Container, Spinner, Alert } from "react-bootstrap";
+import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "./CurrentWeather.css";
+import { getWeatherDescription } from "./weatherDescriptions";
 
-const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone }) => {
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -54,23 +55,47 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName }) 
     isDay = now >= sunrise && now < sunset;
   } else {
     // Fallback if no sunrise/sunset data
-    const hour = new Date().getHours();
+    let hour = new Date().getHours();
+    if (timezone) {
+      try {
+        const hourString = new Date().toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          hour12: false,
+          timeZone: timezone,
+        });
+        hour = parseInt(hourString, 10);
+      } catch (e) {
+        console.warn("Invalid timezone:", timezone);
+      }
+    }
     isDay = hour >= 6 && hour < 22;
   }
+
+  const renderTooltip = (props) => (
+    <Tooltip id="button-tooltip" {...props}>
+      {getWeatherDescription(weatherData.values.weatherCode)}
+    </Tooltip>
+  );
 
   return (
     <Container>
       <div>
         <h2 className="mt-3">{cityName}</h2>
-        <img
-          className="m-5"
-          src={getIcon(
-            weatherData.values.weatherCode,
-            isDay,
-            weatherData.values.cloudCover
-          )}
-          alt="Weather Icon"
-        ></img>
+        <OverlayTrigger
+          placement="bottom"
+          delay={{ show: 250, hide: 400 }}
+          overlay={renderTooltip}
+        >
+          <img
+            className="m-5"
+            src={getIcon(
+              weatherData.values.weatherCode,
+              isDay,
+              weatherData.values.cloudCover
+            )}
+            alt="Weather Icon"
+          />
+        </OverlayTrigger>
         <p className="fs-4">{`${Math.round(
           weatherData.values.temperature
         )}°C`}</p>

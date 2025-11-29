@@ -68,6 +68,6 @@ export const searchResultSchema = z.array(
             municipality: z.string().optional(),
             state: z.string().optional(),
             country: z.string().optional(),
-        }).optional().passthrough(),
+        }).passthrough().optional(),
     }).passthrough()
 );

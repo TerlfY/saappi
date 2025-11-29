@@ -64,7 +64,11 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName }) 
         <h2 className="mt-3">{cityName}</h2>
         <img
           className="m-5"
-          src={getIcon(weatherData.values.weatherCode, isDay)}
+          src={getIcon(
+            weatherData.values.weatherCode,
+            isDay,
+            weatherData.values.cloudCover
+          )}
           alt="Weather Icon"
         ></img>
         <p className="fs-4">{`${Math.round(

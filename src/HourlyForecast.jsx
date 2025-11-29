@@ -71,7 +71,11 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
                   <p className="fs-6 m-0">{`${hour}`}</p>
                   <img
                     className="hourlyIcons my-1" //
-                    src={getIcon(hourData.values.weatherCode, isDay)} //
+                    src={getIcon(
+                      hourData.values.weatherCode,
+                      isDay,
+                      hourData.values.cloudCover
+                    )} //
                     alt="Weather Icon"
                   />
                   <p className="fs-6 my-1">{`${Math.round(
@@ -103,7 +107,11 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
               >
                 <img
                   className="hourlyIcons m-2" //
-                  src={getIcon(hourData.values.weatherCode, isDay)} //
+                  src={getIcon(
+                    hourData.values.weatherCode,
+                    isDay,
+                    hourData.values.cloudCover
+                  )} //
                   alt="Weather Icon"
                 />
               </Col>

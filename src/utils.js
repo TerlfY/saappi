@@ -7,14 +7,24 @@ export const formatLocationName = (addressObj) => {
         addressObj.village ||
         addressObj.hamlet ||
         addressObj.municipality ||
+        addressObj.suburb ||
+        addressObj.neighbourhood ||
+        addressObj.county ||
+        addressObj.province ||
         addressObj.locality;
 
-    const region = addressObj.state || addressObj.principalSubdivision || addressObj.county;
+    const region =
+        addressObj.state ||
+        addressObj.region ||
+        addressObj.province ||
+        addressObj.principalSubdivision ||
+        addressObj.county;
+
     const country = addressObj.country || addressObj.countryName;
 
     const parts = [city, region, country].filter(Boolean);
 
-    // Remove duplicates (e.g. if city and region are the same)
+    // Remove duplicates (e.g. if city and region are the same, or if province is used for both)
     const uniqueParts = [...new Set(parts)];
 
     return uniqueParts.join(", ");

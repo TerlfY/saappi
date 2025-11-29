@@ -20,6 +20,7 @@ import "./App.css";
 import useGeolocation from "./useGeolocation";
 import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
+import { formatLocationName } from "./utils";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -117,7 +118,7 @@ function App() {
                     className="suggestion-item"
                     onClick={() => handleSuggestionClick(result)}
                   >
-                    {result.display_name}
+                    {formatLocationName(result.address) || result.display_name}
                   </div>
                 ))}
               </div>

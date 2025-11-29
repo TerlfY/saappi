@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { searchResultSchema } from "./schemas";
 import useDebounce from "./useDebounce";
+import { formatLocationName } from "./utils";
 
 const fetchCitySearch = async ({ queryKey }) => {
     const [_, city] = queryKey;
     const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?q=${city}&format=json`
+        `https://nominatim.openstreetmap.org/search?q=${city}&format=json&addressdetails=1`
     );
     return searchResultSchema.parse(response.data);
 };
@@ -55,12 +56,14 @@ const useCitySearch = () => {
 
     const handleSuggestionClick = (result) => {
         setSelectionMade(true);
+        const formattedName = formatLocationName(result.address) || result.display_name;
+
         setSearchedLocation({
             latitude: parseFloat(result.lat),
             longitude: parseFloat(result.lon),
-            name: result.display_name,
+            name: formattedName,
         });
-        setSearchCity(result.display_name);
+        setSearchCity(formattedName);
         setShowSuggestions(false);
     };
 

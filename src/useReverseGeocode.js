@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { reverseGeocodeSchema } from "./schemas";
+import { formatLocationName } from "./utils";
 
 const fetchReverseGeocode = async ({ queryKey }) => {
     const [_, lat, lon] = queryKey;
@@ -22,7 +23,16 @@ const useReverseGeocode = (location) => {
         staleTime: Infinity,
     });
 
-    const cityName = data?.locality || data?.city;
+    // Adapt BigDataCloud response to our formatLocationName expected object
+    const addressObj = data
+        ? {
+            city: data.locality || data.city,
+            state: data.principalSubdivision,
+            country: data.countryName,
+        }
+        : null;
+
+    const cityName = formatLocationName(addressObj);
 
     return { cityName, isLoading, error };
 };

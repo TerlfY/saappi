@@ -238,7 +238,9 @@ function App() {
           className="justify-content-center flex-grow-1"
         >
           <CurrentWeather
-            currentLocation={locationToFetch}
+            weatherData={forecastData?.timelines?.hourly?.[0]}
+            loading={forecastLoading}
+            error={forecastError}
             cityName={displayCityName}
           />
         </Col>

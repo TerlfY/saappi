@@ -1,34 +1,9 @@
 import { getIcon } from "./WeatherIcons";
-import useWeatherData from "./useWeatherData"; // Or the correct path
 import { Container, Spinner, Alert } from "react-bootstrap";
 import "./CurrentWeather.css";
-import { useMemo } from "react";
 
-const CurrentWeather = ({ currentLocation, cityName }) => {
-  const params = useMemo(
-    () => ({
-      // Memoize the params object
-      location: currentLocation
-        ? `${currentLocation.latitude},${currentLocation.longitude}`
-        : null,
-    }),
-    [currentLocation]
-  ); // Dependency: re-create only if currentLocation changes
-
-  const {
-    data: currentWeatherData,
-    loading,
-    error,
-  } = useWeatherData("realtime", params);
-
+const CurrentWeather = ({ weatherData, loading, error, cityName }) => {
   // --- Rendering Logic ---
-
-  // Corrected console.log statement
-  console.log(
-    `--- CurrentWeather RENDER --- loading=${loading}, error=${JSON.stringify(
-      error
-    )}, hasData=${!!currentWeatherData?.data?.values}`
-  );
 
   // 1. Handle Loading State
   if (loading) {
@@ -52,24 +27,22 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
         style={{ height: "100%" }}
       >
         <Alert variant="danger">
-          {error.message || "Error fetching daily forecast."}
+          {error.message || "Error fetching weather data."}
         </Alert>
       </Container>
     );
   }
 
-  // 3. Handle No Data/Initial State (before location is known or fetch completes)
-  // Check specifically for the expected data structure
-  if (!currentWeatherData?.data?.values) {
+  // 3. Handle No Data/Initial State
+  if (!weatherData?.values) {
     return (
       <Container
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <p>Waiting for location or weather data...</p>
+        <p>Waiting for weather data...</p>
       </Container>
     );
-    // Or return null, or a placeholder
   }
 
   return (
@@ -78,10 +51,11 @@ const CurrentWeather = ({ currentLocation, cityName }) => {
         <h2 className="mt-3">{cityName}</h2>
         <img
           className="m-5"
-          src={getIcon(currentWeatherData.data.values.weatherCode)}
+          src={getIcon(weatherData.values.weatherCode)}
+          alt="Weather Icon"
         ></img>
         <p className="fs-4">{`${Math.round(
-          currentWeatherData.data.values.temperature
+          weatherData.values.temperature
         )}°C`}</p>
       </div>
     </Container>

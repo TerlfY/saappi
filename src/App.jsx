@@ -175,6 +175,7 @@ function App() {
         >
           <CurrentWeather
             weatherData={forecastData?.timelines?.hourly?.[0]}
+            dailyValues={forecastData?.timelines?.daily?.[0]?.values}
             loading={forecastLoading}
             error={forecastError}
             cityName={displayCityName}

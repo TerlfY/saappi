@@ -2,7 +2,7 @@ import { getIcon } from "./WeatherIcons";
 import { Container, Spinner, Alert } from "react-bootstrap";
 import "./CurrentWeather.css";
 
-const CurrentWeather = ({ weatherData, loading, error, cityName }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName }) => {
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -45,13 +45,30 @@ const CurrentWeather = ({ weatherData, loading, error, cityName }) => {
     );
   }
 
+  // Calculate isDay
+  let isDay = true;
+  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime) {
+    const now = new Date();
+    const sunrise = new Date(dailyValues.sunriseTime);
+    const sunset = new Date(dailyValues.sunsetTime);
+    isDay = now >= sunrise && now < sunset;
+  } else {
+    // Fallback if no sunrise/sunset data
+    const hour = new Date().getHours();
+    isDay = hour >= 6 && hour < 22;
+  }
+
   return (
     <Container>
       <div>
         <h2 className="mt-3">{cityName}</h2>
         <img
           className="m-5"
-          src={getIcon(weatherData.values.weatherCode)}
+          src={getIcon(
+            weatherData.values.weatherCode,
+            isDay,
+            weatherData.values.cloudCover
+          )}
           alt="Weather Icon"
         ></img>
         <p className="fs-4">{`${Math.round(

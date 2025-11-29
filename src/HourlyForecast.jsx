@@ -4,39 +4,11 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
 import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import SkeletonWeather from "./SkeletonWeather";
 
-const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
+
+const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkMode }) => {
   // Process the data *after* checking loading/error states and if data exists
-
-  // --- Rendering Logic ---
-
-  // 1. Handle Loading State
-  if (loading) {
-    return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100%" }}
-      >
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
-    );
-  }
-
-  // 2. Handle Error State
-  if (error) {
-    return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100%" }}
-      >
-        <Alert variant="danger">
-          {error.message || "Error fetching hourly forecast."}
-        </Alert>
-      </Container>
-    );
-  }
 
   // 3. Handle No Data/Initial State or if data structure is unexpected
   // Check specifically for the timelines array needed for mapping
@@ -69,6 +41,44 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
     }
   };
 
+  // Helper to get YYYY-MM-DD in location's timezone
+  const getDateInTimezone = (isoString, tz) => {
+    if (!tz) return new Date(isoString).toLocaleDateString("en-CA");
+    try {
+      return new Date(isoString).toLocaleDateString("en-CA", { timeZone: tz });
+    } catch (e) {
+      console.warn("Invalid timezone for date:", tz);
+      return new Date(isoString).toLocaleDateString("en-CA");
+    }
+  };
+
+  const isDaytime = (timeString) => {
+    if (!dailyData) {
+      // Fallback
+      const hour = getLocalHour(timeString);
+      return hour >= 6 && hour < 22;
+    }
+
+    const targetDateStr = getDateInTimezone(timeString, timezone);
+
+    // Find the daily forecast for this date using timezone-aware string comparison
+    const dayForecast = dailyData.find(d => {
+      const dDateStr = getDateInTimezone(d.time, timezone);
+      return dDateStr === targetDateStr;
+    });
+
+    if (dayForecast && dayForecast.values.sunriseTime && dayForecast.values.sunsetTime) {
+      const date = new Date(timeString);
+      const sunrise = new Date(dayForecast.values.sunriseTime);
+      const sunset = new Date(dayForecast.values.sunsetTime);
+      return date >= sunrise && date < sunset;
+    }
+
+    // Fallback if no matching day or sunrise/sunset data
+    const hour = getLocalHour(timeString);
+    return hour >= 6 && hour < 22;
+  };
+
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
       {getWeatherDescription(code)}
@@ -79,14 +89,15 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
   return (
     <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
-      <Row id="hourly-mobile" className="d-md-none my-2">
+      <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap">
         {hoursToDisplay.map((hourData, index) => {
           const hour = getLocalHour(hourData.time);
-          const isDay = hour >= 6 && hour < 22;
+          const isDay = isDaytime(hourData.time);
           return (
             <Col
               key={index}
               className="border border-secondary border-bottom-0 border-top-0"
+              style={{ minWidth: "80px" }} // Ensure items don't shrink
             >
               {/* Ensure hourData and hourData.values exist */}
               {hourData?.values && (
@@ -118,14 +129,16 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
       </Row>
 
       {/* Desktop layout (visible on medium devices and above) */}
+      {/* Chart moved to App.jsx */}
+
       {hoursToDisplay.map(
         (hourData, index) => {
           // Ensure hourData and hourData.values exist before rendering row
           if (!hourData?.values) return null;
           const hour = getLocalHour(hourData.time);
-          const isDay = hour >= 6 && hour < 22;
+          const isDay = isDaytime(hourData.time);
           return (
-            <Row key={index} className="d-flex my-3 d-none d-md-flex">
+            <Row key={index} className="d-flex my-1 py-2 d-none d-md-flex border-bottom border-light-subtle">
               <Col md={4} className="d-none d-md-flex align-items-center">
                 <p className="fs-5 m-0">{`${hour}:00`}</p>{" "}
                 {/* Added :00 for clarity */}

@@ -1,0 +1,158 @@
+/* Search Bar Container */
+.search-bar-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    /* Limit width on large screens */
+    margin: 0 auto;
+}
+
+/* Input Wrapper */
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* Custom Input Styling */
+.search-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 2.5rem;
+    /* Space for icon and clear button */
+    border-radius: 50px;
+    /* Pill shape */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-color: var(--link-color-light);
+    outline: none;
+}
+
+/* Icons */
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    font-size: 1rem;
+    color: #6c757d;
+    pointer-events: none;
+    /* Let clicks pass through */
+}
+
+.search-action {
+    position: absolute;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Clear Button */
+.clear-button {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.clear-button:hover {
+    color: #343a40;
+}
+
+/* Suggestions Dropdown (Overrides/Enhances App.css) */
+.suggestions-dropdown {
+    position: absolute;
+    top: 110%;
+    /* Slight gap */
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    text-align: left;
+    padding: 0.5rem 0;
+}
+
+.suggestion-item {
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.suggestion-item:hover,
+.suggestion-item.highlighted {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #000;
+}
+
+/* Error Message */
+.search-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.5rem;
+    background-color: #dc3545;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 900;
+}
+
+/* --- Dark Mode Overrides --- */
+body.body-dark-mode .search-input {
+    background-color: rgba(33, 37, 41, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color-dark);
+}
+
+body.body-dark-mode .search-input:focus {
+    background-color: rgba(33, 37, 41, 0.95);
+    border-color: var(--link-color-dark);
+}
+
+body.body-dark-mode .search-icon,
+body.body-dark-mode .clear-button {
+    color: #adb5bd;
+}
+
+body.body-dark-mode .clear-button:hover {
+    color: #fff;
+}
+
+body.body-dark-mode .suggestions-dropdown {
+    background-color: rgba(33, 37, 41, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.body-dark-mode .suggestion-item {
+    color: #e9ecef;
+}
+
+body.body-dark-mode .suggestion-item:hover,
+body.body-dark-mode .suggestion-item.highlighted {
+    background-color: rgba(255, 255, 255, 0.1);
+}

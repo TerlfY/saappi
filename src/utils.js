@@ -13,18 +13,12 @@ export const formatLocationName = (addressObj) => {
         addressObj.province ||
         addressObj.locality;
 
-    const region =
-        addressObj.state ||
-        addressObj.region ||
-        addressObj.province ||
-        addressObj.principalSubdivision ||
-        addressObj.county;
-
     const country = addressObj.country || addressObj.countryName;
 
-    const parts = [city, region, country].filter(Boolean);
+    // Only include city and country to keep it short and prevent layout breakage
+    const parts = [city, country].filter(Boolean);
 
-    // Remove duplicates (e.g. if city and region are the same, or if province is used for both)
+    // Remove duplicates
     const uniqueParts = [...new Set(parts)];
 
     return uniqueParts.join(", ");

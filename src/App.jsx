@@ -4,10 +4,7 @@ import {
   Row,
   Col,
   Navbar,
-  Form,
-  FormControl,
   Button,
-  Spinner,
   Alert,
 } from "react-bootstrap";
 import HourlyForecast from "./HourlyForecast";
@@ -22,6 +19,9 @@ import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
 import { formatLocationName } from "./utils";
 import useTimezone from "./useTimezone";
+import BackgroundManager from "./BackgroundManager";
+import TemperatureChart from "./TemperatureChart";
+import SearchBar from "./SearchBar";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -98,65 +98,55 @@ function App() {
     };
   }, [darkMode]);
 
+  // Determine current weather code and isDay for BackgroundManager
+  const currentWeather = forecastData?.timelines?.hourly?.[0]?.values;
+  const dailyValues = forecastData?.timelines?.daily?.[0]?.values;
+  let isDay = true;
+  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime) {
+    const now = new Date();
+    const sunrise = new Date(dailyValues.sunriseTime);
+    const sunset = new Date(dailyValues.sunsetTime);
+    isDay = now >= sunrise && now < sunset;
+  } else if (timezone) {
+    // Fallback using timezone
+    try {
+      const hourString = new Date().toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: timezone,
+      });
+      const hour = parseInt(hourString, 10);
+      isDay = hour >= 6 && hour < 22;
+    } catch (e) {
+      console.warn("Invalid timezone for background:", timezone);
+    }
+  }
+
   return (
     <Container className={`mx-auto text-center m-4`}>
+      <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
       {/* Header */}
       <Navbar sticky="top">
         <Container>
           <Navbar.Brand>
             <h1 className="fw-bold">Sääppi</h1>
           </Navbar.Brand>
-          <Form className="d-flex position-relative" role="search" onSubmit={handleSearch}>
-            <FormControl
-              type="search"
-              placeholder="City, Country"
-              value={searchCity}
-              onChange={handleSearchInputChange}
-              onKeyDown={(e) => {
-                handleEnterKey(e);
-                handleKeyDown(e);
-              }}
-              aria-label="Search City"
-            />
-            {showSuggestions && searchResults && (
-              <div className="suggestions-dropdown">
-                {searchResults.map((result, index) => (
-                  <div
-                    key={index}
-                    className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""
-                      }`}
-                    onClick={() => handleSuggestionClick(result)}
-                  >
-                    {formatLocationName(result.address) || result.display_name}
-                  </div>
-                ))}
-              </div>
-            )}
-            <Button
-              variant="outline-success"
-              type="submit"
-              disabled={searchLoading}
-              className="ms-2"
-            >
-              {searchLoading ? (
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                />
-              ) : (
-                <span>Search</span>
-              )}
-            </Button>
-            {/* Display search error near the search bar */}
-            {searchError && (
-              <Alert variant="danger" className="ms-2 mb-0 p-2">
-                {searchError}
-              </Alert>
-            )}
-          </Form>
+          <SearchBar
+            value={searchCity}
+            onChange={handleSearchInputChange}
+            onSubmit={handleSearch}
+            onClear={() => handleSearchInputChange({ target: { value: "" } })}
+            suggestions={searchResults}
+            onSuggestionClick={handleSuggestionClick}
+            loading={searchLoading}
+            error={searchError}
+            highlightedIndex={highlightedIndex}
+            onKeyDown={(e) => {
+              handleEnterKey(e);
+              handleKeyDown(e);
+            }}
+            showSuggestions={showSuggestions}
+          />
           <Button
             variant={darkMode ? "light" : "dark"}
             onClick={toggleDarkMode}
@@ -175,47 +165,50 @@ function App() {
         </Alert>
       )}
 
-      {/* Weather modules */}
-      <Row>
-        <Col
-          md={{ order: 2, span: 4 }}
-          xs={{ order: 1, span: 12 }}
-          id="current-section"
-          className="justify-content-center flex-grow-1"
-        >
-          <CurrentWeather
-            weatherData={forecastData?.timelines?.hourly?.[0]}
-            dailyValues={forecastData?.timelines?.daily?.[0]?.values}
-            loading={forecastLoading}
-            error={forecastError}
-            cityName={displayCityName}
-            timezone={timezone}
-          />
+      {/* Dashboard Layout */}
+      <Row className="mt-4">
+        {/* Left Sidebar: Current Weather & Daily Forecast */}
+        <Col md={4} className="mb-4">
+          <div id="current-section" className="mb-4">
+            <CurrentWeather
+              weatherData={forecastData?.timelines?.hourly?.[0]}
+              dailyValues={forecastData?.timelines?.daily?.[0]?.values}
+              loading={forecastLoading}
+              error={forecastError}
+              cityName={displayCityName}
+              timezone={timezone}
+            />
+          </div>
+          <div id="daily-section">
+            <DailyForecast
+              dailyData={forecastData?.timelines?.daily}
+              loading={forecastLoading}
+              error={forecastError}
+            />
+          </div>
         </Col>
-        <Col
-          md={{ order: 1, span: 4 }}
-          xs={{ order: 2, span: 12 }}
-          id="hourly-section"
-          className="justify-content-center flex-grow-1"
-        >
-          <HourlyForecast
-            hourlyData={forecastData?.timelines?.hourly}
-            loading={forecastLoading}
-            error={forecastError}
-            timezone={timezone}
-          />
-        </Col>
-        <Col
-          md={{ order: 3, span: 4 }}
-          xs={{ order: 3, span: 12 }}
-          id="daily-section"
-          className="flex-grow-1"
-        >
-          <DailyForecast
-            dailyData={forecastData?.timelines?.daily}
-            loading={forecastLoading}
-            error={forecastError}
-          />
+
+        {/* Main Area: Chart & Hourly Forecast */}
+        <Col md={8}>
+          {!forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
+            <div id="chart-section" className="mb-4" style={{ minHeight: "300px" }}>
+              <h3 className="mb-3">Temperature Trend</h3>
+              <TemperatureChart
+                data={forecastData.timelines.hourly.slice(0, 24)}
+                darkMode={darkMode}
+              />
+            </div>
+          )}
+          <div id="hourly-section">
+            <HourlyForecast
+              hourlyData={forecastData?.timelines?.hourly}
+              dailyData={forecastData?.timelines?.daily}
+              loading={forecastLoading}
+              error={forecastError}
+              timezone={timezone}
+              darkMode={darkMode}
+            />
+          </div>
         </Col>
       </Row>
       <Row>

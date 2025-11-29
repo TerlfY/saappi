@@ -1,7 +1,8 @@
-import { getIcon } from "./WeatherIcons";
 import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "./CurrentWeather.css";
 import { getWeatherDescription } from "./weatherDescriptions";
+import SkeletonWeather from "./SkeletonWeather";
+import { getIcon } from "./WeatherIcons";
 
 const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone }) => {
   // --- Rendering Logic ---
@@ -13,9 +14,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <SkeletonWeather type="current" />
       </Container>
     );
   }
@@ -80,14 +79,17 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
   return (
     <Container>
       <div>
-        <h2 className="mt-3">{cityName}</h2>
+        <h2 className="mt-3 text-truncate" style={{ maxWidth: "100%" }} title={cityName}>
+          {cityName}
+        </h2>
         <OverlayTrigger
           placement="bottom"
           delay={{ show: 250, hide: 400 }}
           overlay={renderTooltip}
         >
           <img
-            className="m-5"
+            className="mb-3"
+            style={{ height: "120px", width: "auto", objectFit: "contain" }}
             src={getIcon(
               weatherData.values.weatherCode,
               isDay,
@@ -96,9 +98,29 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             alt="Weather Icon"
           />
         </OverlayTrigger>
-        <p className="fs-4">{`${Math.round(
+        <p className="fs-1 fw-bold">{`${Math.round(
           weatherData.values.temperature
         )}°C`}</p>
+
+        {/* Weather Details Grid */}
+        <div className="weather-details-grid mt-4">
+          <div className="detail-item">
+            <span className="detail-label">Feels Like</span>
+            <span className="detail-value">{Math.round(weatherData.values.temperatureApparent)}°C</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Wind</span>
+            <span className="detail-value">{Math.round(weatherData.values.windSpeed)} m/s</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Humidity</span>
+            <span className="detail-value">{Math.round(weatherData.values.humidity)}%</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">UV Index</span>
+            <span className="detail-value">{weatherData.values.uvIndex}</span>
+          </div>
+        </div>
       </div>
     </Container>
   );

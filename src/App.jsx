@@ -229,6 +229,7 @@ function App() {
             loading={forecastLoading}
             error={forecastError}
             timezone={timezone}
+            darkMode={darkMode}
           />
         </Col>
         <Col

@@ -7,7 +7,7 @@ import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootst
 import SkeletonWeather from "./SkeletonWeather";
 import TemperatureChart from "./TemperatureChart";
 
-const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
+const HourlyForecast = ({ hourlyData, loading, error, timezone, darkMode }) => {
   // Process the data *after* checking loading/error states and if data exists
 
   // --- Rendering Logic ---
@@ -121,7 +121,7 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
       {/* Desktop layout (visible on medium devices and above) */}
       <div className="d-none d-md-block mb-4">
         <h3 className="mb-3">Temperature Trend</h3>
-        <TemperatureChart data={hoursToDisplay} />
+        <TemperatureChart data={hoursToDisplay} darkMode={darkMode} />
       </div>
 
       {hoursToDisplay.map(

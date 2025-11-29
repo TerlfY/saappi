@@ -295,3 +295,9 @@ body {
 .bg-thunder-night {
   background: linear-gradient(to bottom, #000000, #434343);
 }
+
+/* Dark Mode for Placeholders */
+body.body-dark-mode .placeholder {
+  background-color: rgba(255, 255, 255, 0.2);
+  /* Semi-transparent white for dark mode */
+}

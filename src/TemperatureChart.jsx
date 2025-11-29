@@ -8,12 +8,17 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
-const TemperatureChart = ({ data }) => {
+const TemperatureChart = ({ data, darkMode }) => {
     // Format data for Recharts
     const chartData = data.map((hour) => ({
         time: new Date(hour.time).getHours() + ":00",
         temp: Math.round(hour.values.temperature),
     }));
+
+    const axisColor = darkMode ? "#ccc" : "#888";
+    const gridColor = darkMode ? "#555" : "#ccc";
+    const tooltipBg = darkMode ? "rgba(33, 37, 41, 0.9)" : "rgba(255, 255, 255, 0.8)";
+    const tooltipText = darkMode ? "#fff" : "#000";
 
     return (
         <div style={{ width: "100%", height: 300 }}>
@@ -27,15 +32,18 @@ const TemperatureChart = ({ data }) => {
                         bottom: 0,
                     }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" vertical={false} />
-                    <XAxis dataKey="time" stroke="#888" tick={{ fontSize: 12 }} />
-                    <YAxis stroke="#888" tick={{ fontSize: 12 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                    <XAxis dataKey="time" stroke={axisColor} tick={{ fontSize: 12, fill: axisColor }} />
+                    <YAxis stroke={axisColor} tick={{ fontSize: 12, fill: axisColor }} />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: "rgba(255, 255, 255, 0.8)",
+                            backgroundColor: tooltipBg,
                             borderRadius: "10px",
                             border: "none",
+                            color: tooltipText,
                         }}
+                        itemStyle={{ color: tooltipText }}
+                        labelStyle={{ color: tooltipText }}
                     />
                     <Line
                         type="monotone"

@@ -20,6 +20,7 @@ import { useDarkMode } from "./DarkModeContext";
 import useWeatherData from "./useWeatherData";
 import "./App.css";
 import { reverseGeocodeSchema, searchResultSchema } from "./schemas";
+import useDebounce from "./useDebounce";
 
 // --- Fetchers ---
 const fetchReverseGeocode = async ({ queryKey }) => {
@@ -44,6 +45,8 @@ function App() {
   const [searchedLocation, setSearchedLocation] = useState(null);
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [searchError, setSearchError] = useState(null);
+
+  const debouncedSearchCity = useDebounce(searchCity, 500);
 
   // --- Get Current Location ---
   useEffect(() => {
@@ -78,14 +81,37 @@ function App() {
 
   // --- Search Query ---
   const {
-    refetch: searchCityQuery,
+    data: searchResults,
     isFetching: searchLoading,
+    error: queryError,
   } = useQuery({
-    queryKey: ["search", searchCity],
+    queryKey: ["search", debouncedSearchCity],
     queryFn: fetchCitySearch,
-    enabled: false, // Manual trigger
+    enabled: !!debouncedSearchCity, // Auto-trigger when debounced value exists
     retry: false,
   });
+
+  // Update searchedLocation when search results change
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0) {
+      setSearchedLocation({
+        latitude: parseFloat(searchResults[0].lat),
+        longitude: parseFloat(searchResults[0].lon),
+        name: searchResults[0].display_name,
+      });
+      setSearchError(null);
+    } else if (searchResults && searchResults.length === 0) {
+      setSearchError("City not found.");
+    }
+  }, [searchResults]);
+
+  // Handle errors from the query
+  useEffect(() => {
+    if (queryError) {
+      console.error("Error searching for the city:", queryError);
+      setSearchError("City search failed. Please try again.");
+    }
+  }, [queryError]);
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
@@ -114,36 +140,15 @@ function App() {
     error: forecastError,
   } = useWeatherData("forecast", forecastParams);
 
-  const handleSearch = async (e) => {
+  const handleSearch = (e) => {
     if (e) e.preventDefault();
-    setSearchError(null);
-    setSearchedLocation(null);
-
-    try {
-      const { data, isError, error } = await searchCityQuery();
-
-      if (isError) {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        setSearchedLocation({
-          latitude: parseFloat(data[0].lat),
-          longitude: parseFloat(data[0].lon),
-          name: data[0].display_name,
-        });
-      } else {
-        setSearchError("City not found.");
-      }
-    } catch (error) {
-      console.error("Error searching for the city:", error);
-      setSearchError("City search failed. Please try again.");
-    }
+    // No manual trigger needed, debounced value handles it
   };
 
   const handleEnterKey = (e) => {
     if (e.key === "Enter") {
-      handleSearch();
+      e.preventDefault();
+      // Optional: Force immediate search if we wanted, but debounce covers it
     }
   };
 

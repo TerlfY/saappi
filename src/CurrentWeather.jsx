@@ -47,26 +47,26 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
 
   // Calculate isDay
   let isDay = true;
-  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime) {
-    const now = new Date();
-    const sunrise = new Date(dailyValues.sunriseTime);
-    const sunset = new Date(dailyValues.sunsetTime);
-    isDay = now >= sunrise && now < sunset;
+  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime && timezone) {
+    try {
+      // Get current time in the target timezone as "YYYY-MM-DD, HH:MM:SS"
+      // and convert to "YYYY-MM-DDTHH:MM:SS" to match Open-Meteo format
+      const localTimeStr = new Date().toLocaleString("en-CA", {
+        timeZone: timezone,
+        hour12: false
+      }).replace(", ", "T");
+
+      // Direct string comparison works because formats are consistent (ISO-like)
+      isDay = localTimeStr >= dailyValues.sunriseTime && localTimeStr < dailyValues.sunsetTime;
+    } catch (e) {
+      console.error("Error calculating isDay:", e);
+      // Fallback to local hour check if timezone conversion fails
+      const hour = new Date().getHours();
+      isDay = hour >= 6 && hour < 22;
+    }
   } else {
     // Fallback if no sunrise/sunset data
-    let hour = new Date().getHours();
-    if (timezone) {
-      try {
-        const hourString = new Date().toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          hour12: false,
-          timeZone: timezone,
-        });
-        hour = parseInt(hourString, 10);
-      } catch (e) {
-        console.warn("Invalid timezone:", timezone);
-      }
-    }
+    const hour = new Date().getHours();
     isDay = hour >= 6 && hour < 22;
   }
 

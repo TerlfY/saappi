@@ -46,6 +46,8 @@ function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [searchError, setSearchError] = useState(null);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   const debouncedSearchCity = useDebounce(searchCity, 500);
 
   // --- Get Current Location ---
@@ -91,16 +93,13 @@ function App() {
     retry: false,
   });
 
-  // Update searchedLocation when search results change
+  // Show suggestions when results come in
   useEffect(() => {
     if (searchResults && searchResults.length > 0) {
-      setSearchedLocation({
-        latitude: parseFloat(searchResults[0].lat),
-        longitude: parseFloat(searchResults[0].lon),
-        name: searchResults[0].display_name,
-      });
+      setShowSuggestions(true);
       setSearchError(null);
     } else if (searchResults && searchResults.length === 0) {
+      setShowSuggestions(false);
       setSearchError("City not found.");
     }
   }, [searchResults]);
@@ -112,6 +111,16 @@ function App() {
       setSearchError("City search failed. Please try again.");
     }
   }, [queryError]);
+
+  const handleSuggestionClick = (result) => {
+    setSearchedLocation({
+      latitude: parseFloat(result.lat),
+      longitude: parseFloat(result.lon),
+      name: result.display_name,
+    });
+    setSearchCity(result.display_name);
+    setShowSuggestions(false);
+  };
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
@@ -178,19 +187,36 @@ function App() {
           <Navbar.Brand>
             <h1 className="fw-bold">Sääppi</h1>
           </Navbar.Brand>
-          <Form className="d-flex" role="search" onSubmit={handleSearch}>
+          <Form className="d-flex position-relative" role="search" onSubmit={handleSearch}>
             <FormControl
               type="search"
               placeholder="City, Country"
               value={searchCity}
-              onChange={(e) => setSearchCity(e.target.value)}
+              onChange={(e) => {
+                setSearchCity(e.target.value);
+                if (e.target.value === "") setShowSuggestions(false);
+              }}
               onKeyDown={handleEnterKey}
               aria-label="Search City"
             />
+            {showSuggestions && searchResults && (
+              <div className="suggestions-dropdown">
+                {searchResults.map((result, index) => (
+                  <div
+                    key={index}
+                    className="suggestion-item"
+                    onClick={() => handleSuggestionClick(result)}
+                  >
+                    {result.display_name}
+                  </div>
+                ))}
+              </div>
+            )}
             <Button
               variant="outline-success"
               type="submit"
               disabled={searchLoading}
+              className="ms-2"
             >
               {searchLoading ? (
                 <Spinner

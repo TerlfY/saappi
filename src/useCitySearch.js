@@ -19,6 +19,7 @@ const useCitySearch = () => {
     const [searchError, setSearchError] = useState(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectionMade, setSelectionMade] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
     const debouncedSearchCity = useDebounce(searchCity, 500);
 
@@ -51,6 +52,7 @@ const useCitySearch = () => {
         if (searchResults && searchResults.length > 0) {
             setShowSuggestions(true);
             setSearchError(null);
+            setHighlightedIndex(-1); // Reset highlight when results change
         } else if (searchResults && searchResults.length === 0) {
             setShowSuggestions(false);
             setSearchError("City not found.");
@@ -74,14 +76,36 @@ const useCitySearch = () => {
             longitude: parseFloat(result.lon),
             name: formattedName,
         });
-        setSearchCity(formattedName);
+        setSearchCity("");
         setShowSuggestions(false);
+        setHighlightedIndex(-1);
     };
 
     const handleSearchInputChange = (e) => {
         setSearchCity(e.target.value);
         setSelectionMade(false);
         if (e.target.value === "") setShowSuggestions(false);
+    };
+
+    const handleKeyDown = (e) => {
+        if (!showSuggestions || !searchResults) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlightedIndex((prev) =>
+                prev < searchResults.length - 1 ? prev + 1 : prev
+            );
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (highlightedIndex >= 0 && searchResults[highlightedIndex]) {
+                handleSuggestionClick(searchResults[highlightedIndex]);
+            }
+        } else if (e.key === "Escape") {
+            setShowSuggestions(false);
+        }
     };
 
     return {
@@ -97,6 +121,8 @@ const useCitySearch = () => {
         searchLoading,
         handleSuggestionClick,
         handleSearchInputChange,
+        handleKeyDown,
+        highlightedIndex,
     };
 };
 

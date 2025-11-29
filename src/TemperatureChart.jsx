@@ -21,7 +21,7 @@ const TemperatureChart = ({ data, darkMode }) => {
     const tooltipText = darkMode ? "#fff" : "#000";
 
     return (
-        <div style={{ width: "100%", height: 300 }}>
+        <div style={{ width: "100%", height: 300, minWidth: 0 }}>
             <ResponsiveContainer>
                 <LineChart
                     data={chartData}

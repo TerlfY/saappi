@@ -5,38 +5,10 @@ import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
 import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import SkeletonWeather from "./SkeletonWeather";
-import TemperatureChart from "./TemperatureChart";
 
-const HourlyForecast = ({ hourlyData, loading, error, timezone, darkMode }) => {
+
+const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkMode }) => {
   // Process the data *after* checking loading/error states and if data exists
-
-  // --- Rendering Logic ---
-
-  // 1. Handle Loading State
-  if (loading) {
-    return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100%" }}
-      >
-        <SkeletonWeather type="hourly" />
-      </Container>
-    );
-  }
-
-  // 2. Handle Error State
-  if (error) {
-    return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100%" }}
-      >
-        <Alert variant="danger">
-          {error.message || "Error fetching hourly forecast."}
-        </Alert>
-      </Container>
-    );
-  }
 
   // 3. Handle No Data/Initial State or if data structure is unexpected
   // Check specifically for the timelines array needed for mapping
@@ -69,6 +41,33 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone, darkMode }) => {
     }
   };
 
+  const isDaytime = (timeString) => {
+    if (!dailyData) {
+      // Fallback
+      const hour = getLocalHour(timeString);
+      return hour >= 6 && hour < 22;
+    }
+
+    const date = new Date(timeString);
+    // Find the daily forecast for this date
+    // Note: This simple comparison assumes dailyData is in chronological order and covers the date.
+    // A more robust way is to match YYYY-MM-DD.
+    const dayForecast = dailyData.find(d => {
+      const dDate = new Date(d.time);
+      return dDate.getDate() === date.getDate() && dDate.getMonth() === date.getMonth();
+    });
+
+    if (dayForecast && dayForecast.values.sunriseTime && dayForecast.values.sunsetTime) {
+      const sunrise = new Date(dayForecast.values.sunriseTime);
+      const sunset = new Date(dayForecast.values.sunsetTime);
+      return date >= sunrise && date < sunset;
+    }
+
+    // Fallback if no matching day or sunrise/sunset data
+    const hour = getLocalHour(timeString);
+    return hour >= 6 && hour < 22;
+  };
+
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
       {getWeatherDescription(code)}
@@ -82,7 +81,7 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone, darkMode }) => {
       <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap">
         {hoursToDisplay.map((hourData, index) => {
           const hour = getLocalHour(hourData.time);
-          const isDay = hour >= 6 && hour < 22;
+          const isDay = isDaytime(hourData.time);
           return (
             <Col
               key={index}
@@ -119,17 +118,14 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone, darkMode }) => {
       </Row>
 
       {/* Desktop layout (visible on medium devices and above) */}
-      <div className="d-none d-md-block mb-4">
-        <h3 className="mb-3">Temperature Trend</h3>
-        <TemperatureChart data={hoursToDisplay} darkMode={darkMode} />
-      </div>
+      {/* Chart moved to App.jsx */}
 
       {hoursToDisplay.map(
         (hourData, index) => {
           // Ensure hourData and hourData.values exist before rendering row
           if (!hourData?.values) return null;
           const hour = getLocalHour(hourData.time);
-          const isDay = hour >= 6 && hour < 22;
+          const isDay = isDaytime(hourData.time);
           return (
             <Row key={index} className="d-flex my-3 d-none d-md-flex">
               <Col md={4} className="d-none d-md-flex align-items-center">

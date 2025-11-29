@@ -66,7 +66,8 @@ a:hover {
 
 #hourly-section,
 #current-section,
-#daily-section {
+#daily-section,
+#chart-section {
   background-color: rgba(255, 255, 255, 0.6);
   /* Semi-transparent white */
   backdrop-filter: blur(10px);
@@ -103,7 +104,8 @@ body.body-dark-mode a:hover {
 
 body.body-dark-mode #hourly-section,
 body.body-dark-mode #current-section,
-body.body-dark-mode #daily-section {
+body.body-dark-mode #daily-section,
+body.body-dark-mode #chart-section {
   background-color: rgba(33, 37, 41, 0.6);
   /* Semi-transparent dark */
   border-color: rgba(255, 255, 255, 0.1);

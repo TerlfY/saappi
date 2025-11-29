@@ -23,6 +23,7 @@ import useCitySearch from "./useCitySearch";
 import { formatLocationName } from "./utils";
 import useTimezone from "./useTimezone";
 import BackgroundManager from "./BackgroundManager";
+import TemperatureChart from "./TemperatureChart";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -201,6 +202,19 @@ function App() {
         </Alert>
       )}
 
+      {/* Temperature Chart Section (Desktop Only) */}
+      {!forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
+        <Row className="d-none d-md-block">
+          <Col id="chart-section" style={{ minHeight: "300px" }}>
+            <h3 className="mb-3">Temperature Trend</h3>
+            <TemperatureChart
+              data={forecastData.timelines.hourly.slice(0, 24)} // Show next 24 hours for a better trend
+              darkMode={darkMode}
+            />
+          </Col>
+        </Row>
+      )}
+
       {/* Weather modules */}
       <Row>
         <Col
@@ -226,6 +240,7 @@ function App() {
         >
           <HourlyForecast
             hourlyData={forecastData?.timelines?.hourly}
+            dailyData={forecastData?.timelines?.daily}
             loading={forecastLoading}
             error={forecastError}
             timezone={timezone}

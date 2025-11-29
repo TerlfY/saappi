@@ -79,7 +79,9 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
   return (
     <Container>
       <div>
-        <h2 className="mt-3">{cityName}</h2>
+        <h2 className="mt-3 text-truncate" style={{ maxWidth: "100%" }} title={cityName}>
+          {cityName}
+        </h2>
         <OverlayTrigger
           placement="bottom"
           delay={{ show: 250, hide: 400 }}

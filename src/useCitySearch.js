@@ -31,6 +31,17 @@ const useCitySearch = () => {
         queryFn: fetchCitySearch,
         enabled: !!debouncedSearchCity,
         retry: false,
+        select: (data) => {
+            const seen = new Set();
+            return data.filter((item) => {
+                const name = formatLocationName(item.address) || item.display_name;
+                if (seen.has(name)) {
+                    return false;
+                }
+                seen.add(name);
+                return true;
+            });
+        },
     });
 
     // Show suggestions when results come in

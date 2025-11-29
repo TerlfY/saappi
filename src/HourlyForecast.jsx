@@ -41,6 +41,17 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkM
     }
   };
 
+  // Helper to get YYYY-MM-DD in location's timezone
+  const getDateInTimezone = (isoString, tz) => {
+    if (!tz) return new Date(isoString).toLocaleDateString("en-CA");
+    try {
+      return new Date(isoString).toLocaleDateString("en-CA", { timeZone: tz });
+    } catch (e) {
+      console.warn("Invalid timezone for date:", tz);
+      return new Date(isoString).toLocaleDateString("en-CA");
+    }
+  };
+
   const isDaytime = (timeString) => {
     if (!dailyData) {
       // Fallback
@@ -48,16 +59,16 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkM
       return hour >= 6 && hour < 22;
     }
 
-    const date = new Date(timeString);
-    // Find the daily forecast for this date
-    // Note: This simple comparison assumes dailyData is in chronological order and covers the date.
-    // A more robust way is to match YYYY-MM-DD.
+    const targetDateStr = getDateInTimezone(timeString, timezone);
+
+    // Find the daily forecast for this date using timezone-aware string comparison
     const dayForecast = dailyData.find(d => {
-      const dDate = new Date(d.time);
-      return dDate.getDate() === date.getDate() && dDate.getMonth() === date.getMonth();
+      const dDateStr = getDateInTimezone(d.time, timezone);
+      return dDateStr === targetDateStr;
     });
 
     if (dayForecast && dayForecast.values.sunriseTime && dayForecast.values.sunsetTime) {
+      const date = new Date(timeString);
       const sunrise = new Date(dayForecast.values.sunriseTime);
       const sunset = new Date(dayForecast.values.sunsetTime);
       return date >= sunrise && date < sunset;
@@ -127,7 +138,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkM
           const hour = getLocalHour(hourData.time);
           const isDay = isDaytime(hourData.time);
           return (
-            <Row key={index} className="d-flex my-3 d-none d-md-flex">
+            <Row key={index} className="d-flex my-1 py-2 d-none d-md-flex border-bottom border-light-subtle">
               <Col md={4} className="d-none d-md-flex align-items-center">
                 <p className="fs-5 m-0">{`${hour}:00`}</p>{" "}
                 {/* Added :00 for clarity */}

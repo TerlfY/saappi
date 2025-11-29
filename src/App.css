@@ -80,11 +80,25 @@ a:hover {
   border-radius: 15px;
   /* More rounded corners */
   padding: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
+  /* Margin handled by parent containers now */
   transition:
     background-color var(--transition-speed) ease,
     border-color var(--transition-speed) ease,
     box-shadow var(--transition-speed) ease;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- Dark Mode Overrides --- */
@@ -171,34 +185,7 @@ body.body-dark-mode .form-control:focus {
   /* Adjust focus shadow */
 }
 
-/* --- Search Suggestions Dropdown --- */
-.suggestions-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-height: 200px;
-  overflow-y: auto;
-  text-align: left;
-}
-
-.suggestion-item {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.suggestion-item:hover,
-.suggestion-item.highlighted {
-  background-color: rgba(0, 0, 0, 0.05);
-}
+/* Search Bar styles moved to SearchBar.css */
 
 /* Dark Mode for Suggestions */
 body.body-dark-mode .suggestions-dropdown {
@@ -302,4 +289,35 @@ body {
 body.body-dark-mode .placeholder {
   background-color: rgba(255, 255, 255, 0.2);
   /* Semi-transparent white for dark mode */
+}
+
+/* Weather Details Grid */
+.weather-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  border-radius: 15px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Dark Mode for Details */
+body.body-dark-mode .weather-details-grid {
+  background: rgba(0, 0, 0, 0.2);
 }

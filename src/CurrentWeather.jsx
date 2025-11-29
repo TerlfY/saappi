@@ -88,7 +88,8 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           overlay={renderTooltip}
         >
           <img
-            className="m-5"
+            className="mb-3"
+            style={{ height: "120px", width: "auto", objectFit: "contain" }}
             src={getIcon(
               weatherData.values.weatherCode,
               isDay,
@@ -97,9 +98,29 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             alt="Weather Icon"
           />
         </OverlayTrigger>
-        <p className="fs-4">{`${Math.round(
+        <p className="fs-1 fw-bold">{`${Math.round(
           weatherData.values.temperature
         )}°C`}</p>
+
+        {/* Weather Details Grid */}
+        <div className="weather-details-grid mt-4">
+          <div className="detail-item">
+            <span className="detail-label">Feels Like</span>
+            <span className="detail-value">{Math.round(weatherData.values.temperatureApparent)}°C</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Wind</span>
+            <span className="detail-value">{Math.round(weatherData.values.windSpeed)} m/s</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Humidity</span>
+            <span className="detail-value">{Math.round(weatherData.values.humidity)}%</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">UV Index</span>
+            <span className="detail-value">{weatherData.values.uvIndex}</span>
+          </div>
+        </div>
       </div>
     </Container>
   );

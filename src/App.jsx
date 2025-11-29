@@ -40,6 +40,8 @@ function App() {
     searchLoading,
     handleSuggestionClick,
     handleSearchInputChange,
+    handleKeyDown,
+    highlightedIndex,
   } = useCitySearch();
 
   // --- Determine the location to use for weather fetching ---
@@ -110,7 +112,10 @@ function App() {
               placeholder="City, Country"
               value={searchCity}
               onChange={handleSearchInputChange}
-              onKeyDown={handleEnterKey}
+              onKeyDown={(e) => {
+                handleEnterKey(e);
+                handleKeyDown(e);
+              }}
               aria-label="Search City"
             />
             {showSuggestions && searchResults && (
@@ -118,7 +123,8 @@ function App() {
                 {searchResults.map((result, index) => (
                   <div
                     key={index}
-                    className="suggestion-item"
+                    className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""
+                      }`}
                     onClick={() => handleSuggestionClick(result)}
                   >
                     {formatLocationName(result.address) || result.display_name}

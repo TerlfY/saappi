@@ -185,7 +185,8 @@ body.body-dark-mode .form-control:focus {
   transition: background-color 0.2s;
 }
 
-.suggestion-item:hover {
+.suggestion-item:hover,
+.suggestion-item.highlighted {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
@@ -196,6 +197,10 @@ body.body-dark-mode .suggestions-dropdown {
   box-shadow: 0 4px 6px var(--shadow-color-dark);
 }
 
+body.body-dark-mode .suggestion-item:hover,
+body.body-dark-mode .suggestion-item.highlighted {
+  background-color: rgba(255, 255, 255, 0.1);
+}
 
 /* Default (Light Mode) Tooltips */
 .tooltip-inner {

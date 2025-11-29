@@ -1,7 +1,8 @@
-import { getIcon } from "./WeatherIcons";
 import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "./CurrentWeather.css";
 import { getWeatherDescription } from "./weatherDescriptions";
+import SkeletonWeather from "./SkeletonWeather";
+import { getIcon } from "./WeatherIcons";
 
 const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone }) => {
   // --- Rendering Logic ---
@@ -13,9 +14,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <SkeletonWeather type="current" />
       </Container>
     );
   }

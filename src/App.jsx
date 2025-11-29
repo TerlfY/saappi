@@ -22,6 +22,7 @@ import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
 import { formatLocationName } from "./utils";
 import useTimezone from "./useTimezone";
+import BackgroundManager from "./BackgroundManager";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -98,8 +99,33 @@ function App() {
     };
   }, [darkMode]);
 
+  // Determine current weather code and isDay for BackgroundManager
+  const currentWeather = forecastData?.timelines?.hourly?.[0]?.values;
+  const dailyValues = forecastData?.timelines?.daily?.[0]?.values;
+  let isDay = true;
+  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime) {
+    const now = new Date();
+    const sunrise = new Date(dailyValues.sunriseTime);
+    const sunset = new Date(dailyValues.sunsetTime);
+    isDay = now >= sunrise && now < sunset;
+  } else if (timezone) {
+    // Fallback using timezone
+    try {
+      const hourString = new Date().toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: timezone,
+      });
+      const hour = parseInt(hourString, 10);
+      isDay = hour >= 6 && hour < 22;
+    } catch (e) {
+      console.warn("Invalid timezone for background:", timezone);
+    }
+  }
+
   return (
     <Container className={`mx-auto text-center m-4`}>
+      <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
       {/* Header */}
       <Navbar sticky="top">
         <Container>

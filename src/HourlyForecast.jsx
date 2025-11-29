@@ -4,6 +4,8 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
 import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import SkeletonWeather from "./SkeletonWeather";
+import TemperatureChart from "./TemperatureChart";
 
 const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
   // Process the data *after* checking loading/error states and if data exists
@@ -17,9 +19,7 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <SkeletonWeather type="hourly" />
       </Container>
     );
   }
@@ -79,7 +79,7 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
   return (
     <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
-      <Row id="hourly-mobile" className="d-md-none my-2">
+      <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap">
         {hoursToDisplay.map((hourData, index) => {
           const hour = getLocalHour(hourData.time);
           const isDay = hour >= 6 && hour < 22;
@@ -87,6 +87,7 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
             <Col
               key={index}
               className="border border-secondary border-bottom-0 border-top-0"
+              style={{ minWidth: "80px" }} // Ensure items don't shrink
             >
               {/* Ensure hourData and hourData.values exist */}
               {hourData?.values && (
@@ -118,6 +119,11 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
       </Row>
 
       {/* Desktop layout (visible on medium devices and above) */}
+      <div className="d-none d-md-block mb-4">
+        <h3 className="mb-3">Temperature Trend</h3>
+        <TemperatureChart data={hoursToDisplay} />
+      </div>
+
       {hoursToDisplay.map(
         (hourData, index) => {
           // Ensure hourData and hourData.values exist before rendering row

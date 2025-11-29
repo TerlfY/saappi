@@ -36,14 +36,34 @@ const dailyIntervalSchema = z.object({
     values: weatherValueSchema,
 }).passthrough();
 
-export const weatherResponseSchema = z.object({
-    data: z.object({
-        values: weatherValueSchema,
-    }).optional(),
-    timelines: z.object({
-        hourly: z.array(hourlyIntervalSchema).optional(),
-        daily: z.array(dailyIntervalSchema).optional(),
-    }).passthrough().optional(),
+export const openMeteoSchema = z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+    generationtime_ms: z.number(),
+    utc_offset_seconds: z.number(),
+    timezone: z.string(),
+    timezone_abbreviation: z.string(),
+    elevation: z.number(),
+    hourly_units: z.object({}).passthrough().optional(),
+    hourly: z.object({
+        time: z.array(z.string()),
+        temperature_2m: z.array(z.number().nullable()),
+        relativehumidity_2m: z.array(z.number().nullable()),
+        apparent_temperature: z.array(z.number().nullable()),
+        weathercode: z.array(z.number().nullable()),
+        windspeed_10m: z.array(z.number().nullable()),
+        uv_index: z.array(z.number().nullable()),
+        cloudcover: z.array(z.number().nullable()),
+    }).passthrough(),
+    daily_units: z.object({}).passthrough().optional(),
+    daily: z.object({
+        time: z.array(z.string()),
+        weathercode: z.array(z.number().nullable()),
+        temperature_2m_max: z.array(z.number().nullable()),
+        temperature_2m_min: z.array(z.number().nullable()),
+        sunrise: z.array(z.string()),
+        sunset: z.array(z.string()),
+    }).passthrough(),
 }).passthrough();
 
 // --- Geocoding API Schemas ---

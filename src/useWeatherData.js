@@ -1,91 +1,85 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { z } from "zod";
+import { weatherResponseSchema } from "./schemas";
 
-const useWeatherData = (endpoint, params) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const fetchWeather = async ({ queryKey }) => {
+  const [_, endpoint, params] = queryKey;
 
-  const fetchData = useCallback(async () => {
-    // Check if location parameter is valid before proceeding
-    if (!params?.location) {
-      setData(null); // Clear data if location becomes null or invalid
-      setLoading(false); // Ensure loading is false if we don't fetch
-      setError(null); // Clear any previous error
-      return; // Stop execution if location is missing
-    }
+  if (!params?.location) {
+    return null;
+  }
 
-    setLoading(true);
-    setError(null);
-    setData(null); // Clear previous data on new fetch
+  const options = {
+    method: "GET",
+    url: `https://api.tomorrow.io/v4/weather/${endpoint}`,
+    params: {
+      ...params,
+      apikey: import.meta.env.VITE_API_KEY,
+    },
+    headers: { accept: "application/json" },
+  };
 
-    const options = {
-      method: "GET",
-      url: `https://api.tomorrow.io/v4/weather/${endpoint}`,
-      params: {
-        ...params, // Include location, timesteps etc. passed in
-        apikey: import.meta.env.VITE_API_KEY,
-      },
-      headers: { accept: "application/json" },
+  try {
+    const response = await axios.request(options);
+
+    // Validate response with Zod
+    const parsedData = weatherResponseSchema.parse(response.data);
+
+    console.log(
+      `✅ SUCCESS fetching ${endpoint} for location:`,
+      params?.location
+    );
+    return parsedData;
+  } catch (err) {
+    console.error("API Fetch Error:", err);
+
+    let errorPayload = {
+      message: "An unexpected error occurred.",
+      status: null,
     };
 
-    try {
-      const response = await axios.request(options);
-      setData(response.data);
-      // Optional: Keep this log if you find it useful to see successful fetches
-      console.log(
-        `✅ SUCCESS fetching ${endpoint} for location:`,
-        params?.location
-      );
-    } catch (err) {
-      console.error("API Fetch Error:", err); // Keep logging the actual error object
-
-      // --- Start Specific Error Handling ---
-      // --- FIX: Define payload object ---
-      let errorPayload = {
-        message: "An unexpected error occurred.",
-        status: null,
+    if (err instanceof z.ZodError) {
+      errorPayload = {
+        message: "Data validation failed. API response format changed.",
+        status: "VALIDATION_ERROR",
       };
-
-      if (axios.isAxiosError(err) && err.response) {
-        const status = err.response.status;
-        if (status === 429) {
-          // --- FIX: Assign specific object for 429 ---
-          errorPayload = {
-            message:
-              "API rate limit exceeded. Please try again at next full hour.",
-            status: 429,
-          };
-        } else {
-          // --- FIX: Assign object for other statuses ---
-          errorPayload = {
-            message: `Error: ${status} - ${err.response.statusText}. Please try again.`,
-            status: status,
-          };
-        }
-      } else if (err.request) {
-        // --- FIX: Assign object for network error ---
+      console.error("Zod Validation Errors:", err.errors);
+    } else if (axios.isAxiosError(err) && err.response) {
+      const status = err.response.status;
+      if (status === 429) {
         errorPayload = {
-          message: "Network error. Please check your connection and try again.",
-          status: null, // Or a specific code/flag for network errors if needed
+          message:
+            "API rate limit exceeded. Please try again at next full hour.",
+          status: 429,
+        };
+      } else {
+        errorPayload = {
+          message: `Error: ${status} - ${err.response.statusText}. Please try again.`,
+          status: status,
         };
       }
-      // No need for specific logs before setError anymore
-
-      // --- FIX: Set the error state to the payload object ---
-      setError(errorPayload);
-    } finally {
-      // No need for the finally log anymore
-      setLoading(false);
+    } else if (err.request) {
+      errorPayload = {
+        message: "Network error. Please check your connection and try again.",
+        status: null,
+      };
     }
-  }, [endpoint, params]); // Dependency array
+    throw errorPayload;
+  }
+};
 
-  useEffect(() => {
-    // No need for the effect trigger log anymore
-    fetchData();
-  }, [fetchData]); // Dependency on memoized fetchData is correct
+const useWeatherData = (endpoint, params) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["weather", endpoint, params],
+    queryFn: fetchWeather,
+    enabled: !!params?.location, // Only run if location is provided
+    staleTime: 1000 * 60 * 15, // Cache for 15 minutes
+    retry: 1, // Retry once on failure
+    refetchOnWindowFocus: false, // Don't refetch on window focus to save API calls
+  });
 
-  return { data, loading, error };
+  return { data, loading: isLoading, error };
 };
 
 export default useWeatherData;

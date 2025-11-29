@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-bootstrap";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import HourlyForecast from "./HourlyForecast";
 import CurrentWeather from "./CurrentWeather";
 import DailyForecast from "./DailyForecast";
@@ -18,32 +19,42 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useDarkMode } from "./DarkModeContext";
 import useWeatherData from "./useWeatherData";
 import "./App.css";
+import { reverseGeocodeSchema, searchResultSchema } from "./schemas";
+import useDebounce from "./useDebounce";
+
+// --- Fetchers ---
+const fetchReverseGeocode = async ({ queryKey }) => {
+  const [_, lat, lon] = queryKey;
+  const response = await axios.get(
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+  );
+  return reverseGeocodeSchema.parse(response.data);
+};
+
+const fetchCitySearch = async ({ queryKey }) => {
+  const [_, city] = queryKey;
+  const response = await axios.get(
+    `https://nominatim.openstreetmap.org/search?q=${city}&format=json`
+  );
+  return searchResultSchema.parse(response.data);
+};
 
 function App() {
   const [currentLocation, setCurrentLocation] = useState(null);
-  const [cityName, setCityName] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [searchedLocation, setSearchedLocation] = useState(null);
   const { darkMode, toggleDarkMode } = useDarkMode();
-  const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
 
+  const debouncedSearchCity = useDebounce(searchCity, 500);
+
+  // --- Get Current Location ---
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const { latitude, longitude } = position.coords;
           setCurrentLocation({ latitude, longitude });
-
-          try {
-            const cityResponse = await axios.get(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            const city = cityResponse.data.locality;
-            setCityName(city);
-          } catch (error) {
-            console.error("Error getting city name:", error.message);
-          }
         },
         (error) => {
           console.error("Error getting current location:", error.message);
@@ -53,6 +64,54 @@ function App() {
       console.error("Geolocation is not supported by your browser");
     }
   }, []);
+
+  // --- Reverse Geocoding Query ---
+  const { data: reverseGeocodeData } = useQuery({
+    queryKey: [
+      "reverseGeocode",
+      currentLocation?.latitude,
+      currentLocation?.longitude,
+    ],
+    queryFn: fetchReverseGeocode,
+    enabled: !!currentLocation,
+    staleTime: Infinity, // City name for coordinates unlikely to change
+  });
+
+  const cityName = reverseGeocodeData?.locality || reverseGeocodeData?.city;
+
+  // --- Search Query ---
+  const {
+    data: searchResults,
+    isFetching: searchLoading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ["search", debouncedSearchCity],
+    queryFn: fetchCitySearch,
+    enabled: !!debouncedSearchCity, // Auto-trigger when debounced value exists
+    retry: false,
+  });
+
+  // Update searchedLocation when search results change
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0) {
+      setSearchedLocation({
+        latitude: parseFloat(searchResults[0].lat),
+        longitude: parseFloat(searchResults[0].lon),
+        name: searchResults[0].display_name,
+      });
+      setSearchError(null);
+    } else if (searchResults && searchResults.length === 0) {
+      setSearchError("City not found.");
+    }
+  }, [searchResults]);
+
+  // Handle errors from the query
+  useEffect(() => {
+    if (queryError) {
+      console.error("Error searching for the city:", queryError);
+      setSearchError("City search failed. Please try again.");
+    }
+  }, [queryError]);
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
@@ -64,6 +123,7 @@ function App() {
     }
     return currentLocation;
   }, [searchedLocation, currentLocation]);
+
   // --- Fetch Forecast Data (Hourly & Daily) ---
   const forecastParams = useMemo(
     () => ({
@@ -74,72 +134,41 @@ function App() {
     [locationToFetch]
   );
 
-  // Fetch forecast data once here
   const {
     data: forecastData,
     loading: forecastLoading,
     error: forecastError,
-  } = useWeatherData("forecast", forecastParams); //
+  } = useWeatherData("forecast", forecastParams);
 
-  const handleSearch = async (e) => {
-    // Prevent default form submission if triggered by button type="submit"
+  const handleSearch = (e) => {
     if (e) e.preventDefault();
-    try {
-      setSearchLoading(true);
-      setSearchError(null);
-
-      const searchResponse = await axios.get(
-        `https://nominatim.openstreetmap.org/search?q=${searchCity}&format=json`
-      );
-
-      const searchResult = searchResponse.data;
-      if (searchResult && searchResult.length > 0) {
-        setSearchedLocation({
-          latitude: parseFloat(searchResult[0].lat),
-          longitude: parseFloat(searchResult[0].lon),
-          name: searchResult[0].display_name,
-        });
-        setCityName(searchResult[0].display_name);
-      } else {
-        setSearchError("City not found.");
-        setSearchedLocation(null);
-      }
-    } catch (error) {
-      console.error("Error searching for the city:", error.message);
-      setSearchError("City search failed. Please try again.");
-      setSearchedLocation(null);
-    } finally {
-      setSearchLoading(false);
-    }
+    // No manual trigger needed, debounced value handles it
   };
 
   const handleEnterKey = (e) => {
     if (e.key === "Enter") {
-      handleSearch();
+      e.preventDefault();
+      // Optional: Force immediate search if we wanted, but debounce covers it
     }
   };
 
   const handleToggleDarkMode = () => {
     toggleDarkMode();
-    console.log("Dark mode toggled:", !darkMode);
   };
 
   const displayCityName =
     searchedLocation?.name || cityName || "Loading city...";
 
   useEffect(() => {
-    // Add/remove the class on the body element when darkMode changes
     if (darkMode) {
       document.body.classList.add("body-dark-mode");
     } else {
       document.body.classList.remove("body-dark-mode");
     }
-
-    // Optional: Cleanup function to remove the class if the App component unmounts
     return () => {
       document.body.classList.remove("body-dark-mode");
     };
-  }, [darkMode]); // Dependency array: run this effect when darkMode changes
+  }, [darkMode]);
 
   return (
     <Container className={`mx-auto text-center m-4`}>

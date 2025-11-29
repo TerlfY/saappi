@@ -41,17 +41,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkM
     }
   };
 
-  // Helper to get YYYY-MM-DD in location's timezone
-  const getDateInTimezone = (isoString, tz) => {
-    if (!tz) return new Date(isoString).toLocaleDateString("en-CA");
-    try {
-      return new Date(isoString).toLocaleDateString("en-CA", { timeZone: tz });
-    } catch (e) {
-      console.warn("Invalid timezone for date:", tz);
-      return new Date(isoString).toLocaleDateString("en-CA");
-    }
-  };
-
   const isDaytime = (timeString) => {
     if (!dailyData) {
       // Fallback
@@ -59,15 +48,16 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkM
       return hour >= 6 && hour < 22;
     }
 
-    const targetDateStr = getDateInTimezone(timeString, timezone);
+    // Assuming dailyData.time is in "YYYY-MM-DD" format and timeString is "YYYY-MM-DDTHH:MM:SSZ"
+    // Extract the date part from the hourly time string
+    const targetDateStr = timeString.split("T")[0];
 
-    // Find the daily forecast for this date using timezone-aware string comparison
-    const dayForecast = dailyData.find(d => {
-      const dDateStr = getDateInTimezone(d.time, timezone);
-      return dDateStr === targetDateStr;
-    });
+    // Find the daily forecast for this date
+    const dayForecast = dailyData.find(d => d.time === targetDateStr);
 
     if (dayForecast && dayForecast.values.sunriseTime && dayForecast.values.sunsetTime) {
+      // Create Date objects. Since all strings are in the same local timezone,
+      // the browser's local timezone offset applies equally to all, preserving relative order.
       const date = new Date(timeString);
       const sunrise = new Date(dayForecast.values.sunriseTime);
       const sunset = new Date(dayForecast.values.sunsetTime);

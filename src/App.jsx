@@ -47,6 +47,7 @@ function App() {
   const [searchError, setSearchError] = useState(null);
 
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectionMade, setSelectionMade] = useState(false);
 
   const debouncedSearchCity = useDebounce(searchCity, 500);
 
@@ -95,6 +96,8 @@ function App() {
 
   // Show suggestions when results come in
   useEffect(() => {
+    if (selectionMade) return; // Don't reopen if we just made a selection
+
     if (searchResults && searchResults.length > 0) {
       setShowSuggestions(true);
       setSearchError(null);
@@ -102,7 +105,7 @@ function App() {
       setShowSuggestions(false);
       setSearchError("City not found.");
     }
-  }, [searchResults]);
+  }, [searchResults, selectionMade]);
 
   // Handle errors from the query
   useEffect(() => {
@@ -113,6 +116,7 @@ function App() {
   }, [queryError]);
 
   const handleSuggestionClick = (result) => {
+    setSelectionMade(true); // Mark as selected
     setSearchedLocation({
       latitude: parseFloat(result.lat),
       longitude: parseFloat(result.lon),
@@ -194,6 +198,7 @@ function App() {
               value={searchCity}
               onChange={(e) => {
                 setSearchCity(e.target.value);
+                setSelectionMade(false); // Reset selection state when typing
                 if (e.target.value === "") setShowSuggestions(false);
               }}
               onKeyDown={handleEnterKey}

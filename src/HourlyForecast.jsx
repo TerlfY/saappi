@@ -57,41 +57,44 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
     <Container>
       {/* Mobile layout (visible on extra small and small devices) */}
       <Row id="hourly-mobile" className="d-md-none my-2">
-        {hoursToDisplay.map((hourData, index) => (
-          <Col
-            key={index}
-            className="border border-secondary border-bottom-0 border-top-0"
-          >
-            {/* Ensure hourData and hourData.values exist */}
-            {hourData?.values && (
-              <Col>
-                <p className="fs-6 m-0">{`${new Date(
-                  hourData.time
-                ).getHours()}`}</p>
-                <img
-                  className="hourlyIcons my-1" //
-                  src={getIcon(hourData.values.weatherCode)} //
-                  alt="Weather Icon"
-                />
-                <p className="fs-6 my-1">{`${Math.round(
-                  hourData.values.temperature
-                )}°C`}</p>
-              </Col>
-            )}
-          </Col>
-        ))}
+        {hoursToDisplay.map((hourData, index) => {
+          const hour = new Date(hourData.time).getHours();
+          const isDay = hour >= 6 && hour < 22;
+          return (
+            <Col
+              key={index}
+              className="border border-secondary border-bottom-0 border-top-0"
+            >
+              {/* Ensure hourData and hourData.values exist */}
+              {hourData?.values && (
+                <Col>
+                  <p className="fs-6 m-0">{`${hour}`}</p>
+                  <img
+                    className="hourlyIcons my-1" //
+                    src={getIcon(hourData.values.weatherCode, isDay)} //
+                    alt="Weather Icon"
+                  />
+                  <p className="fs-6 my-1">{`${Math.round(
+                    hourData.values.temperature
+                  )}°C`}</p>
+                </Col>
+              )}
+            </Col>
+          );
+        })}
       </Row>
 
       {/* Desktop layout (visible on medium devices and above) */}
       {hoursToDisplay.map(
-        (hourData, index) =>
+        (hourData, index) => {
           // Ensure hourData and hourData.values exist before rendering row
-          hourData?.values && (
+          if (!hourData?.values) return null;
+          const hour = new Date(hourData.time).getHours();
+          const isDay = hour >= 6 && hour < 22;
+          return (
             <Row key={index} className="d-flex my-3 d-none d-md-flex">
               <Col md={4} className="d-none d-md-flex align-items-center">
-                <p className="fs-5 m-0">{`${new Date(
-                  hourData.time
-                ).getHours()}:00`}</p>{" "}
+                <p className="fs-5 m-0">{`${hour}:00`}</p>{" "}
                 {/* Added :00 for clarity */}
               </Col>
               <Col
@@ -100,7 +103,7 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
               >
                 <img
                   className="hourlyIcons m-2" //
-                  src={getIcon(hourData.values.weatherCode)} //
+                  src={getIcon(hourData.values.weatherCode, isDay)} //
                   alt="Weather Icon"
                 />
               </Col>
@@ -110,7 +113,8 @@ const HourlyForecast = ({ hourlyData, loading, error }) => {
                 )}°C`}</p>
               </Col>
             </Row>
-          )
+          );
+        }
       )}
     </Container>
   );

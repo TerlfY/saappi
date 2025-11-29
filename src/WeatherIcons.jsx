@@ -1,8 +1,12 @@
-import clearIcon from "./assets/icons/large/10000_clear_large@2x.png";
+import clearIconDay from "./assets/icons/large/10000_clear_large@2x.png";
+import clearIconNight from "./assets/icons/large/10001_clear_large@2x.png";
 import cloudyIcon from "./assets/icons/large/10010_cloudy_large@2x.png";
-import MostlyClearIcon from "./assets/icons/large/11000_mostly_clear_large@2x.png";
-import PartlyCloudyIcon from "./assets/icons/large/11010_partly_cloudy_large@2x.png";
-import MostlyCloudyIcon from "./assets/icons/large/11020_mostly_cloudy_large@2x.png";
+import MostlyClearIconDay from "./assets/icons/large/11000_mostly_clear_large@2x.png";
+import MostlyClearIconNight from "./assets/icons/large/11001_mostly_clear_large@2x.png";
+import PartlyCloudyIconDay from "./assets/icons/large/11010_partly_cloudy_large@2x.png";
+import PartlyCloudyIconNight from "./assets/icons/large/11011_partly_cloudy_large@2x.png";
+import MostlyCloudyIconDay from "./assets/icons/large/11020_mostly_cloudy_large@2x.png";
+import MostlyCloudyIconNight from "./assets/icons/large/11021_mostly_cloudy_large@2x.png";
 import FogIcon from "./assets/icons/large/20000_fog_large@2x.png";
 import LightFogIcon from "./assets/icons/large/20000_fog_large@2x.png";
 import DrizzleIcon from "./assets/icons/large/40000_drizzle_large@2x.png";
@@ -23,11 +27,11 @@ import LightIcePelletsIcon from "./assets/icons/large/71020_ice_pellets_light_la
 import ThunderstormIcon from "./assets/icons/large/80000_tstorm_large@2x.png";
 
 const weatherIcons = {
-  1000: clearIcon,
+  1000: { day: clearIconDay, night: clearIconNight },
   1001: cloudyIcon,
-  1100: MostlyClearIcon,
-  1101: PartlyCloudyIcon,
-  1102: MostlyCloudyIcon,
+  1100: { day: MostlyClearIconDay, night: MostlyClearIconNight },
+  1101: { day: PartlyCloudyIconDay, night: PartlyCloudyIconNight },
+  1102: { day: MostlyCloudyIconDay, night: MostlyCloudyIconNight },
   2000: FogIcon,
   2100: LightFogIcon,
   4000: DrizzleIcon,
@@ -48,6 +52,12 @@ const weatherIcons = {
   8000: ThunderstormIcon,
 };
 
-export function getIcon(weatherCode) {
-  return weatherIcons[weatherCode];
+export function getIcon(weatherCode, isDay = true) {
+  const icon = weatherIcons[weatherCode];
+  if (!icon) return cloudyIcon; // Default fallback
+
+  if (icon.day && icon.night) {
+    return isDay ? icon.day : icon.night;
+  }
+  return icon;
 }

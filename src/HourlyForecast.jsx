@@ -1,9 +1,9 @@
 import { getIcon } from "./WeatherIcons";
+import { getWeatherDescription } from "./weatherDescriptions";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
-import { Container } from "react-bootstrap";
-import { Spinner, Alert } from "react-bootstrap";
+import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 
 const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
   // Process the data *after* checking loading/error states and if data exists
@@ -69,6 +69,12 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
     }
   };
 
+  const renderTooltip = (code) => (props) => (
+    <Tooltip id={`tooltip-${code}`} {...props}>
+      {getWeatherDescription(code)}
+    </Tooltip>
+  );
+
   // 4. Render Weather Data (if loading is false, no error, and data exists)
   return (
     <Container>
@@ -86,15 +92,21 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
               {hourData?.values && (
                 <Col>
                   <p className="fs-6 m-0">{`${hour}`}</p>
-                  <img
-                    className="hourlyIcons my-1" //
-                    src={getIcon(
-                      hourData.values.weatherCode,
-                      isDay,
-                      hourData.values.cloudCover
-                    )} //
-                    alt="Weather Icon"
-                  />
+                  <OverlayTrigger
+                    placement="top"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip(hourData.values.weatherCode)}
+                  >
+                    <img
+                      className="hourlyIcons my-1" //
+                      src={getIcon(
+                        hourData.values.weatherCode,
+                        isDay,
+                        hourData.values.cloudCover
+                      )} //
+                      alt="Weather Icon"
+                    />
+                  </OverlayTrigger>
                   <p className="fs-6 my-1">{`${Math.round(
                     hourData.values.temperature
                   )}°C`}</p>
@@ -122,15 +134,21 @@ const HourlyForecast = ({ hourlyData, loading, error, timezone }) => {
                 md={4}
                 className="d-none d-md-flex justify-content-center align-items-center"
               >
-                <img
-                  className="hourlyIcons m-2" //
-                  src={getIcon(
-                    hourData.values.weatherCode,
-                    isDay,
-                    hourData.values.cloudCover
-                  )} //
-                  alt="Weather Icon"
-                />
+                <OverlayTrigger
+                  placement="top"
+                  delay={{ show: 250, hide: 400 }}
+                  overlay={renderTooltip(hourData.values.weatherCode)}
+                >
+                  <img
+                    className="hourlyIcons m-2" //
+                    src={getIcon(
+                      hourData.values.weatherCode,
+                      isDay,
+                      hourData.values.cloudCover
+                    )} //
+                    alt="Weather Icon"
+                  />
+                </OverlayTrigger>
               </Col>
               <Col md={4} className="d-none d-md-flex align-items-center">
                 <p className="fs-5 m-0">{`${Math.round(

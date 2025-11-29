@@ -1,6 +1,7 @@
 import { getIcon } from "./WeatherIcons";
-import { Container, Spinner, Alert } from "react-bootstrap";
+import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "./CurrentWeather.css";
+import { getWeatherDescription } from "./weatherDescriptions";
 
 const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone }) => {
   // --- Rendering Logic ---
@@ -70,19 +71,31 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
     isDay = hour >= 6 && hour < 22;
   }
 
+  const renderTooltip = (props) => (
+    <Tooltip id="button-tooltip" {...props}>
+      {getWeatherDescription(weatherData.values.weatherCode)}
+    </Tooltip>
+  );
+
   return (
     <Container>
       <div>
         <h2 className="mt-3">{cityName}</h2>
-        <img
-          className="m-5"
-          src={getIcon(
-            weatherData.values.weatherCode,
-            isDay,
-            weatherData.values.cloudCover
-          )}
-          alt="Weather Icon"
-        ></img>
+        <OverlayTrigger
+          placement="bottom"
+          delay={{ show: 250, hide: 400 }}
+          overlay={renderTooltip}
+        >
+          <img
+            className="m-5"
+            src={getIcon(
+              weatherData.values.weatherCode,
+              isDay,
+              weatherData.values.cloudCover
+            )}
+            alt="Weather Icon"
+          />
+        </OverlayTrigger>
         <p className="fs-4">{`${Math.round(
           weatherData.values.temperature
         )}°C`}</p>

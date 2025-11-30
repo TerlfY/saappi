@@ -110,7 +110,18 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           </div>
           <div className="detail-item">
             <span className="detail-label">Wind</span>
-            <span className="detail-value">{Math.round(weatherData.values.windSpeed)} m/s</span>
+            <OverlayTrigger
+              placement="top"
+              overlay={
+                <Tooltip id="wind-tooltip">
+                  Gusts: {Math.round(weatherData.values.windGusts)} m/s
+                </Tooltip>
+              }
+            >
+              <span className="detail-value" style={{ cursor: "help", textDecoration: "underline dotted" }}>
+                {Math.round(weatherData.values.windSpeed)} m/s
+              </span>
+            </OverlayTrigger>
           </div>
           <div className="detail-item">
             <span className="detail-label">Humidity</span>

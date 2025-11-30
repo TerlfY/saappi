@@ -33,34 +33,9 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
   // Prepare continuous list of hours
   const allHours = React.useMemo(() => {
     if (!hourlyData || hourlyData.length === 0) return [];
-
-    let filteredHours = [...hourlyData];
-
-    // Filter out past hours for "Today"
-    if (timezone) {
-      try {
-        const formatter = new Intl.DateTimeFormat('sv-SE', {
-          timeZone: timezone,
-          year: 'numeric', month: '2-digit', day: '2-digit',
-          hour: '2-digit', hour12: false
-        });
-        const parts = formatter.find(p => p.type === 'year') ? formatter.formatToParts(new Date()) : [];
-        const year = parts.find(p => p.type === 'year')?.value;
-        const month = parts.find(p => p.type === 'month')?.value;
-        const day = parts.find(p => p.type === 'day')?.value;
-        const hour = parts.find(p => p.type === 'hour')?.value;
-
-        if (year && month && day && hour) {
-          const currentHourIso = `${year}-${month}-${day}T${hour}`;
-          filteredHours = filteredHours.filter(h => h.time >= currentHourIso);
-        }
-      } catch (e) {
-        console.error("Error filtering past hours:", e);
-      }
-    }
-
-    return filteredHours;
-  }, [hourlyData, timezone]);
+    // Return all hours without filtering past ones
+    return [...hourlyData];
+  }, [hourlyData]);
 
   // Get unique dates for tabs
   const availableDates = React.useMemo(() => {
@@ -68,12 +43,61 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
     return Array.from(dates).sort();
   }, [allHours]);
 
+  // Calculate current hour ISO for comparison
+  const currentHourIso = React.useMemo(() => {
+    if (!timezone) return null;
+    try {
+      const formatter = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: timezone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', hour12: false
+      });
+      const parts = formatter.find(p => p.type === 'year') ? formatter.formatToParts(new Date()) : [];
+      const year = parts.find(p => p.type === 'year')?.value;
+      const month = parts.find(p => p.type === 'month')?.value;
+      const day = parts.find(p => p.type === 'day')?.value;
+      const hour = parts.find(p => p.type === 'hour')?.value;
+
+      if (year && month && day && hour) {
+        // OpenMeteo uses "YYYY-MM-DDTHH:00" format
+        return `${year}-${month}-${day}T${hour}:00`;
+      }
+    } catch (e) {
+      console.error("Error calculating current hour:", e);
+    }
+    return null;
+  }, [timezone]);
+
   // Initialize activeDate
   React.useEffect(() => {
     if (!activeDate && availableDates.length > 0) {
       setActiveDate(availableDates[0]);
+
+      // Initial scroll to current hour if available, otherwise start of day
+      setTimeout(() => {
+        if (currentHourIso) {
+          // Try to scroll to current hour
+          const scrollContainer = (window.innerWidth >= 768) ? scrollContainerRef.current : mobileScrollContainerRef.current;
+          const containerId = (window.innerWidth >= 768) ? 'hourly-desktop' : 'hourly-mobile';
+          const targetId = `hour-${currentHourIso}-${containerId}`;
+          const element = document.getElementById(targetId);
+
+          if (element && scrollContainer) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            // Center the current hour or show it with some context (e.g. 1 item before)
+            const offset = elementRect.left - containerRect.left + scrollContainer.scrollLeft - (elementRect.width * 1.5);
+
+            scrollContainer.scrollTo({
+              left: Math.max(0, offset),
+              behavior: 'smooth'
+            });
+            return;
+          }
+        }
+      }, 100);
     }
-  }, [availableDates, activeDate]);
+  }, [availableDates, activeDate, currentHourIso]);
 
   // Scroll Handler (ScrollSpy)
   const handleScroll = (e) => {
@@ -191,14 +215,25 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
           const date = getLocalDate(hourData.time);
           const isFirstOfDay = index === 0 || getLocalDate(allHours[index - 1].time) !== date;
 
+          // Determine status
+          let statusClass = "";
+          if (currentHourIso) {
+            // Compare ISO strings directly
+            if (hourData.time < currentHourIso) statusClass = "past";
+            else if (hourData.time.startsWith(currentHourIso.slice(0, 13))) statusClass = "current"; // Compare up to hour
+          }
+
           return (
             <Col
               key={index}
-              className="border border-secondary border-bottom-0 border-top-0"
+              className={`border border-secondary border-bottom-0 border-top-0 position-relative ${statusClass}`}
               style={{ minWidth: "70px" }}
               data-date={date}
               id={isFirstOfDay ? `day-start-${date}-hourly-mobile` : undefined}
             >
+              {/* Add ID for specific hour targeting */}
+              <div id={`hour-${hourData.time}-hourly-mobile`} style={{ position: 'absolute', top: 0, left: 0 }} />
+
               {hourData?.values && (
                 <Col>
                   <p className="fs-6 m-0">{hour}</p>
@@ -249,13 +284,24 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
             const date = getLocalDate(hourData.time);
             const isFirstOfDay = index === 0 || getLocalDate(allHours[index - 1].time) !== date;
 
+            // Determine status
+            let statusClass = "";
+            if (currentHourIso) {
+              // Compare ISO strings directly
+              if (hourData.time < currentHourIso) statusClass = "past";
+              else if (hourData.time.startsWith(currentHourIso.slice(0, 13))) statusClass = "current"; // Compare up to hour
+            }
+
             return (
               <div
                 key={index}
-                className="hourly-item"
+                className={`hourly-item ${statusClass}`}
                 data-date={date}
                 id={isFirstOfDay ? `day-start-${date}-hourly-desktop` : undefined}
               >
+                {/* Add ID for specific hour targeting */}
+                <div id={`hour-${hourData.time}-hourly-desktop`} style={{ position: 'absolute', top: 0 }} />
+
                 {/* Time */}
                 <div className="hourly-time">{hour}:00</div>
 

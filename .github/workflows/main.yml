@@ -38,6 +38,7 @@ jobs:
         env:
           # This makes the secret available as an env var during build
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          VITE_WINDY_API_KEY: ${{ secrets.VITE_WINDY_API_KEY }}
 
       # 4. Configure GitHub Pages (optional but good practice)
       - name: Setup Pages

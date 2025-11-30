@@ -23,6 +23,7 @@ import BackgroundManager from "./BackgroundManager";
 import TemperatureChart from "./TemperatureChart";
 import SearchBar from "./SearchBar";
 import WebcamFeed from "./WebcamFeed";
+import WeatherRadar from "./WeatherRadar";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -215,6 +216,8 @@ function App() {
             <WebcamFeed location={locationToFetch} darkMode={darkMode} />
           </div>
 
+
+
           <div id="daily-section">
             <DailyForecast
               dailyData={forecastData?.timelines?.daily}
@@ -244,6 +247,11 @@ function App() {
               timezone={timezone}
               darkMode={darkMode}
             />
+          </div>
+
+          {/* Weather Radar */}
+          <div id="radar-section" className="mt-4">
+            <WeatherRadar location={locationToFetch} />
           </div>
         </Col>
       </Row>

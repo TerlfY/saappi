@@ -24,6 +24,7 @@ import TemperatureChart from "./TemperatureChart";
 import SearchBar from "./SearchBar";
 import WebcamFeed from "./WebcamFeed";
 import WeatherRadar from "./WeatherRadar";
+import WeatherEffects from "./WeatherEffects";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -156,6 +157,7 @@ function App() {
   return (
     <Container className={`mx-auto text-center m-4`}>
       <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
+      <WeatherEffects weatherCode={currentWeather?.weatherCode} />
       {/* Header */}
       <Navbar sticky="top">
         <Container>

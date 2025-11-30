@@ -15,7 +15,7 @@ const fetchWebcams = async ({ queryKey }) => {
             `https://api.windy.com/webcams/api/v3/webcams`,
             {
                 params: {
-                    limit: 1,
+                    limit: 10,
                     nearby: `${lat},${lon},${radius}`,
                     include: "images,location",
                 },
@@ -26,7 +26,9 @@ const fetchWebcams = async ({ queryKey }) => {
         );
 
         if (response.data && response.data.webcams && response.data.webcams.length > 0) {
-            return response.data.webcams[0];
+            // Sort by viewCount descending to get the most popular one
+            const sortedWebcams = response.data.webcams.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+            return sortedWebcams[0];
         }
         return null;
     } catch (error) {

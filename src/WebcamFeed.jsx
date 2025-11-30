@@ -69,6 +69,10 @@ const WebcamFeed = ({ location, darkMode }) => {
                     }}
                 >
                     {webcam.title} ({webcam.location.city}, {webcam.location.country})
+                    <br />
+                    <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>
+                        Updated: {new Date(webcam.lastUpdatedOn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                 </div>
             </div>
             {/* Attribution required by Windy */}

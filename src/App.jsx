@@ -23,6 +23,8 @@ import BackgroundManager from "./BackgroundManager";
 import TemperatureChart from "./TemperatureChart";
 import SearchBar from "./SearchBar";
 import WebcamFeed from "./WebcamFeed";
+import WeatherRadar from "./WeatherRadar";
+import WeatherEffects from "./WeatherEffects";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -155,6 +157,7 @@ function App() {
   return (
     <Container className={`mx-auto text-center m-4`}>
       <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
+      <WeatherEffects weatherCode={currentWeather?.weatherCode} />
       {/* Header */}
       <Navbar sticky="top">
         <Container>
@@ -177,6 +180,17 @@ function App() {
             }}
             showSuggestions={showSuggestions}
           />
+          <Button
+            variant={darkMode ? "light" : "dark"}
+            onClick={() => {
+              setSearchedLocation(null);
+              handleSearchInputChange({ target: { value: "" } });
+            }}
+            className="ms-2"
+            title="Use Current Location"
+          >
+            📍
+          </Button>
           <Button
             variant={darkMode ? "light" : "dark"}
             onClick={toggleDarkMode}
@@ -215,6 +229,8 @@ function App() {
             <WebcamFeed location={locationToFetch} darkMode={darkMode} />
           </div>
 
+
+
           <div id="daily-section">
             <DailyForecast
               dailyData={forecastData?.timelines?.daily}
@@ -244,6 +260,11 @@ function App() {
               timezone={timezone}
               darkMode={darkMode}
             />
+          </div>
+
+          {/* Weather Radar */}
+          <div id="radar-section" className="mt-4">
+            <WeatherRadar location={locationToFetch} />
           </div>
         </Col>
       </Row>

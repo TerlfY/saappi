@@ -76,6 +76,34 @@ body.body-dark-mode .hourlyIcons {
   border-right: none;
 }
 
+.hourly-item.past {
+  opacity: 0.5;
+}
+
+.hourly-item.current {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1;
+  /* Ensure it pops out */
+}
+
+/* Mobile Overrides for Past/Current */
+#hourly-mobile .past {
+  opacity: 0.5;
+}
+
+#hourly-mobile .current {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  z-index: 1;
+}
+
 /* Row alignments within the column */
 .hourly-time {
   font-weight: bold;

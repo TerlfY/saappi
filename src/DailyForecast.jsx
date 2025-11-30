@@ -58,67 +58,82 @@ const DailyForecast = ({ dailyData, loading, error }) => {
   return (
     <Container>
       {/* Mobile layout */}
-      {daysToDisplay.map(
-        (dayData, index) =>
-          dayData?.values && (
-            <Row
-              id="daily-mobile"
-              key={`mobile-${index}`}
-              className="d-md-none my-2 align-items-center"
-            >
-              {" "}
-              {/* */}
+      {daysToDisplay.map((dayData, index) => {
+        if (!dayData?.values) return null;
+
+        // Override icon if high chance of rain (>50%) and not already a precipitation code
+        let displayWeatherCode = dayData.values.weatherCodeMin;
+        if (dayData.values.precipitationProbabilityMax > 50) {
+          const precipitationCodes = [
+            51, 53, 55, 56, 57, // Drizzle
+            61, 63, 65, 66, 67, // Rain
+            71, 73, 75, 77,     // Snow
+            80, 81, 82,         // Rain showers
+            85, 86,             // Snow showers
+            95, 96, 99          // Thunderstorm
+          ];
+
+          if (!precipitationCodes.includes(displayWeatherCode)) {
+            displayWeatherCode = 63; // Force "Rain: Moderate" icon
+          }
+        }
+
+        return (
+          <div key={index}>
+            {/* Mobile Row */}
+            <Row id="daily-mobile" className="d-md-none my-2 align-items-center">
               <Col xs={4}>
-                {" "}
-                {/* Using explicit grid columns for better alignment */}
-                <p className="fs-6 m-0 text-start ps-2">{`${formatDay(
-                  new Date(dayData.time)
-                )}`}</p>
+                <p className="fs-6 m-0 text-start ps-2">{formatDay(new Date(dayData.time))}</p>
               </Col>
               <Col xs={4} className="text-center">
-                <img
-                  className="dailyIcons" //
-                  src={getIcon(dayData.values.weatherCodeMin)} //
-                  alt="Weather Icon"
-                />
+                <div className="daily-icon-wrapper">
+                  <img
+                    className="dailyIcons"
+                    src={getIcon(displayWeatherCode, true)}
+                    alt="Weather Icon"
+                  />
+                  {dayData.values.precipitationProbabilityMax > 0 && (
+                    <span className="daily-precip-prob">
+                      💧{dayData.values.precipitationProbabilityMax}%
+                    </span>
+                  )}
+                </div>
               </Col>
               <Col xs={4}>
-                <p className="fs-6 m-0 text-end pe-2">{`${Math.round(
-                  dayData.values.temperatureMin
-                )}°..${Math.round(dayData.values.temperatureMax)}°C`}</p>{" "}
-                {/* */}
+                <p className="fs-6 m-0 text-end pe-2">
+                  {Math.round(dayData.values.temperatureMin)}°..{Math.round(dayData.values.temperatureMax)}°C
+                </p>
               </Col>
             </Row>
-          )
-      )}
 
-      {/* Desktop layout */}
-      {daysToDisplay.map(
-        (dayData, index) =>
-          // Ensure dayData and dayData.values exist before rendering row
-          dayData?.values && (
-            <Row
-              key={`desktop-${index}`}
-              className="d-flex my-3 d-none d-md-flex align-items-center"
-            >
+            {/* Desktop Row */}
+            <Row className="d-flex my-3 d-none d-md-flex align-items-center">
               <Col md={4} className="d-none d-md-flex">
-                <p className="fs-5">{`${formatDay(new Date(dayData.time))}`}</p>{" "}
+                <p className="fs-5">{formatDay(new Date(dayData.time))}</p>
               </Col>
               <Col md={4} className="d-none d-md-flex justify-content-center">
-                <img
-                  className="dailyIcons" //
-                  src={getIcon(dayData.values.weatherCodeMin)} //
-                  alt="Weather Icon"
-                />
+                <div className="daily-icon-wrapper">
+                  <img
+                    className="dailyIcons"
+                    src={getIcon(displayWeatherCode, true)}
+                    alt="Weather Icon"
+                  />
+                  {dayData.values.precipitationProbabilityMax > 0 && (
+                    <span className="daily-precip-prob">
+                      💧{dayData.values.precipitationProbabilityMax}%
+                    </span>
+                  )}
+                </div>
               </Col>
               <Col md={4} className="d-none d-md-flex">
-                <p className="fs-5">{`${Math.round(
-                  dayData.values.temperatureMin
-                )}°..${Math.round(dayData.values.temperatureMax)}°C`}</p>{" "}
+                <p className="fs-5">
+                  {Math.round(dayData.values.temperatureMin)}°..{Math.round(dayData.values.temperatureMax)}°C
+                </p>
               </Col>
             </Row>
-          )
-      )}
+          </div>
+        );
+      })}
     </Container>
   );
 };

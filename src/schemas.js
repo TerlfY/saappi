@@ -67,6 +67,7 @@ export const openMeteoSchema = z.object({
         temperature_2m_min: z.array(z.number().nullable()),
         sunrise: z.array(z.string()),
         sunset: z.array(z.string()),
+        precipitation_probability_max: z.array(z.number().nullable()).optional(),
     }).passthrough(),
 }).passthrough();
 

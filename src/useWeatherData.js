@@ -29,6 +29,7 @@ const transformOpenMeteoData = (data) => {
       weatherCode: data.daily.weathercode[index],
       sunriseTime: data.daily.sunrise[index],
       sunsetTime: data.daily.sunset[index],
+      precipitationProbabilityMax: data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[index] : 0,
     },
   }));
 
@@ -59,7 +60,7 @@ const fetchWeather = async ({ queryKey }) => {
       latitude: lat,
       longitude: lon,
       hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,uv_index,cloudcover,precipitation_probability",
-      daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
+      daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max",
       timezone: "auto",
       windspeed_unit: "ms",
     },

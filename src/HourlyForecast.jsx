@@ -34,21 +34,32 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
   let startIndex = 0;
   if (timezone) {
     try {
-      // Get current time in target timezone as ISO-like string "YYYY-MM-DDTHH"
-      // en-CA returns "YYYY-MM-DD, HH:MM:SS" -> replace -> "YYYY-MM-DDTHH:MM:SS"
-      const nowInTargetTz = new Date().toLocaleString("en-CA", {
+      // Use sv-SE for reliable ISO 8601 formatting (YYYY-MM-DD hh:mm:ss)
+      const formatter = new Intl.DateTimeFormat('sv-SE', {
         timeZone: timezone,
-        hour12: false,
-      }).replace(", ", "T");
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        hour12: false
+      });
 
-      // Match the first 13 chars: "YYYY-MM-DDTHH"
-      const currentHourIso = nowInTargetTz.slice(0, 13);
+      const parts = formatter.formatToParts(new Date());
+      const year = parts.find(p => p.type === 'year').value;
+      const month = parts.find(p => p.type === 'month').value;
+      const day = parts.find(p => p.type === 'day').value;
+      const hour = parts.find(p => p.type === 'hour').value;
+
+      // Construct ISO-like string "YYYY-MM-DDTHH"
+      const currentHourIso = `${year}-${month}-${day}T${hour}`;
 
       startIndex = hourlyData.findIndex(h => h.time.startsWith(currentHourIso));
 
       // Fallback: if exact hour not found, find first future hour
       if (startIndex === -1) {
-        startIndex = hourlyData.findIndex(h => h.time > nowInTargetTz);
+        // Construct full ISO string for comparison
+        const nowIso = `${year}-${month}-${day}T${hour}:00`;
+        startIndex = hourlyData.findIndex(h => h.time > nowIso);
       }
     } catch (e) {
       console.error("Error calculating start index:", e);
@@ -63,15 +74,10 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
 
   // 4. Helper to get local hour integer for display
   const getLocalHour = (timeString) => {
-    if (!timezone) return new Date(timeString).getHours();
-    try {
-      const hourString = new Date(timeString).toLocaleTimeString("en-GB", {
-        hour: "2-digit", hour12: false, timeZone: timezone
-      });
-      return parseInt(hourString, 10);
-    } catch (e) {
-      return new Date(timeString).getHours();
-    }
+    // timeString is "YYYY-MM-DDTHH:MM"
+    // We can just parse the HH part directly from the string!
+    // This avoids all Date object timezone confusion.
+    return parseInt(timeString.split("T")[1].slice(0, 2), 10);
   };
 
   // 5. Helper to determine Day/Night status

@@ -120,6 +120,30 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <span className="detail-label">UV Index</span>
             <span className="detail-value">{weatherData.values.uvIndex}</span>
           </div>
+          <div className="detail-item">
+            <span className="detail-label">Sunrise</span>
+            <span className="detail-value">
+              {dailyValues?.sunriseTime
+                ? new Date(dailyValues.sunriseTime).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: timezone,
+                })
+                : "--:--"}
+            </span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Sunset</span>
+            <span className="detail-value">
+              {dailyValues?.sunsetTime
+                ? new Date(dailyValues.sunsetTime).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: timezone,
+                })
+                : "--:--"}
+            </span>
+          </div>
         </div>
       </div>
     </Container>

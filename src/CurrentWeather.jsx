@@ -124,11 +124,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <span className="detail-label">Sunrise</span>
             <span className="detail-value">
               {dailyValues?.sunriseTime
-                ? new Date(dailyValues.sunriseTime).toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: timezone,
-                })
+                ? dailyValues.sunriseTime.split("T")[1]
                 : "--:--"}
             </span>
           </div>
@@ -136,11 +132,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <span className="detail-label">Sunset</span>
             <span className="detail-value">
               {dailyValues?.sunsetTime
-                ? new Date(dailyValues.sunsetTime).toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: timezone,
-                })
+                ? dailyValues.sunsetTime.split("T")[1]
                 : "--:--"}
             </span>
           </div>

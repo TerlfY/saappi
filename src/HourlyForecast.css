@@ -106,3 +106,32 @@ body.body-dark-mode .hourlyIcons {
   min-height: 20px;
   /* Ensure alignment even if empty */
 }
+
+/* Tab Bar Styling */
+.hourly-tabs-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Firefox */
+  margin-bottom: 1rem;
+}
+
+.hourly-tabs-wrapper::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+.hourly-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  padding-bottom: 5px;
+  /* Space for potential scrollbar if we wanted one */
+}
+
+.hourly-tabs .nav-link {
+  white-space: nowrap;
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.9rem;
+}

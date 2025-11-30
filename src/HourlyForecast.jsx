@@ -155,7 +155,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
           const hour = getLocalHour(hourData.time);
           const isDay = getIsDaytime(hourData.time);
           return (
-            <Col key={index} className="border border-secondary border-bottom-0 border-top-0" style={{ minWidth: "80px" }}>
+            <Col key={index} className="border border-secondary border-bottom-0 border-top-0" style={{ minWidth: "70px" }}>
               {hourData?.values && (
                 <Col>
                   <p className="fs-6 m-0">{hour}</p>
@@ -167,6 +167,18 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
                     />
                   </OverlayTrigger>
                   <p className="fs-6 my-1">{Math.round(hourData.values.temperature)}°C</p>
+
+                  {/* Wind Info for Mobile */}
+                  <div className="d-flex flex-column align-items-center mb-1" style={{ fontSize: "0.75rem", opacity: 0.9 }}>
+                    <span
+                      className="wind-arrow"
+                      style={{ transform: `rotate(${hourData.values.windDirection || 0}deg)`, fontSize: "1rem" }}
+                    >
+                      ↓
+                    </span>
+                    <span>{Math.round(hourData.values.windSpeed)}</span>
+                  </div>
+
                   {hourData.values.precipitationProbability > 20 && (
                     <p className="m-0 precip-prob">
                       💧{hourData.values.precipitationProbability}%

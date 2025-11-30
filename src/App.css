@@ -321,6 +321,7 @@ body.body-dark-mode .placeholder {
 body.body-dark-mode .weather-details-grid {
   background: rgba(0, 0, 0, 0.2);
 }
+
 /* Daily Forecast Precipitation */
 .daily-icon-wrapper {
   display: flex;
@@ -331,6 +332,22 @@ body.body-dark-mode .weather-details-grid {
 
 .daily-precip-prob {
   font-size: 0.75rem;
-  color: #0dcaf0; /* Bootstrap info color */
+  color: #0dcaf0;
+  /* Bootstrap info color */
   margin-top: -5px;
+}
+
+/* Pulse Animation for Live Badge */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }

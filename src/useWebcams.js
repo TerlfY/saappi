@@ -1,0 +1,53 @@
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+const API_KEY = import.meta.env.VITE_WINDY_API_KEY;
+
+const fetchWebcams = async ({ queryKey }) => {
+    const [_, { lat, lon, radius }] = queryKey;
+
+    if (!lat || !lon || !API_KEY) return null;
+
+    try {
+        // Windy Webcams API v3
+        // Endpoint: https://api.windy.com/webcams/api/v3/webcams
+        const response = await axios.get(
+            `https://api.windy.com/webcams/api/v3/webcams`,
+            {
+                params: {
+                    limit: 1,
+                    nearby: `${lat},${lon},${radius}`,
+                    include: "images,location",
+                },
+                headers: {
+                    "X-WINDY-API-KEY": API_KEY,
+                },
+            }
+        );
+
+        if (response.data && response.data.webcams && response.data.webcams.length > 0) {
+            return response.data.webcams[0];
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching webcams:", error);
+        throw error;
+    }
+};
+
+const useWebcams = (location) => {
+    const lat = location?.latitude;
+    const lon = location?.longitude;
+    // Default radius 20km
+    const radius = 20;
+
+    return useQuery({
+        queryKey: ["webcams", { lat, lon, radius }],
+        queryFn: fetchWebcams,
+        enabled: !!lat && !!lon && !!API_KEY,
+        staleTime: 1000 * 60 * 10, // 10 minutes (API images expire)
+        retry: 1,
+    });
+};
+
+export default useWebcams;

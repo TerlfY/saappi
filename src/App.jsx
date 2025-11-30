@@ -22,6 +22,7 @@ import useTimezone from "./useTimezone";
 import BackgroundManager from "./BackgroundManager";
 import TemperatureChart from "./TemperatureChart";
 import SearchBar from "./SearchBar";
+import WebcamFeed from "./WebcamFeed";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -208,6 +209,12 @@ function App() {
               timezone={timezone}
             />
           </div>
+
+          {/* Webcam Feed */}
+          <div id="webcam-section">
+            <WebcamFeed location={locationToFetch} darkMode={darkMode} />
+          </div>
+
           <div id="daily-section">
             <DailyForecast
               dailyData={forecastData?.timelines?.daily}

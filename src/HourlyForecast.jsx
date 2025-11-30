@@ -1,10 +1,38 @@
 import React from "react";
-import { Container, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Container, Row, Col, OverlayTrigger, Tooltip, Nav } from "react-bootstrap";
 import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => {
+  const [selectedDate, setSelectedDate] = React.useState(null);
+
+  // Helper to get local date string "YYYY-MM-DD"
+  const getLocalDate = (timeString) => {
+    return timeString.slice(0, 10);
+  };
+
+  // Group data by date
+  const groupedData = React.useMemo(() => {
+    if (!hourlyData || hourlyData.length === 0) return {};
+    const groups = {};
+    hourlyData.forEach(hour => {
+      const date = getLocalDate(hour.time);
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(hour);
+    });
+    return groups;
+  }, [hourlyData]);
+
+  const availableDates = React.useMemo(() => Object.keys(groupedData).sort(), [groupedData]);
+
+  // Initialize selectedDate if null
+  React.useEffect(() => {
+    if (!selectedDate && availableDates.length > 0) {
+      setSelectedDate(availableDates[0]);
+    }
+  }, [availableDates, selectedDate]);
+
   // 1. Handle Loading/Error/Empty States
   if (loading) {
     return (
@@ -30,72 +58,57 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
     );
   }
 
-  // 2. Determine Start Index based on Target Timezone
-  let startIndex = 0;
-  if (timezone) {
-    try {
-      // Use sv-SE for reliable ISO 8601 formatting (YYYY-MM-DD hh:mm:ss)
-      const formatter = new Intl.DateTimeFormat('sv-SE', {
-        timeZone: timezone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        hour12: false
-      });
-
-      const parts = formatter.formatToParts(new Date());
-      const year = parts.find(p => p.type === 'year').value;
-      const month = parts.find(p => p.type === 'month').value;
-      const day = parts.find(p => p.type === 'day').value;
-      const hour = parts.find(p => p.type === 'hour').value;
-
-      // Construct ISO-like string "YYYY-MM-DDTHH"
-      const currentHourIso = `${year}-${month}-${day}T${hour}`;
-
-      startIndex = hourlyData.findIndex(h => h.time.startsWith(currentHourIso));
-
-      // Fallback: if exact hour not found, find first future hour
-      if (startIndex === -1) {
-        // Construct full ISO string for comparison
-        const nowIso = `${year}-${month}-${day}T${hour}:00`;
-        startIndex = hourlyData.findIndex(h => h.time > nowIso);
-      }
-    } catch (e) {
-      console.error("Error calculating start index:", e);
-    }
-  }
-
-  // Default to 0 if calculation failed or returned -1
-  startIndex = startIndex >= 0 ? startIndex : 0;
-
-  // 3. Slice the next 7 hours
-  const hoursToDisplay = hourlyData.slice(startIndex, startIndex + 7);
-
-  // 4. Helper to get local hour integer for display
+  // Helper to get local hour integer
   const getLocalHour = (timeString) => {
-    // timeString is "YYYY-MM-DDTHH:MM"
-    // We can just parse the HH part directly from the string!
-    // This avoids all Date object timezone confusion.
     return parseInt(timeString.split("T")[1].slice(0, 2), 10);
   };
 
-  // 5. Helper to determine Day/Night status
+  // Helper for Day/Night
   const getIsDaytime = (timeString) => {
-    // Extract date part "YYYY-MM-DD"
     const datePart = timeString.slice(0, 10);
-    // Find corresponding daily forecast
     const dayForecast = dailyData.find(d => d.time === datePart);
-
     if (dayForecast && dayForecast.values.sunriseTime && dayForecast.values.sunsetTime) {
-      // Direct string comparison of ISO timestamps
       return timeString >= dayForecast.values.sunriseTime && timeString < dayForecast.values.sunsetTime;
     }
-
-    // Fallback: 06:00 to 22:00
     const hour = getLocalHour(timeString);
     return hour >= 6 && hour < 22;
   };
+
+  // Determine hours to display
+  let hoursToDisplay = [];
+  if (selectedDate) {
+    let dayHours = groupedData[selectedDate] || [];
+
+    // If "Today", filter out past hours
+    // We need to know if selectedDate is "Today" in the target timezone
+    // We can check if it matches the first available date (usually today)
+    // Or better, use the same logic as before to find "now"
+
+    // Let's use the robust "now" calculation from before to filter "Today"
+    if (selectedDate === availableDates[0] && timezone) {
+      try {
+        const formatter = new Intl.DateTimeFormat('sv-SE', {
+          timeZone: timezone,
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', hour12: false
+        });
+        const parts = formatter.formatToParts(new Date());
+        const year = parts.find(p => p.type === 'year').value;
+        const month = parts.find(p => p.type === 'month').value;
+        const day = parts.find(p => p.type === 'day').value;
+        const hour = parts.find(p => p.type === 'hour').value;
+
+        const currentHourIso = `${year}-${month}-${day}T${hour}`;
+
+        // Filter hours that are >= current hour
+        dayHours = dayHours.filter(h => h.time >= currentHourIso);
+      } catch (e) {
+        console.error("Error filtering today's hours:", e);
+      }
+    }
+
+    hoursToDisplay = dayHours;
+  }
 
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
@@ -103,12 +116,42 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
     </Tooltip>
   );
 
-  // 6. Render
+  // Format date for tab label
+  const formatDateLabel = (dateStr) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (dateStr === availableDates[0]) return "Today"; // Assumption: first date is today
+    // Simple check for tomorrow (ignoring timezone edge cases for label simplicity)
+    if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+
+    return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+  };
+
   return (
-    <Container>
+    <Container className="hourly-forecast-container">
+      {/* Tabs */}
+      <div className="hourly-tabs-wrapper mb-3">
+        <Nav variant="pills" className="flex-nowrap hourly-tabs">
+          {availableDates.map(date => (
+            <Nav.Item key={date}>
+              <Nav.Link
+                active={selectedDate === date}
+                onClick={() => setSelectedDate(date)}
+                className="text-nowrap"
+              >
+                {formatDateLabel(date)}
+              </Nav.Link>
+            </Nav.Item>
+          ))}
+        </Nav>
+      </div>
+
       {/* Mobile Layout (Horizontal Scroll) */}
-      <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap">
-        {hoursToDisplay.map((hourData, index) => {
+      <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap" style={{ overflowX: 'auto' }}>
+        {hoursToDisplay.length > 0 ? hoursToDisplay.map((hourData, index) => {
           const hour = getLocalHour(hourData.time);
           const isDay = getIsDaytime(hourData.time);
           return (
@@ -133,42 +176,48 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
               )}
             </Col>
           );
-        })}
+        }) : (
+          <p className="text-center w-100 text-muted">No more data for today.</p>
+        )}
       </Row>
 
       {/* Desktop Layout (Vertical List) */}
-      {hoursToDisplay.map((hourData, index) => {
-        if (!hourData?.values) return null;
-        const hour = getLocalHour(hourData.time);
-        const isDay = getIsDaytime(hourData.time);
-        return (
-          <Row key={index} className="d-flex my-1 py-2 d-none d-md-flex border-bottom border-light-subtle">
-            <Col md={4} className="d-none d-md-flex align-items-center">
-              <p className="fs-5 m-0">{hour}:00</p>
-            </Col>
-            <Col md={4} className="d-none d-md-flex justify-content-center align-items-center">
-              <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
-                <img
-                  className="hourlyIcons m-2"
-                  src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
-                  alt="Weather Icon"
-                />
-              </OverlayTrigger>
-            </Col>
-            <Col md={4} className="d-none d-md-flex align-items-center">
-              <div className="d-flex align-items-center">
-                <p className="fs-5 m-0 me-3">{Math.round(hourData.values.temperature)}°C</p>
-                {hourData.values.precipitationProbability > 0 && (
-                  <div className="d-flex align-items-center text-info" style={{ fontSize: "0.9rem" }}>
-                    <span className="me-1">💧</span>
-                    <span>{hourData.values.precipitationProbability}%</span>
-                  </div>
-                )}
-              </div>
-            </Col>
-          </Row>
-        );
-      })}
+      <div className="d-none d-md-block">
+        {hoursToDisplay.length > 0 ? hoursToDisplay.map((hourData, index) => {
+          if (!hourData?.values) return null;
+          const hour = getLocalHour(hourData.time);
+          const isDay = getIsDaytime(hourData.time);
+          return (
+            <Row key={index} className="d-flex my-1 py-2 border-bottom border-light-subtle">
+              <Col md={4} className="d-flex align-items-center">
+                <p className="fs-5 m-0">{hour}:00</p>
+              </Col>
+              <Col md={4} className="d-flex justify-content-center align-items-center">
+                <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
+                  <img
+                    className="hourlyIcons m-2"
+                    src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
+                    alt="Weather Icon"
+                  />
+                </OverlayTrigger>
+              </Col>
+              <Col md={4} className="d-flex align-items-center">
+                <div className="d-flex align-items-center">
+                  <p className="fs-5 m-0 me-3">{Math.round(hourData.values.temperature)}°C</p>
+                  {hourData.values.precipitationProbability > 0 && (
+                    <div className="d-flex align-items-center text-info" style={{ fontSize: "0.9rem" }}>
+                      <span className="me-1">💧</span>
+                      <span>{hourData.values.precipitationProbability}%</span>
+                    </div>
+                  )}
+                </div>
+              </Col>
+            </Row>
+          );
+        }) : (
+          <p className="text-center py-3 text-muted">No more data for today.</p>
+        )}
+      </div>
     </Container>
   );
 };

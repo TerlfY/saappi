@@ -124,6 +124,11 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
                     />
                   </OverlayTrigger>
                   <p className="fs-6 my-1">{Math.round(hourData.values.temperature)}°C</p>
+                  {hourData.values.precipitationProbability > 0 && (
+                    <p className="m-0 text-info" style={{ fontSize: "0.75rem" }}>
+                      💧{hourData.values.precipitationProbability}%
+                    </p>
+                  )}
                 </Col>
               )}
             </Col>
@@ -151,7 +156,15 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
               </OverlayTrigger>
             </Col>
             <Col md={4} className="d-none d-md-flex align-items-center">
-              <p className="fs-5 m-0">{Math.round(hourData.values.temperature)}°C</p>
+              <div className="d-flex align-items-center">
+                <p className="fs-5 m-0 me-3">{Math.round(hourData.values.temperature)}°C</p>
+                {hourData.values.precipitationProbability > 0 && (
+                  <div className="d-flex align-items-center text-info" style={{ fontSize: "0.9rem" }}>
+                    <span className="me-1">💧</span>
+                    <span>{hourData.values.precipitationProbability}%</span>
+                  </div>
+                )}
+              </div>
             </Col>
           </Row>
         );

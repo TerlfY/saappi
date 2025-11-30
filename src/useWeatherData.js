@@ -16,6 +16,7 @@ const transformOpenMeteoData = (data) => {
       uvIndex: data.hourly.uv_index[index],
       cloudCover: data.hourly.cloudcover[index],
       snowDepth: data.hourly.snow_depth ? data.hourly.snow_depth[index] : 0,
+      precipitationProbability: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[index] : 0,
     },
   }));
 
@@ -56,7 +57,7 @@ const fetchWeather = async ({ queryKey }) => {
     params: {
       latitude: lat,
       longitude: lon,
-      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,uv_index,cloudcover",
+      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,uv_index,cloudcover,precipitation_probability",
       daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
       timezone: "auto",
       windspeed_unit: "ms",

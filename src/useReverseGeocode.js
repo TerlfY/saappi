@@ -23,16 +23,16 @@ const useReverseGeocode = (location) => {
         staleTime: Infinity,
     });
 
-    // Adapt BigDataCloud response to our formatLocationName expected object
-    const addressObj = data
+    // Adapt BigDataCloud response to Open-Meteo format for formatLocationName
+    const locationObj = data
         ? {
-            city: data.locality || data.city,
-            state: data.principalSubdivision,
+            name: data.locality || data.city,
+            admin1: data.principalSubdivision,
             country: data.countryName,
         }
         : null;
 
-    const cityName = formatLocationName(addressObj);
+    const cityName = formatLocationName(locationObj);
 
     return { cityName, isLoading, error };
 };

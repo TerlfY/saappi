@@ -74,7 +74,7 @@ const SearchBar = ({
                                     }`}
                                 onClick={() => onSuggestionClick(result)}
                             >
-                                {formatLocationName(result.address) || result.display_name}
+                                {formatLocationName(result)}
                             </div>
                         ))}
                     </div>

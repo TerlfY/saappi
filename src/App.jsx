@@ -182,6 +182,17 @@ function App() {
           />
           <Button
             variant={darkMode ? "light" : "dark"}
+            onClick={() => {
+              setSearchedLocation(null);
+              handleSearchInputChange({ target: { value: "" } });
+            }}
+            className="ms-2"
+            title="Use Current Location"
+          >
+            📍
+          </Button>
+          <Button
+            variant={darkMode ? "light" : "dark"}
             onClick={toggleDarkMode}
             className="ms-2"
           >

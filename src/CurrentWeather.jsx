@@ -88,7 +88,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           overlay={renderTooltip}
         >
           <img
-            className="mb-3"
+            className="mb-3 current-weather-icon"
             style={{ height: "120px", width: "auto", objectFit: "contain" }}
             src={getIcon(
               weatherData.values.weatherCode,

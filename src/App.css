@@ -330,11 +330,24 @@ body.body-dark-mode .weather-details-grid {
   justify-content: center;
 }
 
-.daily-precip-prob {
-  font-size: 0.75rem;
-  color: #0dcaf0;
-  /* Bootstrap info color */
+.daily-precip-prob,
+.precip-prob {
+  font-size: 0.85rem;
+  color: #004085;
+  /* Dark blue for better contrast on light/grey bg */
+  font-weight: 800;
+  /* Extra bold */
+  text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.7);
+  /* White outline */
   margin-top: -5px;
+}
+
+/* Dark mode adjustment */
+body.body-dark-mode .daily-precip-prob,
+body.body-dark-mode .precip-prob {
+  color: #0dcaf0;
+  /* Cyan pops well on dark bg */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 /* Pulse Animation for Live Badge */

@@ -9,7 +9,7 @@ import {
 } from "react-bootstrap";
 import HourlyForecast from "./HourlyForecast";
 import CurrentWeather from "./CurrentWeather";
-import DailyForecast from "./DailyForecast";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useDarkMode } from "./DarkModeContext";
 import useWeatherData from "./useWeatherData";
@@ -219,13 +219,7 @@ function App() {
 
 
 
-          <div id="daily-section">
-            <DailyForecast
-              dailyData={forecastData?.timelines?.daily}
-              loading={forecastLoading}
-              error={forecastError}
-            />
-          </div>
+
         </Col>
 
         {/* Main Area: Chart & Hourly Forecast */}

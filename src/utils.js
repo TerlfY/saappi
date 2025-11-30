@@ -1,24 +1,25 @@
-export const formatLocationName = (addressObj) => {
-    if (!addressObj) return "";
+export const formatLocationName = (locationObj) => {
+    if (!locationObj) return "";
 
-    const city =
-        addressObj.city ||
-        addressObj.town ||
-        addressObj.village ||
-        addressObj.hamlet ||
-        addressObj.municipality ||
-        addressObj.suburb ||
-        addressObj.neighbourhood ||
-        addressObj.county ||
-        addressObj.province ||
-        addressObj.locality;
+    // Handle Open-Meteo format
+    const name = locationObj.name;
+    const admin1 = locationObj.admin1;
+    const country = locationObj.country;
 
-    const country = addressObj.country || addressObj.countryName;
+    // Filter out parts that are the same as the name to avoid "Berlin, Berlin, Germany"
+    const parts = [name, admin1, country].filter((part) => part && part !== name);
 
-    // Only include city and country to keep it short and prevent layout breakage
-    const parts = [city, country].filter(Boolean);
+    // If admin1 was filtered out but it's different from country, we might want it.
+    // But the above logic keeps admin1 if it's != name.
+    // We also want to ensure we don't have duplicates in the list.
+    // e.g. if name == admin1, we have [name, country].
 
-    // Remove duplicates
+    // Re-add name at the start if it was filtered (it shouldn't be by the logic above unless name is empty)
+    if (parts[0] !== name) {
+        parts.unshift(name);
+    }
+
+    // Remove duplicates just in case
     const uniqueParts = [...new Set(parts)];
 
     return uniqueParts.join(", ");

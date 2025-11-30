@@ -87,3 +87,10 @@
         opacity: 0;
     }
 }
+
+/* Hide effects on mobile to improve performance and visibility */
+@media (max-width: 768px) {
+    .weather-effects-container {
+        display: none;
+    }
+}

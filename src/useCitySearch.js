@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { searchResultSchema } from "./schemas";
+import { openMeteoGeocodingSchema } from "./schemas";
 import useDebounce from "./useDebounce";
 import { formatLocationName } from "./utils";
 
 const fetchCitySearch = async ({ queryKey }) => {
     const [_, city] = queryKey;
     const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?q=${city}&format=json&addressdetails=1`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=10&language=en&format=json`
     );
-    return searchResultSchema.parse(response.data);
+    return openMeteoGeocodingSchema.parse(response.data);
 };
 
 const useCitySearch = () => {
@@ -33,9 +33,10 @@ const useCitySearch = () => {
         enabled: !!debouncedSearchCity,
         retry: false,
         select: (data) => {
+            if (!data.results) return [];
             const seen = new Set();
-            return data.filter((item) => {
-                const name = formatLocationName(item.address) || item.display_name;
+            return data.results.filter((item) => {
+                const name = formatLocationName(item);
                 if (seen.has(name)) {
                     return false;
                 }
@@ -69,11 +70,11 @@ const useCitySearch = () => {
 
     const handleSuggestionClick = (result) => {
         setSelectionMade(true);
-        const formattedName = formatLocationName(result.address) || result.display_name;
+        const formattedName = formatLocationName(result);
 
         setSearchedLocation({
-            latitude: parseFloat(result.lat),
-            longitude: parseFloat(result.lon),
+            latitude: result.latitude,
+            longitude: result.longitude,
             name: formattedName,
         });
         setSearchCity("");

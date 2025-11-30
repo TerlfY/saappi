@@ -1,165 +1,171 @@
-#hourly-mobile {
-  display: flex;
-  flex-wrap: nowrap;
+/* Unified Forecast Grid Layout */
+.unified-forecast-scroll-container {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  /* Smooth scrolling on iOS */
+  width: 100%;
   padding-bottom: 10px;
-  /* Space for scrollbar if visible */
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-#hourly-mobile::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-#hourly-mobile {
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
-}
-
-.hourlyIcons {
-  width: 50px;
-  height: 50px;
-  /* Improve contrast for grey icons on light background */
-  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4));
-  transition: filter 0.3s ease;
-}
-
-/* Improve contrast for grey icons on dark background */
-body.body-dark-mode .hourlyIcons {
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
-}
-
-/* Horizontal Scroll Container for Desktop */
-.hourly-scroll-container {
-  display: flex;
-  overflow-x: auto;
-  padding-bottom: 10px;
-  /* Space for scrollbar */
   scrollbar-width: thin;
-  /* Firefox */
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
-.hourly-scroll-container::-webkit-scrollbar {
-  height: 8px;
+.unified-forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--total-hours), minmax(50px, 1fr));
+  grid-template-rows: auto auto auto auto auto;
+  /* Hour, Icon, Temp, Wind, Precip */
+  gap: 0;
+  min-width: max-content;
+  /* Ensure it scrolls instead of shrinking too much */
 }
 
-.hourly-scroll-container::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* Row 1: Day Headers - REMOVED */
+/* .grid-day-header { ... } */
 
-.hourly-scroll-container::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-.hourly-item {
-  flex: 0 0 auto;
-  width: 70px;
-  /* Fixed width for each hour column */
+/* Common Cell Styles */
+.grid-cell {
   text-align: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 0;
+  padding: 8px 2px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  /* Spacing between rows */
+  justify-content: center;
+  position: relative;
 }
 
-.hourly-item:last-child {
-  border-right: none;
-}
-
-.hourly-item.past {
-  opacity: 0.5;
-}
-
-.hourly-item.current {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  z-index: 1;
-  /* Ensure it pops out */
-}
-
-/* Mobile Overrides for Past/Current */
-#hourly-mobile .past {
-  opacity: 0.5;
-}
-
-#hourly-mobile .current {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  z-index: 1;
-}
-
-/* Row alignments within the column */
-.hourly-time {
+/* Row Assignments */
+.hour-header {
+  grid-row: 1;
+  /* Was 2 */
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  /* border-top: 1px solid rgba(255, 255, 255, 0.1); - No longer needed if top row */
 }
 
-.hourly-temp {
+.icon-cell {
+  grid-row: 2;
+  /* Was 3 */
+  padding: 5px 0;
+}
+
+.temp-cell {
+  grid-row: 3;
+  /* Was 4 */
+  font-weight: bold;
   font-size: 1.1rem;
-  font-weight: bold;
 }
 
-.hourly-wind {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.wind-cell {
+  grid-row: 4;
+  /* Was 5 */
   font-size: 0.8rem;
-  opacity: 0.9;
+}
+
+.precip-cell {
+  grid-row: 5;
+  /* Was 6 */
+  font-size: 0.8rem;
+  min-height: 30px;
+}
+
+/* Styling Details */
+.hourlyIcons {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+  /* Keep contrast */
+}
+
+body.body-dark-mode .hourlyIcons {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
 }
 
 .wind-arrow {
-  font-size: 1.2rem;
   display: inline-block;
+  font-size: 1.2rem;
   margin-bottom: 2px;
 }
 
-.hourly-precip {
-  font-size: 0.8rem;
-  min-height: 20px;
-  /* Ensure alignment even if empty */
+.precip-prob {
+  color: #0dcaf0;
+  /* Bootstrap info color */
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Tab Bar Styling */
-.hourly-tabs-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* Firefox */
-  margin-bottom: 1rem;
+/* Past / Current Styling */
+.grid-cell.past {
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.05);
 }
 
-.hourly-tabs-wrapper::-webkit-scrollbar {
-  display: none;
-  /* Chrome, Safari, Opera */
+.grid-cell.current {
+  background: rgba(255, 255, 255, 0.15);
+  font-weight: bold;
 }
 
-.hourly-tabs {
+/* Day Navigation Bar */
+.day-navigation-bar {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 5px;
-  padding-bottom: 5px;
-  /* Space for potential scrollbar if we wanted one */
+  overflow-x: auto;
+  gap: 2px;
+  /* Small gap for separation */
+  padding-bottom: 0;
+  scrollbar-width: none;
+  /* Hide scrollbar */
+  -webkit-overflow-scrolling: touch;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 4px;
 }
 
-.hourly-tabs .nav-link {
+.day-navigation-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.day-nav-item {
+  background: #e9ecef;
+  /* Light grey inactive */
+  border: none;
+  color: #1e3a8a;
+  /* Dark blue text */
+  padding: 8px 16px;
+  border-radius: 2px;
+  /* Slight rounding or 0 for sharp */
+  font-size: 0.95rem;
+  font-weight: bold;
   white-space: nowrap;
-  border-radius: 20px;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 0 0 auto;
+  /* Don't shrink */
+  min-width: 60px;
+  text-align: center;
+}
+
+.day-nav-item:hover {
+  background: #dee2e6;
+}
+
+.day-nav-item.active {
+  background: #1e3a8a;
+  /* Dark blue active */
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode adjustments for tabs */
+body.body-dark-mode .day-nav-item {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e9ecef;
+}
+
+body.body-dark-mode .day-nav-item.active {
+  background: #3b82f6;
+  /* Brighter blue for dark mode active */
+  color: white;
+}
+
+/* Mobile specific overrides if needed, but grid should handle it */
+#hourly-mobile {
+  display: none;
+  /* Hide old mobile view if it still exists in DOM, but we replaced it */
 }

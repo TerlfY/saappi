@@ -1,83 +1,114 @@
+import React from "react";
+import { Container, Row, Col, OverlayTrigger, Tooltip, Nav } from "react-bootstrap";
 import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 import "./HourlyForecast.css";
-import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
-import SkeletonWeather from "./SkeletonWeather";
 
+const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => {
+  const [selectedDate, setSelectedDate] = React.useState(null);
 
-const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkMode }) => {
-  // Process the data *after* checking loading/error states and if data exists
+  // Helper to get local date string "YYYY-MM-DD"
+  const getLocalDate = (timeString) => {
+    return timeString.slice(0, 10);
+  };
 
-  // 3. Handle No Data/Initial State or if data structure is unexpected
-  // Check specifically for the timelines array needed for mapping
-  const hoursToDisplay = hourlyData?.slice(1, 6) || [];
-  if (!hourlyData || hoursToDisplay.length === 0) {
+  // Group data by date
+  const groupedData = React.useMemo(() => {
+    if (!hourlyData || hourlyData.length === 0) return {};
+    const groups = {};
+    hourlyData.forEach(hour => {
+      const date = getLocalDate(hour.time);
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(hour);
+    });
+    return groups;
+  }, [hourlyData]);
+
+  const availableDates = React.useMemo(() => Object.keys(groupedData).sort(), [groupedData]);
+
+  // Initialize selectedDate if null
+  React.useEffect(() => {
+    if (!selectedDate && availableDates.length > 0) {
+      setSelectedDate(availableDates[0]);
+    }
+  }, [availableDates, selectedDate]);
+
+  // 1. Handle Loading/Error/Empty States
+  if (loading) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100%" }}
-      >
-        <p>Waiting for hourly forecast data...</p>
+      <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}>
+        <p>Loading hourly forecast...</p>
       </Container>
     );
   }
 
-  // Helper to get hour in location's timezone
+  if (error) {
+    return (
+      <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}>
+        <p>Error loading hourly forecast.</p>
+      </Container>
+    );
+  }
+
+  if (!hourlyData || hourlyData.length === 0 || !dailyData) {
+    return (
+      <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}>
+        <p>No hourly data available.</p>
+      </Container>
+    );
+  }
+
+  // Helper to get local hour integer
   const getLocalHour = (timeString) => {
-    if (!timezone) return new Date(timeString).getHours();
-
-    try {
-      const hourString = new Date(timeString).toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: timezone,
-      });
-      return parseInt(hourString, 10);
-    } catch (e) {
-      console.warn("Invalid timezone:", timezone);
-      return new Date(timeString).getHours();
-    }
+    return parseInt(timeString.split("T")[1].slice(0, 2), 10);
   };
 
-  // Helper to get YYYY-MM-DD in location's timezone
-  const getDateInTimezone = (isoString, tz) => {
-    if (!tz) return new Date(isoString).toLocaleDateString("en-CA");
-    try {
-      return new Date(isoString).toLocaleDateString("en-CA", { timeZone: tz });
-    } catch (e) {
-      console.warn("Invalid timezone for date:", tz);
-      return new Date(isoString).toLocaleDateString("en-CA");
-    }
-  };
-
-  const isDaytime = (timeString) => {
-    if (!dailyData) {
-      // Fallback
-      const hour = getLocalHour(timeString);
-      return hour >= 6 && hour < 22;
-    }
-
-    const targetDateStr = getDateInTimezone(timeString, timezone);
-
-    // Find the daily forecast for this date using timezone-aware string comparison
-    const dayForecast = dailyData.find(d => {
-      const dDateStr = getDateInTimezone(d.time, timezone);
-      return dDateStr === targetDateStr;
-    });
-
+  // Helper for Day/Night
+  const getIsDaytime = (timeString) => {
+    const datePart = timeString.slice(0, 10);
+    const dayForecast = dailyData.find(d => d.time === datePart);
     if (dayForecast && dayForecast.values.sunriseTime && dayForecast.values.sunsetTime) {
-      const date = new Date(timeString);
-      const sunrise = new Date(dayForecast.values.sunriseTime);
-      const sunset = new Date(dayForecast.values.sunsetTime);
-      return date >= sunrise && date < sunset;
+      return timeString >= dayForecast.values.sunriseTime && timeString < dayForecast.values.sunsetTime;
     }
-
-    // Fallback if no matching day or sunrise/sunset data
     const hour = getLocalHour(timeString);
     return hour >= 6 && hour < 22;
   };
+
+  // Determine hours to display
+  let hoursToDisplay = [];
+  if (selectedDate) {
+    let dayHours = groupedData[selectedDate] || [];
+
+    // If "Today", filter out past hours
+    // We need to know if selectedDate is "Today" in the target timezone
+    // We can check if it matches the first available date (usually today)
+    // Or better, use the same logic as before to find "now"
+
+    // Let's use the robust "now" calculation from before to filter "Today"
+    if (selectedDate === availableDates[0] && timezone) {
+      try {
+        const formatter = new Intl.DateTimeFormat('sv-SE', {
+          timeZone: timezone,
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', hour12: false
+        });
+        const parts = formatter.formatToParts(new Date());
+        const year = parts.find(p => p.type === 'year').value;
+        const month = parts.find(p => p.type === 'month').value;
+        const day = parts.find(p => p.type === 'day').value;
+        const hour = parts.find(p => p.type === 'hour').value;
+
+        const currentHourIso = `${year}-${month}-${day}T${hour}`;
+
+        // Filter hours that are >= current hour
+        dayHours = dayHours.filter(h => h.time >= currentHourIso);
+      } catch (e) {
+        console.error("Error filtering today's hours:", e);
+      }
+    }
+
+    hoursToDisplay = dayHours;
+  }
 
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
@@ -85,93 +116,108 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, darkM
     </Tooltip>
   );
 
-  // 4. Render Weather Data (if loading is false, no error, and data exists)
+  // Format date for tab label
+  const formatDateLabel = (dateStr) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (dateStr === availableDates[0]) return "Today"; // Assumption: first date is today
+    // Simple check for tomorrow (ignoring timezone edge cases for label simplicity)
+    if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+
+    return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+  };
+
   return (
-    <Container>
-      {/* Mobile layout (visible on extra small and small devices) */}
-      <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap">
-        {hoursToDisplay.map((hourData, index) => {
+    <Container className="hourly-forecast-container">
+      {/* Tabs */}
+      <div className="hourly-tabs-wrapper mb-3">
+        <Nav variant="pills" className="flex-nowrap hourly-tabs">
+          {availableDates.map(date => (
+            <Nav.Item key={date}>
+              <Nav.Link
+                active={selectedDate === date}
+                onClick={() => setSelectedDate(date)}
+                className="text-nowrap"
+              >
+                {formatDateLabel(date)}
+              </Nav.Link>
+            </Nav.Item>
+          ))}
+        </Nav>
+      </div>
+
+      {/* Mobile Layout (Horizontal Scroll) */}
+      <Row id="hourly-mobile" className="d-md-none my-2 flex-nowrap" style={{ overflowX: 'auto' }}>
+        {hoursToDisplay.length > 0 ? hoursToDisplay.map((hourData, index) => {
           const hour = getLocalHour(hourData.time);
-          const isDay = isDaytime(hourData.time);
+          const isDay = getIsDaytime(hourData.time);
           return (
-            <Col
-              key={index}
-              className="border border-secondary border-bottom-0 border-top-0"
-              style={{ minWidth: "80px" }} // Ensure items don't shrink
-            >
-              {/* Ensure hourData and hourData.values exist */}
+            <Col key={index} className="border border-secondary border-bottom-0 border-top-0" style={{ minWidth: "80px" }}>
               {hourData?.values && (
                 <Col>
-                  <p className="fs-6 m-0">{`${hour}`}</p>
-                  <OverlayTrigger
-                    placement="top"
-                    delay={{ show: 250, hide: 400 }}
-                    overlay={renderTooltip(hourData.values.weatherCode)}
-                  >
+                  <p className="fs-6 m-0">{hour}</p>
+                  <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
                     <img
-                      className="hourlyIcons my-1" //
-                      src={getIcon(
-                        hourData.values.weatherCode,
-                        isDay,
-                        hourData.values.cloudCover
-                      )} //
+                      className="hourlyIcons my-1"
+                      src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
                       alt="Weather Icon"
                     />
                   </OverlayTrigger>
-                  <p className="fs-6 my-1">{`${Math.round(
-                    hourData.values.temperature
-                  )}°C`}</p>
+                  <p className="fs-6 my-1">{Math.round(hourData.values.temperature)}°C</p>
+                  {hourData.values.precipitationProbability > 0 && (
+                    <p className="m-0 text-info" style={{ fontSize: "0.75rem" }}>
+                      💧{hourData.values.precipitationProbability}%
+                    </p>
+                  )}
                 </Col>
               )}
             </Col>
           );
-        })}
+        }) : (
+          <p className="text-center w-100 text-muted">No more data for today.</p>
+        )}
       </Row>
 
-      {/* Desktop layout (visible on medium devices and above) */}
-      {/* Chart moved to App.jsx */}
-
-      {hoursToDisplay.map(
-        (hourData, index) => {
-          // Ensure hourData and hourData.values exist before rendering row
+      {/* Desktop Layout (Vertical List) */}
+      <div className="d-none d-md-block">
+        {hoursToDisplay.length > 0 ? hoursToDisplay.map((hourData, index) => {
           if (!hourData?.values) return null;
           const hour = getLocalHour(hourData.time);
-          const isDay = isDaytime(hourData.time);
+          const isDay = getIsDaytime(hourData.time);
           return (
-            <Row key={index} className="d-flex my-1 py-2 d-none d-md-flex border-bottom border-light-subtle">
-              <Col md={4} className="d-none d-md-flex align-items-center">
-                <p className="fs-5 m-0">{`${hour}:00`}</p>{" "}
-                {/* Added :00 for clarity */}
+            <Row key={index} className="d-flex my-1 py-2 border-bottom border-light-subtle">
+              <Col md={4} className="d-flex align-items-center">
+                <p className="fs-5 m-0">{hour}:00</p>
               </Col>
-              <Col
-                md={4}
-                className="d-none d-md-flex justify-content-center align-items-center"
-              >
-                <OverlayTrigger
-                  placement="top"
-                  delay={{ show: 250, hide: 400 }}
-                  overlay={renderTooltip(hourData.values.weatherCode)}
-                >
+              <Col md={4} className="d-flex justify-content-center align-items-center">
+                <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
                   <img
-                    className="hourlyIcons m-2" //
-                    src={getIcon(
-                      hourData.values.weatherCode,
-                      isDay,
-                      hourData.values.cloudCover
-                    )} //
+                    className="hourlyIcons m-2"
+                    src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
                     alt="Weather Icon"
                   />
                 </OverlayTrigger>
               </Col>
-              <Col md={4} className="d-none d-md-flex align-items-center">
-                <p className="fs-5 m-0">{`${Math.round(
-                  hourData.values.temperature
-                )}°C`}</p>
+              <Col md={4} className="d-flex align-items-center">
+                <div className="d-flex align-items-center">
+                  <p className="fs-5 m-0 me-3">{Math.round(hourData.values.temperature)}°C</p>
+                  {hourData.values.precipitationProbability > 0 && (
+                    <div className="d-flex align-items-center text-info" style={{ fontSize: "0.9rem" }}>
+                      <span className="me-1">💧</span>
+                      <span>{hourData.values.precipitationProbability}%</span>
+                    </div>
+                  )}
+                </div>
               </Col>
             </Row>
           );
-        }
-      )}
+        }) : (
+          <p className="text-center py-3 text-muted">No more data for today.</p>
+        )}
+      </div>
     </Container>
   );
 };

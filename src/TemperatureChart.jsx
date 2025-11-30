@@ -10,10 +10,16 @@ import {
 
 const TemperatureChart = ({ data, darkMode }) => {
     // Format data for Recharts
-    const chartData = data.map((hour) => ({
-        time: new Date(hour.time).getHours() + ":00",
-        temp: Math.round(hour.values.temperature),
-    }));
+    const chartData = data.map((hour) => {
+        // Parse hour directly from ISO string "YYYY-MM-DDTHH:MM"
+        const hourStr = hour.time.split("T")[1].slice(0, 2);
+        const hourInt = parseInt(hourStr, 10);
+        return {
+            time: hourInt, // Just the number
+            fullTime: `${hourInt}:00`, // For tooltip
+            temp: Math.round(hour.values.temperature),
+        };
+    });
 
     const axisColor = darkMode ? "#ccc" : "#888";
     const gridColor = darkMode ? "#555" : "#ccc";
@@ -44,6 +50,12 @@ const TemperatureChart = ({ data, darkMode }) => {
                         }}
                         itemStyle={{ color: tooltipText }}
                         labelStyle={{ color: tooltipText }}
+                        labelFormatter={(label, payload) => {
+                            if (payload && payload.length > 0) {
+                                return payload[0].payload.fullTime;
+                            }
+                            return label;
+                        }}
                     />
                     <Line
                         type="monotone"

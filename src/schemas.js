@@ -8,6 +8,7 @@ const weatherValueSchema = z.object({
     weatherCode: z.number().optional(),
     humidity: z.number().optional(),
     windSpeed: z.number().optional(),
+    windGusts: z.number().optional(),
     windDirection: z.number().optional(),
     precipitationProbability: z.number().optional(),
     rainAccumulation: z.number().optional(),
@@ -52,8 +53,11 @@ export const openMeteoSchema = z.object({
         apparent_temperature: z.array(z.number().nullable()),
         weathercode: z.array(z.number().nullable()),
         windspeed_10m: z.array(z.number().nullable()),
+        windgusts_10m: z.array(z.number().nullable()).optional(),
         uv_index: z.array(z.number().nullable()),
         cloudcover: z.array(z.number().nullable()),
+        snow_depth: z.array(z.number().nullable()).optional(),
+        precipitation_probability: z.array(z.number().nullable()).optional(),
     }).passthrough(),
     daily_units: z.object({}).passthrough().optional(),
     daily: z.object({
@@ -63,6 +67,7 @@ export const openMeteoSchema = z.object({
         temperature_2m_min: z.array(z.number().nullable()),
         sunrise: z.array(z.string()),
         sunset: z.array(z.string()),
+        precipitation_probability_max: z.array(z.number().nullable()).optional(),
     }).passthrough(),
 }).passthrough();
 

@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Spinner, Alert, Badge } from "react-bootstrap";
 import useWebcams from "./useWebcams";
 
-const WebcamFeed = ({ location, darkMode }) => {
+const WebcamFeed = ({ location, darkMode, timezone }) => {
     const { data: webcams, isLoading, error } = useWebcams(location);
     const [currentIndex, setCurrentIndex] = React.useState(0);
     const apiKeyMissing = !import.meta.env.VITE_WINDY_API_KEY;
@@ -123,7 +123,7 @@ const WebcamFeed = ({ location, darkMode }) => {
                             {currentWebcam.location.city}, {currentWebcam.location.country}
                         </span>
                         <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>
-                            {new Date(currentWebcam.lastUpdatedOn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(currentWebcam.lastUpdatedOn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: timezone })}
                         </span>
                     </div>
                 </div>

@@ -30,7 +30,7 @@ const WeatherEffects = ({ weatherCode }) => {
     const particles = useMemo(() => {
         if (!effectType) return []; // Handle null effectType inside hook
 
-        const count = effectType === 'rain' ? 100 : effectType === 'snow' ? 50 : 0;
+        const count = effectType === 'rain' ? 40 : effectType === 'snow' ? 50 : 0;
         const items = [];
 
         for (let i = 0; i < count; i++) {

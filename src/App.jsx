@@ -180,24 +180,6 @@ function App() {
             }}
             showSuggestions={showSuggestions}
           />
-          <Button
-            variant={darkMode ? "light" : "dark"}
-            onClick={() => {
-              setSearchedLocation(null);
-              handleSearchInputChange({ target: { value: "" } });
-            }}
-            className="ms-2"
-            title="Use Current Location"
-          >
-            📍
-          </Button>
-          <Button
-            variant={darkMode ? "light" : "dark"}
-            onClick={toggleDarkMode}
-            className="ms-2"
-          >
-            {darkMode ? "☀️" : "🌙"}
-          </Button>
         </Container>
       </Navbar>
 
@@ -221,12 +203,18 @@ function App() {
               error={forecastError}
               cityName={displayCityName}
               timezone={timezone}
+              darkMode={darkMode}
+              toggleDarkMode={toggleDarkMode}
+              onLocationReset={() => {
+                setSearchedLocation(null);
+                handleSearchInputChange({ target: { value: "" } });
+              }}
             />
           </div>
 
           {/* Webcam Feed */}
           <div id="webcam-section">
-            <WebcamFeed location={locationToFetch} darkMode={darkMode} />
+            <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
           </div>
 
 

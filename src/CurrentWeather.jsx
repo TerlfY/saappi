@@ -1,10 +1,10 @@
-import { Container, Spinner, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Container, Spinner, Alert, OverlayTrigger, Tooltip, Button } from "react-bootstrap";
 import "./CurrentWeather.css";
 import { getWeatherDescription } from "./weatherDescriptions";
 import SkeletonWeather from "./SkeletonWeather";
 import { getIcon } from "./WeatherIcons";
 
-const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset }) => {
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -77,7 +77,26 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
   );
 
   return (
-    <Container>
+    <Container className="position-relative">
+      <div className="weather-controls">
+        <Button
+          variant="link"
+          onClick={onLocationReset}
+          className="control-btn"
+          title="Use Current Location"
+        >
+          📍
+        </Button>
+        <Button
+          variant="link"
+          onClick={toggleDarkMode}
+          className="control-btn"
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </Button>
+      </div>
+
       <div>
         <h2 className="mt-3 text-truncate" style={{ maxWidth: "100%" }} title={cityName}>
           {cityName}

@@ -1,6 +1,6 @@
 import {
-    LineChart,
-    Line,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -21,15 +21,27 @@ const TemperatureChart = ({ data, darkMode }) => {
         };
     });
 
+    // Calculate min and max for gradient offset
+    const temps = chartData.map(d => d.temp);
+    const min = Math.min(...temps);
+    const max = Math.max(...temps);
+
+    const gradientOffset = () => {
+        if (max <= 0) return 0;
+        if (min >= 0) return 1;
+        return max / (max - min);
+    };
+
+    const off = gradientOffset();
+
     const axisColor = darkMode ? "#ccc" : "#888";
     const gridColor = darkMode ? "#555" : "#ccc";
-    const tooltipBg = darkMode ? "rgba(33, 37, 41, 0.9)" : "rgba(255, 255, 255, 0.8)";
     const tooltipText = darkMode ? "#fff" : "#000";
 
     return (
         <div style={{ width: "100%", height: 300, minWidth: 0 }}>
             <ResponsiveContainer debounce={50}>
-                <LineChart
+                <AreaChart
                     data={chartData}
                     margin={{
                         top: 20,
@@ -38,34 +50,61 @@ const TemperatureChart = ({ data, darkMode }) => {
                         bottom: 0,
                     }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="time" stroke={axisColor} tick={{ fontSize: 12, fill: axisColor }} />
-                    <YAxis stroke={axisColor} tick={{ fontSize: 12, fill: axisColor }} />
+                    <defs>
+                        <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset={off} stopColor="#ff7300" stopOpacity={1} />
+                            <stop offset={off} stopColor="#2F80ED" stopOpacity={1} />
+                        </linearGradient>
+                        <linearGradient id="splitFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset={0} stopColor="#ff7300" stopOpacity={0.8} />
+                            <stop offset={off} stopColor="#ff7300" stopOpacity={0.1} />
+                            <stop offset={off} stopColor="#2F80ED" stopOpacity={0.1} />
+                            <stop offset={1} stopColor="#2F80ED" stopOpacity={0.8} />
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} opacity={0.3} />
+                    <XAxis
+                        dataKey="time"
+                        stroke={axisColor}
+                        tick={{ fontSize: 12, fill: axisColor }}
+                        tickLine={false}
+                        axisLine={false}
+                    />
+                    <YAxis
+                        stroke={axisColor}
+                        tick={{ fontSize: 12, fill: axisColor }}
+                        tickLine={false}
+                        axisLine={false}
+                    />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: tooltipBg,
-                            borderRadius: "10px",
-                            border: "none",
+                            backgroundColor: darkMode ? "rgba(33, 37, 41, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                            backdropFilter: "blur(10px)",
+                            borderRadius: "15px",
+                            border: "1px solid rgba(255, 255, 255, 0.2)",
+                            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
                             color: tooltipText,
                         }}
                         itemStyle={{ color: tooltipText }}
-                        labelStyle={{ color: tooltipText }}
+                        labelStyle={{ color: tooltipText, fontWeight: "bold", marginBottom: "5px" }}
                         labelFormatter={(label, payload) => {
                             if (payload && payload.length > 0) {
                                 return payload[0].payload.fullTime;
                             }
                             return label;
                         }}
+                        cursor={{ stroke: axisColor, strokeWidth: 1, strokeDasharray: "5 5" }}
                     />
-                    <Line
+                    <Area
                         type="monotone"
                         dataKey="temp"
-                        stroke="#ff7300"
+                        stroke="url(#splitColor)"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: "#ff7300" }}
-                        activeDot={{ r: 6 }}
+                        fillOpacity={1}
+                        fill="url(#splitFill)"
+                        activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
                     />
-                </LineChart>
+                </AreaChart>
             </ResponsiveContainer>
         </div>
     );

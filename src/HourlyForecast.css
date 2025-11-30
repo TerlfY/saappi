@@ -24,4 +24,12 @@
 .hourlyIcons {
   width: 50px;
   height: 50px;
+  /* Improve contrast for grey icons on light background */
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4));
+  transition: filter 0.3s ease;
+}
+
+/* Improve contrast for grey icons on dark background */
+body.body-dark-mode .hourlyIcons {
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
 }

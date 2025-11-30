@@ -390,3 +390,51 @@ body.body-dark-mode .precip-prob {
 .webcam-nav-btn:hover {
   background: rgba(0, 0, 0, 0.8);
 }
+
+/* Mobile Layout Reordering */
+@media (max-width: 767px) {
+  .main-layout-row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Unwrap the columns so their children become flex items of the row */
+  .main-layout-row>.col-md-4,
+  .main-layout-row>.col-md-8 {
+    display: contents;
+  }
+
+  #current-section,
+  #hourly-section,
+  #daily-section,
+  #chart-section,
+  #webcam-section {
+    width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    margin-bottom: 1.5rem;
+    /* Ensure spacing between reordered modules */
+  }
+
+  /* Define order */
+  #current-section {
+    order: 1;
+  }
+
+  #hourly-section {
+    order: 2;
+  }
+
+  #daily-section {
+    order: 3;
+  }
+
+  #chart-section {
+    order: 4;
+  }
+
+  #webcam-section {
+    order: 5;
+  }
+}

@@ -54,6 +54,7 @@ export const openMeteoSchema = z.object({
         windspeed_10m: z.array(z.number().nullable()),
         uv_index: z.array(z.number().nullable()),
         cloudcover: z.array(z.number().nullable()),
+        snow_depth: z.array(z.number().nullable()).optional(),
     }).passthrough(),
     daily_units: z.object({}).passthrough().optional(),
     daily: z.object({

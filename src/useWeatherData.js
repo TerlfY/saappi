@@ -13,7 +13,9 @@ const transformOpenMeteoData = (data) => {
       weatherCode: data.hourly.weathercode[index],
       windSpeed: data.hourly.windspeed_10m[index], // km/h by default, might need conversion if UI expects m/s
       uvIndex: data.hourly.uv_index[index],
+      uvIndex: data.hourly.uv_index[index],
       cloudCover: data.hourly.cloudcover[index],
+      snowDepth: data.hourly.snow_depth ? data.hourly.snow_depth[index] : 0,
     },
   }));
 
@@ -47,7 +49,8 @@ const fetchWeather = async ({ queryKey }) => {
   // Parse location "lat,lon" string
   const [lat, lon] = params.location.split(",");
 
-  const options = {
+  // 1. Main Weather Request (Best Match / Auto)
+  const mainOptions = {
     method: "GET",
     url: `https://api.open-meteo.com/v1/forecast`,
     params: {
@@ -56,15 +59,46 @@ const fetchWeather = async ({ queryKey }) => {
       hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,uv_index,cloudcover",
       daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
       timezone: "auto",
-      windspeed_unit: "ms", // Request m/s to match existing UI
+      windspeed_unit: "ms",
+    },
+  };
+
+  // 2. Snow Depth Request (ICON Model - often more accurate for snow)
+  const snowOptions = {
+    method: "GET",
+    url: `https://api.open-meteo.com/v1/forecast`,
+    params: {
+      latitude: lat,
+      longitude: lon,
+      hourly: "snow_depth",
+      models: "icon_seamless", // Explicitly use ICON for snow
+      timezone: "auto",
     },
   };
 
   try {
-    const response = await axios.request(options);
+    // Run requests in parallel
+    const [mainResponse, snowResponse] = await Promise.all([
+      axios.request(mainOptions),
+      axios.request(snowOptions).catch(e => {
+        console.warn("Snow depth fetch failed, falling back to main:", e);
+        return { data: { hourly: { snow_depth: [] } } }; // Fallback empty
+      })
+    ]);
 
-    // Validate response with Zod
-    const parsedData = openMeteoSchema.parse(response.data);
+    // Validate main response
+    const parsedData = openMeteoSchema.parse(mainResponse.data);
+
+    // Merge snow depth from ICON into main data
+    // ICON data should align by time since we use same timezone/location
+    // But to be safe, we assume index alignment (Open-Meteo is consistent)
+    if (snowResponse?.data?.hourly?.snow_depth) {
+      // We inject it into the parsedData before transformation
+      // Note: parsedData is Zod object, we might need to extend it or just modify the raw object if Zod allows
+      // Actually, transformOpenMeteoData takes the raw data structure.
+      // Let's just attach it.
+      parsedData.hourly.snow_depth = snowResponse.data.hourly.snow_depth;
+    }
 
     console.log(
       `✅ SUCCESS fetching weather for location:`,

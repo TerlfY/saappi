@@ -144,6 +144,23 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                 : "--:--"}
             </span>
           </div>
+          <div className="detail-item" style={{ gridColumn: "span 2" }}>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="detail-label">Snow Depth</span>
+              <span className="detail-value">{weatherData.values.snowDepth ? (weatherData.values.snowDepth * 100).toFixed(0) : 0} cm</span>
+            </div>
+            <div style={{ height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${Math.min(((weatherData.values.snowDepth || 0) * 100) / 50 * 100, 100)}%`,
+                  background: "#fff",
+                  borderRadius: "4px",
+                  transition: "width 0.5s ease-out"
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </Container>

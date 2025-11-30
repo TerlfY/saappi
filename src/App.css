@@ -351,3 +351,29 @@ body.body-dark-mode .weather-details-grid {
     opacity: 1;
   }
 }
+
+/* Webcam Navigation Buttons */
+.webcam-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  z-index: 10;
+  /* Ensure it's above everything */
+  font-size: 1.2rem;
+  padding-bottom: 3px;
+}
+
+.webcam-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}

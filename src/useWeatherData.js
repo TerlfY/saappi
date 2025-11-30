@@ -13,6 +13,7 @@ const transformOpenMeteoData = (data) => {
       weatherCode: data.hourly.weathercode[index],
       windSpeed: data.hourly.windspeed_10m[index], // km/h by default, might need conversion if UI expects m/s
       windGusts: data.hourly.windgusts_10m ? data.hourly.windgusts_10m[index] : 0,
+      windDirection: data.hourly.winddirection_10m ? data.hourly.winddirection_10m[index] : 0,
       uvIndex: data.hourly.uv_index[index],
       uvIndex: data.hourly.uv_index[index],
       cloudCover: data.hourly.cloudcover[index],
@@ -59,7 +60,7 @@ const fetchWeather = async ({ queryKey }) => {
     params: {
       latitude: lat,
       longitude: lon,
-      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,uv_index,cloudcover,precipitation_probability",
+      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,winddirection_10m,uv_index,cloudcover,precipitation_probability",
       daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max",
       timezone: "auto",
       windspeed_unit: "ms",

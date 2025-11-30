@@ -167,8 +167,8 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
                     />
                   </OverlayTrigger>
                   <p className="fs-6 my-1">{Math.round(hourData.values.temperature)}°C</p>
-                  {hourData.values.precipitationProbability > 0 && (
-                    <p className="m-0 text-info" style={{ fontSize: "0.75rem" }}>
+                  {hourData.values.precipitationProbability > 20 && (
+                    <p className="m-0 precip-prob">
                       💧{hourData.values.precipitationProbability}%
                     </p>
                   )}
@@ -181,40 +181,58 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
         )}
       </Row>
 
-      {/* Desktop Layout (Vertical List) */}
+      {/* Desktop Layout (Horizontal Table-like) */}
       <div className="d-none d-md-block">
-        {hoursToDisplay.length > 0 ? hoursToDisplay.map((hourData, index) => {
-          if (!hourData?.values) return null;
-          const hour = getLocalHour(hourData.time);
-          const isDay = getIsDaytime(hourData.time);
-          return (
-            <Row key={index} className="d-flex my-1 py-2 border-bottom border-light-subtle">
-              <Col md={4} className="d-flex align-items-center">
-                <p className="fs-5 m-0">{hour}:00</p>
-              </Col>
-              <Col md={4} className="d-flex justify-content-center align-items-center">
-                <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
-                  <img
-                    className="hourlyIcons m-2"
-                    src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
-                    alt="Weather Icon"
-                  />
-                </OverlayTrigger>
-              </Col>
-              <Col md={4} className="d-flex align-items-center">
-                <div className="d-flex align-items-center">
-                  <p className="fs-5 m-0 me-3">{Math.round(hourData.values.temperature)}°C</p>
-                  {hourData.values.precipitationProbability > 0 && (
-                    <div className="d-flex align-items-center text-info" style={{ fontSize: "0.9rem" }}>
-                      <span className="me-1">💧</span>
-                      <span>{hourData.values.precipitationProbability}%</span>
-                    </div>
-                  )}
+        {hoursToDisplay.length > 0 ? (
+          <div className="hourly-scroll-container">
+            {hoursToDisplay.map((hourData, index) => {
+              if (!hourData?.values) return null;
+              const hour = getLocalHour(hourData.time);
+              const isDay = getIsDaytime(hourData.time);
+              const windDir = hourData.values.windDirection || 0;
+
+              return (
+                <div key={index} className="hourly-item">
+                  {/* Time */}
+                  <div className="hourly-time">{hour}:00</div>
+
+                  {/* Icon */}
+                  <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
+                    <img
+                      className="hourlyIcons"
+                      src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
+                      alt="Weather Icon"
+                    />
+                  </OverlayTrigger>
+
+                  {/* Temperature */}
+                  <div className="hourly-temp">{Math.round(hourData.values.temperature)}°</div>
+
+                  {/* Wind */}
+                  <div className="hourly-wind">
+                    <span
+                      className="wind-arrow"
+                      style={{ transform: `rotate(${windDir}deg)` }}
+                      title={`Wind Direction: ${windDir}°`}
+                    >
+                      ↓
+                    </span>
+                    <span>{Math.round(hourData.values.windSpeed)}</span>
+                  </div>
+
+                  {/* Precipitation */}
+                  <div className="hourly-precip">
+                    {hourData.values.precipitationProbability > 20 && (
+                      <span className="precip-prob">
+                        💧{hourData.values.precipitationProbability}%
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </Col>
-            </Row>
-          );
-        }) : (
+              );
+            })}
+          </div>
+        ) : (
           <p className="text-center py-3 text-muted">No more data for today.</p>
         )}
       </div>

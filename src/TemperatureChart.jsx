@@ -40,7 +40,7 @@ const TemperatureChart = ({ data, darkMode }) => {
 
     return (
         <div style={{ width: "100%", height: 300, minWidth: 0 }}>
-            <ResponsiveContainer debounce={50}>
+            <ResponsiveContainer debounce={50} minWidth={0}>
                 <AreaChart
                     data={chartData}
                     margin={{

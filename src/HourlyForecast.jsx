@@ -72,88 +72,79 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
   React.useEffect(() => {
     if (!activeDate && availableDates.length > 0) {
       setActiveDate(availableDates[0]);
+    }
+  }, [availableDates, activeDate]);
 
-      // Initial scroll to current hour if available, otherwise start of day
-      setTimeout(() => {
-        if (currentHourIso) {
-          // Try to scroll to current hour
-          const scrollContainer = (window.innerWidth >= 768) ? scrollContainerRef.current : mobileScrollContainerRef.current;
-          const containerId = (window.innerWidth >= 768) ? 'hourly-desktop' : 'hourly-mobile';
-          const targetId = `hour-${currentHourIso}-${containerId}`;
-          const element = document.getElementById(targetId);
+  // Initial scroll to current hour
+  const hasScrolledToCurrentRef = React.useRef(false);
 
-          if (element && scrollContainer) {
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const elementRect = element.getBoundingClientRect();
-            // Center the current hour or show it with some context (e.g. 1 item before)
-            const offset = elementRect.left - containerRect.left + scrollContainer.scrollLeft - (elementRect.width * 1.5);
+  React.useEffect(() => {
+    if (currentHourIso && allHours.length > 0 && !hasScrolledToCurrentRef.current) {
+      const timer = setTimeout(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (scrollContainer) {
+          const currentIndex = allHours.findIndex(h => h.time.startsWith(currentHourIso.slice(0, 13)));
+          if (currentIndex !== -1) {
+            // Logic to scroll
+            const grid = scrollContainer.querySelector('.unified-forecast-grid');
+            // We can estimate width or measure first child
+            // Note: We need to be careful if children aren't rendered yet, but this is in useEffect
+            const firstItem = scrollContainer.querySelector('.hour-header');
+            const cellWidth = firstItem ? firstItem.offsetWidth : 60; // Fallback
+
+            const scrollPosition = Math.max(0, (currentIndex * cellWidth) - (scrollContainer.clientWidth / 2) + (cellWidth / 2));
 
             scrollContainer.scrollTo({
-              left: Math.max(0, offset),
+              left: scrollPosition,
               behavior: 'smooth'
             });
-            return;
+            hasScrolledToCurrentRef.current = true;
           }
         }
       }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [availableDates, activeDate, currentHourIso]);
+  }, [currentHourIso, allHours]);
 
-  // Scroll Handler (ScrollSpy)
-  const handleScroll = (e) => {
-    const container = e.target;
-    const containerLeft = container.getBoundingClientRect().left;
+  // Handle Scroll to update active tab
+  const handleScroll = () => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
 
-    // Better ScrollSpy:
-    // Get all child elements with data-date
-    const items = Array.from(container.children).filter(child => child.hasAttribute('data-date'));
+    // Measure cell width dynamically
+    const firstItem = scrollContainer.querySelector('.hour-header');
+    const cellWidth = firstItem ? firstItem.offsetWidth : 50;
 
-    // Find the first item that is at least partially visible or close to left
-    // We want the date of the item that is currently at the left edge
+    // Calculate visible index based on scroll position
+    // We use a slight offset to trigger change when the new day enters significantly
+    const scrollLeft = scrollContainer.scrollLeft;
+    const index = Math.floor((scrollLeft + 10) / cellWidth);
 
-    // Offset for "active" area (e.g. 50px from left)
-    const triggerPoint = containerLeft + 50;
-
-    for (const item of items) {
-      const rect = item.getBoundingClientRect();
-      if (rect.right > triggerPoint) {
-        const date = item.getAttribute('data-date');
-        if (date && date !== activeDate) {
-          setActiveDate(date);
-        }
-        break; // Found the leftmost visible item
+    if (allHours[index]) {
+      const newDate = getLocalDate(allHours[index].time);
+      // Only update if different to avoid re-renders
+      if (newDate !== activeDate) {
+        setActiveDate(newDate);
       }
     }
   };
 
-  // Scroll to Date
-  const scrollToDate = (date) => {
-    setActiveDate(date);
+  // Group hours by day for the header row
+  const days = React.useMemo(() => {
+    if (!allHours.length) return [];
+    const groups = [];
+    let currentDay = null;
 
-    // Determine which container is visible (Desktop or Mobile)
-    // We can try scrolling both or checking visibility
-    // Let's use the refs
-
-    const scrollContainer = (window.innerWidth >= 768) ? scrollContainerRef.current : mobileScrollContainerRef.current;
-    const containerId = (window.innerWidth >= 768) ? 'hourly-desktop' : 'hourly-mobile';
-
-    if (scrollContainer) {
-      const targetId = `day-start-${date}-${containerId}`;
-      const element = document.getElementById(targetId);
-
-      if (element) {
-        // Calculate offset relative to container
-        const containerRect = scrollContainer.getBoundingClientRect();
-        const elementRect = element.getBoundingClientRect();
-        const offset = elementRect.left - containerRect.left + scrollContainer.scrollLeft;
-
-        scrollContainer.scrollTo({
-          left: offset,
-          behavior: 'smooth'
-        });
+    allHours.forEach(hour => {
+      const date = getLocalDate(hour.time);
+      if (!currentDay || currentDay.date !== date) {
+        currentDay = { date, hours: [] };
+        groups.push(currentDay);
       }
-    }
-  };
+      currentDay.hours.push(hour);
+    });
+    return groups;
+  }, [allHours]);
 
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
@@ -167,13 +158,15 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Check if it's today (using local date string comparison to be safe)
-    // const todayStr = today.toISOString().slice(0, 10); // Rough check, but availableDates[0] is safer if sorted
+    const todayStr = today.toISOString().slice(0, 10);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
-    if (dateStr === availableDates[0]) return "Today";
-    if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+    if (dateStr === todayStr) return "Today";
+    if (dateStr === tomorrowStr) return "Tomorrow";
 
-    return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    const day = date.getDate();
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    return `${weekday} ${day}`;
   };
 
   // Loading/Error states
@@ -181,131 +174,78 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
   if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
   if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
 
+  // Scroll to Date
+  const scrollToDate = (date) => {
+    setActiveDate(date);
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer && allHours.length > 0) {
+      // Find the index of the first hour for the selected date
+      const index = allHours.findIndex(h => h.time.startsWith(date));
+
+      if (index !== -1) {
+        // Measure cell width dynamically or fallback
+        const firstItem = scrollContainer.querySelector('.hour-header');
+        const cellWidth = firstItem ? firstItem.offsetWidth : 60;
+
+        // Scroll to the start of that day's section
+        const scrollPosition = index * cellWidth;
+
+        scrollContainer.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
   return (
-    <Container className="hourly-forecast-container">
-      {/* Tabs */}
-      <div className="hourly-tabs-wrapper mb-3">
-        <Nav variant="pills" className="flex-nowrap hourly-tabs">
-          {availableDates.map(date => (
-            <Nav.Item key={date}>
-              <Nav.Link
-                active={activeDate === date}
-                onClick={() => scrollToDate(date)}
-                className="text-nowrap"
-                style={{ cursor: 'pointer' }}
-              >
-                {formatDateLabel(date)}
-              </Nav.Link>
-            </Nav.Item>
-          ))}
-        </Nav>
+    <Container className="hourly-forecast-container p-0">
+      {/* Day Navigation Bar */}
+      <div className="day-navigation-bar mb-2">
+        {days.map(day => (
+          <button
+            key={day.date}
+            className={`day-nav-item ${activeDate === day.date ? 'active' : ''}`}
+            onClick={() => scrollToDate(day.date)}
+          >
+            {formatDateLabel(day.date)}
+          </button>
+        ))}
       </div>
 
-      {/* Mobile Layout (Horizontal Scroll) */}
-      <Row
-        id="hourly-mobile"
-        className="d-md-none my-2 flex-nowrap"
-        style={{ overflowX: 'auto' }}
+      <div
+        className="unified-forecast-scroll-container"
+        ref={scrollContainerRef}
         onScroll={handleScroll}
-        ref={mobileScrollContainerRef}
       >
-        {allHours.map((hourData, index) => {
-          const hour = getLocalHour(hourData.time);
-          const isDay = getIsDaytime(hourData.time);
-          const date = getLocalDate(hourData.time);
-          const isFirstOfDay = index === 0 || getLocalDate(allHours[index - 1].time) !== date;
-
-          // Determine status
-          let statusClass = "";
-          if (currentHourIso) {
-            // Compare ISO strings directly
-            if (hourData.time < currentHourIso) statusClass = "past";
-            else if (hourData.time.startsWith(currentHourIso.slice(0, 13))) statusClass = "current"; // Compare up to hour
-          }
-
-          return (
-            <Col
-              key={index}
-              className={`border border-secondary border-bottom-0 border-top-0 position-relative ${statusClass}`}
-              style={{ minWidth: "70px" }}
-              data-date={date}
-              id={isFirstOfDay ? `day-start-${date}-hourly-mobile` : undefined}
-            >
-              {/* Add ID for specific hour targeting */}
-              <div id={`hour-${hourData.time}-hourly-mobile`} style={{ position: 'absolute', top: 0, left: 0 }} />
-
-              {hourData?.values && (
-                <Col>
-                  <p className="fs-6 m-0">{hour}</p>
-                  <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
-                    <img
-                      className="hourlyIcons my-1"
-                      src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
-                      alt="Weather Icon"
-                    />
-                  </OverlayTrigger>
-                  <p className="fs-6 my-1">{Math.round(hourData.values.temperature)}°C</p>
-
-                  <div className="d-flex flex-column align-items-center mb-1" style={{ fontSize: "0.75rem", opacity: 0.9 }}>
-                    <span
-                      className="wind-arrow"
-                      style={{ transform: `rotate(${hourData.values.windDirection || 0}deg)`, fontSize: "1rem" }}
-                    >
-                      ↓
-                    </span>
-                    <span>{Math.round(hourData.values.windSpeed)}</span>
-                  </div>
-
-                  {hourData.values.precipitationProbability > 20 && (
-                    <p className="m-0 precip-prob">
-                      💧{hourData.values.precipitationProbability}%
-                    </p>
-                  )}
-                </Col>
-              )}
-            </Col>
-          );
-        })}
-      </Row>
-
-      {/* Desktop Layout (Horizontal Table-like) */}
-      <div className="d-none d-md-block">
         <div
-          id="hourly-desktop"
-          className="hourly-scroll-container"
-          onScroll={handleScroll}
-          ref={scrollContainerRef}
+          className="unified-forecast-grid"
+          style={{ '--total-hours': allHours.length }}
         >
-          {allHours.map((hourData, index) => {
-            if (!hourData?.values) return null;
-            const hour = getLocalHour(hourData.time);
-            const isDay = getIsDaytime(hourData.time);
-            const windDir = hourData.values.windDirection || 0;
-            const date = getLocalDate(hourData.time);
-            const isFirstOfDay = index === 0 || getLocalDate(allHours[index - 1].time) !== date;
+          {/* Row 1: Day Headers - REMOVED (Moved to Navigation Bar) */}
+          {/* days.map... */}
 
-            // Determine status
-            let statusClass = "";
-            if (currentHourIso) {
-              // Compare ISO strings directly
-              if (hourData.time < currentHourIso) statusClass = "past";
-              else if (hourData.time.startsWith(currentHourIso.slice(0, 13))) statusClass = "current"; // Compare up to hour
-            }
+          {/* Row 2: Hour Headers */}
+          {allHours.map((hourData, i) => {
+            const hour = getLocalHour(hourData.time);
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div
-                key={index}
-                className={`hourly-item ${statusClass}`}
-                data-date={date}
-                id={isFirstOfDay ? `day-start-${date}-hourly-desktop` : undefined}
-              >
-                {/* Add ID for specific hour targeting */}
-                <div id={`hour-${hourData.time}-hourly-desktop`} style={{ position: 'absolute', top: 0 }} />
+              <div key={`hour-${i}`} className={`grid-cell hour-header ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                {hour}
+              </div>
+            );
+          })}
 
-                {/* Time */}
-                <div className="hourly-time">{hour}:00</div>
+          {/* Row 3: Icons */}
+          {allHours.map((hourData, i) => {
+            const isDay = getIsDaytime(hourData.time);
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
 
-                {/* Icon */}
+            return (
+              <div key={`icon-${i}`} className={`grid-cell icon-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
                   <img
                     className="hourlyIcons"
@@ -313,30 +253,58 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
                     alt="Weather Icon"
                   />
                 </OverlayTrigger>
+              </div>
+            );
+          })}
 
-                {/* Temperature */}
-                <div className="hourly-temp">{Math.round(hourData.values.temperature)}°</div>
+          {/* Row 4: Temperature */}
+          {allHours.map((hourData, i) => {
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
 
-                {/* Wind */}
-                <div className="hourly-wind">
+            return (
+              <div key={`temp-${i}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                {Math.round(hourData.values.temperature)}°
+              </div>
+            );
+          })}
+
+          {/* Row 5: Wind */}
+          {allHours.map((hourData, i) => {
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
+
+            return (
+              <div key={`wind-${i}`} className={`grid-cell wind-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                <div className="d-flex flex-column align-items-center">
                   <span
                     className="wind-arrow"
-                    style={{ transform: `rotate(${windDir}deg)` }}
-                    title={`Wind Direction: ${windDir}°`}
+                    style={{ transform: `rotate(${hourData.values.windDirection || 0}deg)` }}
                   >
                     ↓
                   </span>
-                  <span>{Math.round(hourData.values.windSpeed)}</span>
+                  <span className="wind-speed">{Math.round(hourData.values.windSpeed)}</span>
                 </div>
+              </div>
+            );
+          })}
 
-                {/* Precipitation */}
-                <div className="hourly-precip">
-                  {hourData.values.precipitationProbability > 20 && (
-                    <span className="precip-prob">
-                      💧{hourData.values.precipitationProbability}%
+          {/* Row 6: Precipitation */}
+          {allHours.map((hourData, i) => {
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
+            const prob = hourData.values.precipitationProbability;
+
+            return (
+              <div key={`precip-${i}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                {prob > 0 && (
+                  <div className="precip-data">
+                    <span className="precip-prob" style={{ opacity: prob / 100 + 0.3 }}>
+                      {prob}%
                     </span>
-                  )}
-                </div>
+                    {/* If we had precip amount, we'd show it here */}
+                  </div>
+                )}
               </div>
             );
           })}

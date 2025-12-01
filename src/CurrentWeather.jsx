@@ -4,7 +4,7 @@ import { getWeatherDescription } from "./weatherDescriptions";
 import SkeletonWeather from "./SkeletonWeather";
 import { getIcon } from "./WeatherIcons";
 
-const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite }) => {
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -98,9 +98,20 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
       </div>
 
       <div>
-        <h2 className="mt-3 text-truncate" style={{ maxWidth: "100%" }} title={cityName}>
-          {cityName}
-        </h2>
+        <div className="d-flex justify-content-center align-items-center gap-2 mt-3">
+          <h2 className="text-truncate m-0" style={{ maxWidth: "80%" }} title={cityName}>
+            {cityName}
+          </h2>
+          <Button
+            variant="link"
+            onClick={onToggleFavorite}
+            className="p-0 text-decoration-none"
+            style={{ fontSize: "1.5rem", lineHeight: 1, color: isFavorite ? "#FFD700" : (darkMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)") }}
+            title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+          >
+            {isFavorite ? "★" : "☆"}
+          </Button>
+        </div>
         <OverlayTrigger
           placement="bottom"
           delay={{ show: 250, hide: 400 }}
@@ -166,23 +177,25 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                 : "--:--"}
             </span>
           </div>
-          <div className="detail-item" style={{ gridColumn: "span 2" }}>
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="detail-label">Snow Depth</span>
-              <span className="detail-value">{weatherData.values.snowDepth ? (weatherData.values.snowDepth * 100).toFixed(0) : 0} cm</span>
+          {(weatherData.values.snowDepth || 0) * 100 >= 1 && (
+            <div className="detail-item" style={{ gridColumn: "span 2" }}>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <span className="detail-label">Snow Depth</span>
+                <span className="detail-value">{weatherData.values.snowDepth ? (weatherData.values.snowDepth * 100).toFixed(0) : 0} cm</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${Math.min(((weatherData.values.snowDepth || 0) * 100) / 50 * 100, 100)}%`,
+                    background: "#fff",
+                    borderRadius: "4px",
+                    transition: "width 0.5s ease-out"
+                  }}
+                />
+              </div>
             </div>
-            <div style={{ height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
-              <div
-                style={{
-                  height: "100%",
-                  width: `${Math.min(((weatherData.values.snowDepth || 0) * 100) / 50 * 100, 100)}%`,
-                  background: "#fff",
-                  borderRadius: "4px",
-                  transition: "width 0.5s ease-out"
-                }}
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </Container>

@@ -15,15 +15,13 @@ const SearchBar = ({
     highlightedIndex,
     onKeyDown,
     showSuggestions,
+    favorites,
+    onFavoriteSelect,
 }) => {
     const inputRef = useRef(null);
+    const [isFocused, setIsFocused] = React.useState(false);
 
-    // Focus input on mount (optional, maybe annoying on mobile)
-    // useEffect(() => {
-    //   if (inputRef.current) {
-    //     inputRef.current.focus();
-    //   }
-    // }, []);
+    // ...
 
     return (
         <div className="search-bar-container">
@@ -41,6 +39,8 @@ const SearchBar = ({
                         value={value}
                         onChange={onChange}
                         onKeyDown={onKeyDown}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow click
                         aria-label="Search City"
                     />
 
@@ -65,7 +65,7 @@ const SearchBar = ({
                 </div>
 
                 {/* Suggestions Dropdown */}
-                {showSuggestions && suggestions && suggestions.length > 0 && (
+                {showSuggestions && suggestions && suggestions.length > 0 ? (
                     <div className="suggestions-dropdown">
                         {suggestions.map((result, index) => (
                             <div
@@ -78,6 +78,23 @@ const SearchBar = ({
                             </div>
                         ))}
                     </div>
+                ) : (
+                    /* Favorites Dropdown */
+                    isFocused && !value && favorites && favorites.length > 0 && (
+                        <div className="suggestions-dropdown">
+                            <div className="dropdown-header px-3 py-2 text-muted small">Favorites</div>
+                            {favorites.map((fav, index) => (
+                                <div
+                                    key={`fav-${index}`}
+                                    className="suggestion-item"
+                                    onClick={() => onFavoriteSelect(fav)}
+                                >
+                                    <span className="me-2">★</span>
+                                    {fav.name}
+                                </div>
+                            ))}
+                        </div>
+                    )
                 )}
             </Form>
 

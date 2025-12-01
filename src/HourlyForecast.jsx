@@ -92,7 +92,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
             const firstItem = scrollContainer.querySelector('.hour-header');
             const cellWidth = firstItem ? firstItem.offsetWidth : 60; // Fallback
 
-            const scrollPosition = Math.max(0, (currentIndex * cellWidth) - (scrollContainer.clientWidth / 2) + (cellWidth / 2));
+            const scrollPosition = currentIndex * cellWidth;
 
             scrollContainer.scrollTo({
               left: scrollPosition,

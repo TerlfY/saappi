@@ -37,10 +37,13 @@ const useCitySearch = () => {
             const seen = new Set();
             return data.results.filter((item) => {
                 const name = formatLocationName(item);
-                if (seen.has(name)) {
+                // Create a unique key based on name and coordinates (rounded to 2 decimals for rough equality)
+                const key = `${name}-${item.latitude.toFixed(2)}-${item.longitude.toFixed(2)}`;
+
+                if (seen.has(key)) {
                     return false;
                 }
-                seen.add(name);
+                seen.add(key);
                 return true;
             });
         },

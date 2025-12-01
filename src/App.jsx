@@ -20,7 +20,6 @@ import useCitySearch from "./useCitySearch";
 import { formatLocationName, getCurrentHourData } from "./utils";
 import useFavorites from "./useFavorites";
 import useTimezone from "./useTimezone";
-import AirQuality from "./AirQuality";
 
 
 import BackgroundManager from "./BackgroundManager";
@@ -113,52 +112,9 @@ function App() {
   const currentWeather = currentHourData?.values;
 
   const dailyValues = forecastData?.timelines?.daily?.[0]?.values;
-  let isDay = true;
-  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime) {
-    const now = new Date();
-    // Note: This comparison uses local browser time against sunrise/sunset strings.
-    // Ideally we should use the same robust logic as HourlyForecast, but for now
-    // let's rely on the timezone fallback if needed or the simple comparison if formats align.
-    // Actually, let's use the timezone-aware check if possible.
 
-    if (timezone) {
-      try {
-        const formatter = new Intl.DateTimeFormat('sv-SE', {
-          timeZone: timezone,
-          year: 'numeric', month: '2-digit', day: '2-digit',
-          hour: '2-digit', minute: '2-digit', second: '2-digit',
-          hour12: false
-        });
-        // Format: YYYY-MM-DD hh:mm:ss
-        const parts = formatter.formatToParts(new Date());
-        // Reconstruct ISO-like string YYYY-MM-DDTHH:MM:SS
-        const isoNow = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value}T${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
-
-        isDay = isoNow >= dailyValues.sunriseTime && isoNow < dailyValues.sunsetTime;
-      } catch (e) {
-        const sunrise = new Date(dailyValues.sunriseTime);
-        const sunset = new Date(dailyValues.sunsetTime);
-        isDay = now >= sunrise && now < sunset;
-      }
-    } else {
-      const sunrise = new Date(dailyValues.sunriseTime);
-      const sunset = new Date(dailyValues.sunsetTime);
-      isDay = now >= sunrise && now < sunset;
-    }
-  } else if (timezone) {
-    // Fallback using timezone
-    try {
-      const hourString = new Date().toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: timezone,
-      });
-      const hour = parseInt(hourString, 10);
-      isDay = hour >= 6 && hour < 22;
-    } catch (e) {
-      console.warn("Invalid timezone for background:", timezone);
-    }
-  }
+  // Use isDay from API, default to 1 (Day) if not available
+  const isDay = currentWeather?.isDay !== undefined ? currentWeather.isDay : 1;
 
   return (
     <Container className={`mx-auto text-center m-4`}>
@@ -215,6 +171,7 @@ function App() {
               loading={forecastLoading}
               error={forecastError}
               cityName={displayCityName}
+              location={locationToFetch}
               timezone={timezone}
               darkMode={darkMode}
               toggleDarkMode={toggleDarkMode}
@@ -233,8 +190,7 @@ function App() {
             />
           </div>
 
-          {/* Air Quality Meter */}
-          <AirQuality location={locationToFetch} darkMode={darkMode} />
+
 
           {/* Webcam Feed */}
           <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />

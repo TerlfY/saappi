@@ -110,19 +110,7 @@ export function getIcon(weatherCode, isDay = true, cloudCover = null) {
 
   let selectedIcon = iconEntry;
 
-  // Check for variants based on cloudCover
-  if (iconEntry.variants && cloudCover !== null) {
-    if (cloudCover < 25) {
-      selectedIcon = iconEntry.variants.mostlyClear;
-    } else if (cloudCover < 75) {
-      selectedIcon = iconEntry.variants.partlyCloudy;
-    } else {
-      selectedIcon = iconEntry.variants.mostlyCloudy;
-    }
-  } else if (iconEntry.default) {
-    // Fallback to default if no cloudCover or no variants
-    selectedIcon = iconEntry.default;
-  }
+
 
   // If selectedIcon is still an object with day/night, resolve it
   if (selectedIcon && typeof selectedIcon === 'object' && selectedIcon.day && selectedIcon.night) {

@@ -100,7 +100,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                 <Form.Check
                     type="switch"
                     id="temp-switch"
-                    label="Temperature"
+                    label="Temp"
                     checked={visibleSeries.temp}
                     onChange={(e) => setVisibleSeries(prev => ({ ...prev, temp: e.target.checked }))}
                     style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
@@ -108,7 +108,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                 <Form.Check
                     type="switch"
                     id="pop-switch"
-                    label="Rain %"
+                    label="Rain"
                     checked={visibleSeries.pop}
                     onChange={(e) => setVisibleSeries(prev => ({ ...prev, pop: e.target.checked }))}
                     style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
@@ -124,7 +124,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                 <Form.Check
                     type="switch"
                     id="uv-switch"
-                    label="UV Index"
+                    label="UV"
                     checked={visibleSeries.uv}
                     onChange={(e) => setVisibleSeries(prev => ({ ...prev, uv: e.target.checked }))}
                     style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}

@@ -231,9 +231,7 @@ function App() {
           </div>
 
           {/* Webcam Feed */}
-          <div id="webcam-section">
-            <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
-          </div>
+          <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
 
 
 

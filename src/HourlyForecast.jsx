@@ -3,10 +3,15 @@ import { Container, Row, Col, OverlayTrigger, Tooltip, Nav } from "react-bootstr
 import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
+import useDraggableScroll from "./useDraggableScroll";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
   const scrollContainerRef = React.useRef(null);
   const mobileScrollContainerRef = React.useRef(null);
+  const navContainerRef = React.useRef(null);
+
+  useDraggableScroll(scrollContainerRef);
+  useDraggableScroll(navContainerRef);
 
   // Helper to get local date string "YYYY-MM-DD"
   const getLocalDate = (timeString) => {
@@ -106,26 +111,48 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
   }, [currentHourIso, allHours]);
 
   // Handle Scroll to update active tab
-  const handleScroll = () => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
+  const cellWidthRef = React.useRef(50);
+  const scrollTimeoutRef = React.useRef(null);
 
-    // Measure cell width dynamically
-    const firstItem = scrollContainer.querySelector('.hour-header');
-    const cellWidth = firstItem ? firstItem.offsetWidth : 50;
-
-    // Calculate visible index based on scroll position
-    // We use a slight offset to trigger change when the new day enters significantly
-    const scrollLeft = scrollContainer.scrollLeft;
-    const index = Math.floor((scrollLeft + 10) / cellWidth);
-
-    if (allHours[index]) {
-      const newDate = getLocalDate(allHours[index].time);
-      // Only update if different to avoid re-renders
-      if (newDate !== activeDate && onDateChange) {
-        onDateChange(newDate);
+  // Measure cell width on mount and resize
+  React.useEffect(() => {
+    const measureCellWidth = () => {
+      if (scrollContainerRef.current) {
+        const firstItem = scrollContainerRef.current.querySelector('.hour-header');
+        if (firstItem) {
+          cellWidthRef.current = firstItem.offsetWidth;
+        }
       }
-    }
+    };
+
+    measureCellWidth();
+    window.addEventListener('resize', measureCellWidth);
+    return () => window.removeEventListener('resize', measureCellWidth);
+  }, [hourlyData]); // Re-measure if data changes (might affect layout)
+
+  // Handle Scroll to update active tab (Throttled with rAF)
+  const handleScroll = () => {
+    if (scrollTimeoutRef.current) return;
+
+    scrollTimeoutRef.current = requestAnimationFrame(() => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer) {
+        scrollTimeoutRef.current = null;
+        return;
+      }
+
+      const cellWidth = cellWidthRef.current;
+      const scrollLeft = scrollContainer.scrollLeft;
+      const index = Math.floor((scrollLeft + 10) / cellWidth);
+
+      if (allHours[index]) {
+        const newDate = getLocalDate(allHours[index].time);
+        if (newDate !== activeDate && onDateChange) {
+          onDateChange(newDate);
+        }
+      }
+      scrollTimeoutRef.current = null;
+    });
   };
 
   // Group hours by day for the header row
@@ -144,6 +171,16 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     });
     return groups;
   }, [allHours]);
+
+  // Scroll active day tab into view
+  React.useEffect(() => {
+    if (navContainerRef.current && activeDate) {
+      const activeTab = navContainerRef.current.querySelector('.day-nav-item.active');
+      if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [activeDate]);
 
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
@@ -200,7 +237,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
   return (
     <Container className="hourly-forecast-container p-0">
       {/* Day Navigation Bar */}
-      <div className="day-navigation-bar mb-2">
+      <div className="day-navigation-bar mb-2" ref={navContainerRef}>
         {days.map(day => (
           <button
             key={day.date}
@@ -221,7 +258,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
           className="unified-forecast-grid"
           style={{ '--total-hours': allHours.length }}
         >
-          {/* ... grid content ... */}
           {/* Row 2: Hour Headers */}
           {allHours.map((hourData, i) => {
             const hour = getLocalHour(hourData.time);

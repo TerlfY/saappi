@@ -122,46 +122,56 @@ body.body-dark-mode .hourlyIcons {
 }
 
 .day-nav-item {
-  background: #e9ecef;
-  /* Light grey inactive */
+  background: rgba(255, 255, 255, 0.2);
+  /* More transparent default */
   border: none;
   color: #1e3a8a;
   /* Dark blue text */
-  padding: 8px 16px;
-  border-radius: 2px;
-  /* Slight rounding or 0 for sharp */
+  padding: 8px 20px;
+  border-radius: 6px;
+  /* Soft square */
   font-size: 0.95rem;
   font-weight: bold;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Smooth spring-like transition */
   flex: 0 0 auto;
   /* Don't shrink */
   min-width: 60px;
   text-align: center;
+  backdrop-filter: blur(5px);
 }
 
 .day-nav-item:hover {
-  background: #dee2e6;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .day-nav-item.active {
   background: #1e3a8a;
   /* Dark blue active */
   color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+  transform: scale(1.05);
 }
 
 /* Dark mode adjustments for tabs */
 body.body-dark-mode .day-nav-item {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: #e9ecef;
+}
+
+body.body-dark-mode .day-nav-item:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 body.body-dark-mode .day-nav-item.active {
   background: #3b82f6;
   /* Brighter blue for dark mode active */
   color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: scale(1.05);
 }
 
 /* Mobile specific overrides if needed, but grid should handle it */

@@ -192,7 +192,9 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                 if (aqi > 60) { status = "Poor"; color = "danger"; }
                 if (aqi > 80) { status = "Very Poor"; color = "danger"; }
                 if (aqi > 100) { status = "Extremely Poor"; color = "dark"; }
-                const percentage = Math.min((aqi / 100) * 100, 100);
+
+                // Invert percentage: 0 AQI (Good) = 100% Bar, 100 AQI (Bad) = 0% Bar
+                const percentage = Math.max(0, 100 - aqi);
 
                 return (
                   <>

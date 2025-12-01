@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
   Container,
   Row,
@@ -80,6 +80,22 @@ function App() {
     loading: forecastLoading,
     error: forecastError,
   } = useWeatherData("forecast", forecastParams);
+
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Initialize selectedDate when data loads
+  useEffect(() => {
+    if (forecastData?.timelines?.hourly?.length > 0 && !selectedDate) {
+      const firstDate = forecastData.timelines.hourly[0].time.slice(0, 10);
+      setSelectedDate(firstDate);
+    }
+  }, [forecastData, selectedDate]);
+
+  // Filter chart data based on selected date
+  const chartData = useMemo(() => {
+    if (!forecastData?.timelines?.hourly || !selectedDate) return [];
+    return forecastData.timelines.hourly.filter(hour => hour.time.startsWith(selectedDate));
+  }, [forecastData, selectedDate]);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -202,16 +218,6 @@ function App() {
 
         {/* Main Area: Chart & Hourly Forecast */}
         <Col md={8}>
-          {!forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
-            <div id="chart-section" className="mb-4" style={{ minHeight: "300px" }}>
-              <h3 className="mb-3">Temperature Trend</h3>
-              <TemperatureChart
-                data={forecastData.timelines.hourly.slice(0, 24)}
-                darkMode={darkMode}
-                timezone={timezone}
-              />
-            </div>
-          )}
           <div id="hourly-section">
             <HourlyForecast
               hourlyData={forecastData?.timelines?.hourly}
@@ -220,6 +226,17 @@ function App() {
               error={forecastError}
               timezone={timezone}
               darkMode={darkMode}
+              activeDate={selectedDate}
+              onDateChange={setSelectedDate}
+              chart={
+                !forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
+                  <TemperatureChart
+                    data={chartData}
+                    darkMode={darkMode}
+                    timezone={timezone}
+                  />
+                )
+              }
             />
           </div>
 

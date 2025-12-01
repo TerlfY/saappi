@@ -19,7 +19,8 @@ import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
 import { formatLocationName, getCurrentHourData } from "./utils";
 import useFavorites from "./useFavorites";
-import useTimezone from "./useTimezone"; // Added import
+import useTimezone from "./useTimezone";
+import AirQuality from "./AirQuality";
 
 
 import BackgroundManager from "./BackgroundManager";
@@ -205,6 +206,8 @@ function App() {
       <Row className="mt-4 main-layout-row">
         {/* Left Sidebar: Current Weather & Daily Forecast */}
         <Col md={4} className="mb-4">
+
+
           <div id="current-section" className="mb-4">
             <CurrentWeather
               weatherData={currentHourData}
@@ -229,6 +232,9 @@ function App() {
               }}
             />
           </div>
+
+          {/* Air Quality Meter */}
+          <AirQuality location={locationToFetch} darkMode={darkMode} />
 
           {/* Webcam Feed */}
           <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />

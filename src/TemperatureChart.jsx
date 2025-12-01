@@ -6,9 +6,10 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    ReferenceLine,
 } from "recharts";
 
-const TemperatureChart = ({ data, darkMode }) => {
+const TemperatureChart = ({ data, darkMode, timezone }) => {
     // Format data for Recharts
     const chartData = data.map((hour) => {
         // Parse hour directly from ISO string "YYYY-MM-DDTHH:MM"
@@ -20,6 +21,26 @@ const TemperatureChart = ({ data, darkMode }) => {
             temp: Math.round(hour.values.temperature),
         };
     });
+
+    // Calculate current hour in the target timezone
+    let currentHour = null;
+    if (timezone) {
+        try {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                hour: 'numeric',
+                hour12: false
+            });
+            const hourStr = formatter.format(new Date());
+            // Handle "24" as "0" if necessary, but usually it returns 0-23
+            currentHour = parseInt(hourStr, 10);
+            if (currentHour === 24) currentHour = 0;
+        } catch (e) {
+            console.error("Error calculating chart current hour:", e);
+        }
+    } else {
+        currentHour = new Date().getHours();
+    }
 
     // Calculate min and max for gradient offset
     const temps = chartData.map(d => d.temp);
@@ -37,6 +58,7 @@ const TemperatureChart = ({ data, darkMode }) => {
     const axisColor = darkMode ? "#ccc" : "#888";
     const gridColor = darkMode ? "#555" : "#ccc";
     const tooltipText = darkMode ? "#fff" : "#000";
+    const referenceLineColor = darkMode ? "#ff4d4d" : "#ff0000"; // Red for visibility
 
     return (
         <div style={{ width: "100%", height: 300, minWidth: 0 }}>
@@ -104,6 +126,20 @@ const TemperatureChart = ({ data, darkMode }) => {
                         fill="url(#splitFill)"
                         activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
                     />
+                    {currentHour !== null && (
+                        <ReferenceLine
+                            x={currentHour}
+                            stroke={referenceLineColor}
+                            strokeDasharray="3 3"
+                            label={{
+                                value: "Now",
+                                position: "top",
+                                fill: referenceLineColor,
+                                fontSize: 12,
+                                fontWeight: "bold"
+                            }}
+                        />
+                    )}
                 </AreaChart>
             </ResponsiveContainer>
         </div>

@@ -18,7 +18,10 @@ import useGeolocation from "./useGeolocation";
 import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
 import { formatLocationName, getCurrentHourData } from "./utils";
-import useTimezone from "./useTimezone";
+import useFavorites from "./useFavorites";
+import useTimezone from "./useTimezone"; // Added import
+
+
 import BackgroundManager from "./BackgroundManager";
 import TemperatureChart from "./TemperatureChart";
 import SearchBar from "./SearchBar";
@@ -46,6 +49,8 @@ function App() {
     handleKeyDown,
     highlightedIndex,
   } = useCitySearch();
+
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
@@ -179,6 +184,11 @@ function App() {
               handleKeyDown(e);
             }}
             showSuggestions={showSuggestions}
+            favorites={favorites}
+            onFavoriteSelect={(fav) => {
+              setSearchedLocation(fav);
+              handleSearchInputChange({ target: { value: "" } });
+            }}
           />
         </Container>
       </Navbar>
@@ -209,13 +219,19 @@ function App() {
                 setSearchedLocation(null);
                 handleSearchInputChange({ target: { value: "" } });
               }}
+              isFavorite={isFavorite(locationToFetch)}
+              onToggleFavorite={() => {
+                if (isFavorite(locationToFetch)) {
+                  removeFavorite(locationToFetch);
+                } else {
+                  addFavorite({ ...locationToFetch, name: displayCityName });
+                }
+              }}
             />
           </div>
 
           {/* Webcam Feed */}
-          <div id="webcam-section">
-            <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
-          </div>
+          <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
 
 
 
@@ -230,6 +246,7 @@ function App() {
               <TemperatureChart
                 data={forecastData.timelines.hourly.slice(0, 24)}
                 darkMode={darkMode}
+                timezone={timezone}
               />
             </div>
           )}

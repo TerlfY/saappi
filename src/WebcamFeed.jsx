@@ -16,7 +16,7 @@ const WebcamFeed = ({ location, darkMode, timezone }) => {
 
     if (isLoading) {
         return (
-            <Card className={`mb-4 ${darkMode ? "bg-dark text-white" : ""}`} style={{ minHeight: "200px" }}>
+            <Card id="webcam-section" className={`mb-4 ${darkMode ? "bg-dark text-white" : ""}`} style={{ minHeight: "200px" }}>
                 <Card.Body className="d-flex justify-content-center align-items-center">
                     <Spinner animation="border" role="status">
                         <span className="visually-hidden">Loading webcams...</span>
@@ -27,13 +27,7 @@ const WebcamFeed = ({ location, darkMode, timezone }) => {
     }
 
     if (error || !webcams || webcams.length === 0) {
-        return (
-            <Card className={`mb-4 ${darkMode ? "bg-dark text-white" : ""}`}>
-                <Card.Body className="text-center text-muted">
-                    <p className="m-0">No live webcams found nearby.</p>
-                </Card.Body>
-            </Card>
-        );
+        return null;
     }
 
     const currentWebcam = webcams[currentIndex];
@@ -48,7 +42,7 @@ const WebcamFeed = ({ location, darkMode, timezone }) => {
     };
 
     return (
-        <Card className={`mb-4 ${darkMode ? "bg-dark text-white" : ""} overflow-hidden`}>
+        <Card id="webcam-section" className={`mb-4 ${darkMode ? "bg-dark text-white" : ""} overflow-hidden`}>
             <div style={{ position: "relative" }}>
                 <Card.Img
                     variant="top"

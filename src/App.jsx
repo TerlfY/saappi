@@ -177,7 +177,7 @@ function App() {
       {/* Dashboard Layout */}
       <Row className="mt-4 main-layout-row">
         {/* Left Sidebar: Current Weather & Daily Forecast */}
-        <Col md={4} className="mb-4">
+        <Col md={4} className="mb-5">
 
 
           <div id="current-section" className="mb-4">

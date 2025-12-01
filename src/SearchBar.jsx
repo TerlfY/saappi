@@ -72,7 +72,11 @@ const SearchBar = ({
                                 key={index}
                                 className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""
                                     }`}
-                                onClick={() => onSuggestionClick(result)}
+                                onClick={() => {
+                                    onSuggestionClick(result);
+                                    setIsFocused(false);
+                                    inputRef.current?.blur();
+                                }}
                             >
                                 {formatLocationName(result)}
                             </div>
@@ -87,7 +91,11 @@ const SearchBar = ({
                                 <div
                                     key={`fav-${index}`}
                                     className="suggestion-item"
-                                    onClick={() => onFavoriteSelect(fav)}
+                                    onClick={() => {
+                                        onFavoriteSelect(fav);
+                                        setIsFocused(false);
+                                        inputRef.current?.blur();
+                                    }}
                                 >
                                     <span className="me-2">★</span>
                                     {fav.name}

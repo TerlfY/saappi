@@ -1,6 +1,7 @@
 import {
-    AreaChart,
+    ComposedChart,
     Area,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -8,8 +9,12 @@ import {
     ResponsiveContainer,
     ReferenceLine,
 } from "recharts";
+import { useState } from "react";
+import { Form } from "react-bootstrap";
 
 const TemperatureChart = ({ data, darkMode, timezone }) => {
+    const [visibleSeries, setVisibleSeries] = useState({ temp: true, uv: false, pop: false, wind: false });
+
     // Format data for Recharts
     const chartData = data.map((hour) => {
         // Parse hour directly from ISO string "YYYY-MM-DDTHH:MM"
@@ -19,27 +24,56 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
             time: hourInt, // Just the number
             fullTime: `${hourInt}:00`, // For tooltip
             temp: Math.round(hour.values.temperature),
+            uvIndex: hour.values.uvIndex || 0,
+            pop: hour.values.precipitationProbability || 0,
+            windSpeed: Math.round(hour.values.windSpeed) || 0,
         };
     });
 
     // Calculate current hour in the target timezone
     let currentHour = null;
-    if (timezone) {
-        try {
-            const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: timezone,
-                hour: 'numeric',
-                hour12: false
-            });
-            const hourStr = formatter.format(new Date());
-            // Handle "24" as "0" if necessary, but usually it returns 0-23
-            currentHour = parseInt(hourStr, 10);
-            if (currentHour === 24) currentHour = 0;
-        } catch (e) {
-            console.error("Error calculating chart current hour:", e);
+
+    // Check if the data belongs to "today"
+    const isToday = data.length > 0 && (() => {
+        const dataDate = data[0].time.slice(0, 10);
+        let todayDate = new Date().toISOString().slice(0, 10);
+
+        if (timezone) {
+            try {
+                const formatter = new Intl.DateTimeFormat('sv-SE', {
+                    timeZone: timezone,
+                    year: 'numeric', month: '2-digit', day: '2-digit'
+                });
+                const parts = formatter.formatToParts(new Date());
+                const year = parts.find(p => p.type === 'year')?.value;
+                const month = parts.find(p => p.type === 'month')?.value;
+                const day = parts.find(p => p.type === 'day')?.value;
+                todayDate = `${year}-${month}-${day}`;
+            } catch (e) {
+                console.error("Error formatting today date:", e);
+            }
         }
-    } else {
-        currentHour = new Date().getHours();
+        return dataDate === todayDate;
+    })();
+
+    if (isToday) {
+        if (timezone) {
+            try {
+                const formatter = new Intl.DateTimeFormat('en-US', {
+                    timeZone: timezone,
+                    hour: 'numeric',
+                    hour12: false
+                });
+                const hourStr = formatter.format(new Date());
+                // Handle "24" as "0" if necessary, but usually it returns 0-23
+                currentHour = parseInt(hourStr, 10);
+                if (currentHour === 24) currentHour = 0;
+            } catch (e) {
+                console.error("Error calculating chart current hour:", e);
+            }
+        } else {
+            currentHour = new Date().getHours();
+        }
     }
 
     // Calculate min and max for gradient offset
@@ -62,8 +96,42 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
 
     return (
         <div style={{ width: "100%", height: 300, minWidth: 0 }}>
+            <div className="d-flex justify-content-end gap-3 mb-2 px-2 flex-wrap">
+                <Form.Check
+                    type="switch"
+                    id="temp-switch"
+                    label="Temperature"
+                    checked={visibleSeries.temp}
+                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, temp: e.target.checked }))}
+                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                />
+                <Form.Check
+                    type="switch"
+                    id="pop-switch"
+                    label="Rain %"
+                    checked={visibleSeries.pop}
+                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, pop: e.target.checked }))}
+                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                />
+                <Form.Check
+                    type="switch"
+                    id="wind-switch"
+                    label="Wind"
+                    checked={visibleSeries.wind}
+                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, wind: e.target.checked }))}
+                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                />
+                <Form.Check
+                    type="switch"
+                    id="uv-switch"
+                    label="UV Index"
+                    checked={visibleSeries.uv}
+                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, uv: e.target.checked }))}
+                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                />
+            </div>
             <ResponsiveContainer debounce={50} minWidth={0}>
-                <AreaChart
+                <ComposedChart
                     data={chartData}
                     margin={{
                         top: 20,
@@ -92,12 +160,44 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                         tickLine={false}
                         axisLine={false}
                     />
-                    <YAxis
-                        stroke={axisColor}
-                        tick={{ fontSize: 12, fill: axisColor }}
-                        tickLine={false}
-                        axisLine={false}
-                    />
+                    {visibleSeries.temp && (
+                        <YAxis
+                            yAxisId="left"
+                            stroke={axisColor}
+                            tick={{ fontSize: 12, fill: axisColor }}
+                            tickLine={false}
+                            axisLine={false}
+                            label={{ value: '°C', angle: -90, position: 'insideLeft', fill: axisColor, fontSize: 10 }}
+                        />
+                    )}
+                    {visibleSeries.pop && (
+                        <YAxis
+                            yAxisId="right_pop"
+                            orientation="right"
+                            domain={[0, 100]}
+                            hide
+                        />
+                    )}
+                    {visibleSeries.wind && (
+                        <YAxis
+                            yAxisId="right_wind"
+                            orientation="right"
+                            hide
+                        />
+                    )}
+                    {visibleSeries.uv && (
+                        <YAxis
+                            yAxisId="right_uv"
+                            orientation="right"
+                            stroke="#9C27B0" // Purple for UV
+                            tick={{ fontSize: 12, fill: "#9C27B0" }}
+                            tickLine={false}
+                            axisLine={false}
+                            domain={[0, 12]}
+                            allowDecimals={false}
+                            label={{ value: 'UV', angle: 90, position: 'insideRight', fill: "#9C27B0", fontSize: 10 }}
+                        />
+                    )}
                     <Tooltip
                         contentStyle={{
                             backgroundColor: darkMode ? "rgba(33, 37, 41, 0.7)" : "rgba(255, 255, 255, 0.7)",
@@ -116,18 +216,62 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                             return label;
                         }}
                         cursor={{ stroke: axisColor, strokeWidth: 1, strokeDasharray: "5 5" }}
+                        formatter={(value, name) => {
+                            if (name === "temp") return [`${value}°C`, "Temperature"];
+                            if (name === "uvIndex") return [value, "UV Index"];
+                            if (name === "pop") return [`${value}%`, "Rain Probability"];
+                            if (name === "windSpeed") return [`${value} m/s`, "Wind Speed"];
+                            return [value, name];
+                        }}
                     />
-                    <Area
-                        type="monotone"
-                        dataKey="temp"
-                        stroke="url(#splitColor)"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#splitFill)"
-                        activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
-                    />
+                    {visibleSeries.temp && (
+                        <Area
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="temp"
+                            stroke="url(#splitColor)"
+                            strokeWidth={3}
+                            fillOpacity={1}
+                            fill="url(#splitFill)"
+                            activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
+                        />
+                    )}
+                    {visibleSeries.pop && (
+                        <Line
+                            yAxisId="right_pop"
+                            type="monotone"
+                            dataKey="pop"
+                            stroke="#2196F3"
+                            strokeWidth={2}
+                            dot={false}
+                            activeDot={{ r: 4, fill: "#2196F3" }}
+                        />
+                    )}
+                    {visibleSeries.wind && (
+                        <Line
+                            yAxisId="right_wind"
+                            type="monotone"
+                            dataKey="windSpeed"
+                            stroke="#009688"
+                            strokeWidth={2}
+                            dot={false}
+                            activeDot={{ r: 4, fill: "#009688" }}
+                        />
+                    )}
+                    {visibleSeries.uv && (
+                        <Line
+                            yAxisId="right_uv"
+                            type="monotone"
+                            dataKey="uvIndex"
+                            stroke="#9C27B0"
+                            strokeWidth={2}
+                            dot={false}
+                            activeDot={{ r: 4, fill: "#9C27B0" }}
+                        />
+                    )}
                     {currentHour !== null && (
                         <ReferenceLine
+                            yAxisId="left"
                             x={currentHour}
                             stroke={referenceLineColor}
                             strokeDasharray="3 3"
@@ -140,7 +284,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                             }}
                         />
                     )}
-                </AreaChart>
+                </ComposedChart>
             </ResponsiveContainer>
         </div>
     );

@@ -4,8 +4,7 @@ import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
 
-const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => {
-  const [activeDate, setActiveDate] = React.useState(null);
+const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
   const scrollContainerRef = React.useRef(null);
   const mobileScrollContainerRef = React.useRef(null);
 
@@ -68,12 +67,12 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
     return null;
   }, [timezone]);
 
-  // Initialize activeDate
+  // Initialize activeDate if not set
   React.useEffect(() => {
-    if (!activeDate && availableDates.length > 0) {
-      setActiveDate(availableDates[0]);
+    if (!activeDate && availableDates.length > 0 && onDateChange) {
+      onDateChange(availableDates[0]);
     }
-  }, [availableDates, activeDate]);
+  }, [availableDates, activeDate, onDateChange]);
 
   // Initial scroll to current hour
   const hasScrolledToCurrentRef = React.useRef(false);
@@ -123,8 +122,8 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
     if (allHours[index]) {
       const newDate = getLocalDate(allHours[index].time);
       // Only update if different to avoid re-renders
-      if (newDate !== activeDate) {
-        setActiveDate(newDate);
+      if (newDate !== activeDate && onDateChange) {
+        onDateChange(newDate);
       }
     }
   };
@@ -176,7 +175,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
 
   // Scroll to Date
   const scrollToDate = (date) => {
-    setActiveDate(date);
+    if (onDateChange) onDateChange(date);
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer && allHours.length > 0) {
       // Find the index of the first hour for the selected date
@@ -222,9 +221,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
           className="unified-forecast-grid"
           style={{ '--total-hours': allHours.length }}
         >
-          {/* Row 1: Day Headers - REMOVED (Moved to Navigation Bar) */}
-          {/* days.map... */}
-
+          {/* ... grid content ... */}
           {/* Row 2: Hour Headers */}
           {allHours.map((hourData, i) => {
             const hour = getLocalHour(hourData.time);
@@ -310,6 +307,13 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone }) => 
           })}
         </div>
       </div>
+
+      {/* Chart Section */}
+      {chart && (
+        <div className="chart-container mt-3 mb-3">
+          {chart}
+        </div>
+      )}
     </Container>
   );
 };

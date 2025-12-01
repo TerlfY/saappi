@@ -15,10 +15,11 @@ const transformOpenMeteoData = (data) => {
       windGusts: data.hourly.windgusts_10m ? data.hourly.windgusts_10m[index] : 0,
       windDirection: data.hourly.winddirection_10m ? data.hourly.winddirection_10m[index] : 0,
       uvIndex: data.hourly.uv_index[index],
-      uvIndex: data.hourly.uv_index[index],
+
       cloudCover: data.hourly.cloudcover[index],
       snowDepth: data.hourly.snow_depth ? data.hourly.snow_depth[index] : 0,
       precipitationProbability: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[index] : 0,
+      isDay: data.hourly.is_day ? data.hourly.is_day[index] : 1, // Default to 1 (day) if missing
     },
   }));
 
@@ -60,7 +61,7 @@ const fetchWeather = async ({ queryKey }) => {
     params: {
       latitude: lat,
       longitude: lon,
-      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,winddirection_10m,uv_index,cloudcover,precipitation_probability",
+      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,winddirection_10m,uv_index,cloudcover,precipitation_probability,is_day",
       daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max",
       timezone: "auto",
       windspeed_unit: "ms",

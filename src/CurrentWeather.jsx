@@ -1,10 +1,12 @@
-import { Container, Spinner, Alert, OverlayTrigger, Tooltip, Button } from "react-bootstrap";
+import { Container, Spinner, Alert, OverlayTrigger, Tooltip, Button, ProgressBar } from "react-bootstrap";
 import "./CurrentWeather.css";
 import { getWeatherDescription } from "./weatherDescriptions";
 import SkeletonWeather from "./SkeletonWeather";
 import { getIcon } from "./WeatherIcons";
+import useAirQuality from "./useAirQuality";
 
-const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite, location }) => {
+  const { data: aqiData, isLoading: aqiLoading } = useAirQuality(location);
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -177,6 +179,39 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                 : "--:--"}
             </span>
           </div>
+
+          {/* Air Quality Meter */}
+          {aqiData?.current && (
+            <div className="detail-item" style={{ gridColumn: "span 2" }}>
+              {(() => {
+                const aqi = aqiData.current.european_aqi;
+                let status = "Good";
+                let color = "success";
+                if (aqi > 20) { status = "Fair"; color = "info"; }
+                if (aqi > 40) { status = "Moderate"; color = "warning"; }
+                if (aqi > 60) { status = "Poor"; color = "danger"; }
+                if (aqi > 80) { status = "Very Poor"; color = "danger"; }
+                if (aqi > 100) { status = "Extremely Poor"; color = "dark"; }
+
+                // Invert percentage: 0 AQI (Good) = 100% Bar, 100 AQI (Bad) = 0% Bar
+                const percentage = Math.max(0, 100 - aqi);
+
+                return (
+                  <>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="detail-label">Air Quality</span>
+                      <span className={`detail-value text-${color}`} style={{ fontSize: "0.9rem" }}>{status} ({aqi})</span>
+                    </div>
+                    <ProgressBar
+                      now={percentage}
+                      variant={color}
+                      style={{ height: "8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)" }}
+                    />
+                  </>
+                );
+              })()}
+            </div>
+          )}
           {(weatherData.values.snowDepth || 0) * 100 >= 1 && (
             <div className="detail-item" style={{ gridColumn: "span 2" }}>
               <div className="d-flex justify-content-between align-items-center mb-1">

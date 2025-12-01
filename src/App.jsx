@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
   Container,
   Row,
@@ -19,7 +19,7 @@ import useReverseGeocode from "./useReverseGeocode";
 import useCitySearch from "./useCitySearch";
 import { formatLocationName, getCurrentHourData } from "./utils";
 import useFavorites from "./useFavorites";
-import useTimezone from "./useTimezone"; // Added import
+import useTimezone from "./useTimezone";
 
 
 import BackgroundManager from "./BackgroundManager";
@@ -81,6 +81,22 @@ function App() {
     error: forecastError,
   } = useWeatherData("forecast", forecastParams);
 
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Initialize selectedDate when data loads
+  useEffect(() => {
+    if (forecastData?.timelines?.hourly?.length > 0 && !selectedDate) {
+      const firstDate = forecastData.timelines.hourly[0].time.slice(0, 10);
+      setSelectedDate(firstDate);
+    }
+  }, [forecastData, selectedDate]);
+
+  // Filter chart data based on selected date
+  const chartData = useMemo(() => {
+    if (!forecastData?.timelines?.hourly || !selectedDate) return [];
+    return forecastData.timelines.hourly.filter(hour => hour.time.startsWith(selectedDate));
+  }, [forecastData, selectedDate]);
+
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     // No manual trigger needed, debounced value handles it
@@ -112,52 +128,9 @@ function App() {
   const currentWeather = currentHourData?.values;
 
   const dailyValues = forecastData?.timelines?.daily?.[0]?.values;
-  let isDay = true;
-  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime) {
-    const now = new Date();
-    // Note: This comparison uses local browser time against sunrise/sunset strings.
-    // Ideally we should use the same robust logic as HourlyForecast, but for now
-    // let's rely on the timezone fallback if needed or the simple comparison if formats align.
-    // Actually, let's use the timezone-aware check if possible.
 
-    if (timezone) {
-      try {
-        const formatter = new Intl.DateTimeFormat('sv-SE', {
-          timeZone: timezone,
-          year: 'numeric', month: '2-digit', day: '2-digit',
-          hour: '2-digit', minute: '2-digit', second: '2-digit',
-          hour12: false
-        });
-        // Format: YYYY-MM-DD hh:mm:ss
-        const parts = formatter.formatToParts(new Date());
-        // Reconstruct ISO-like string YYYY-MM-DDTHH:MM:SS
-        const isoNow = `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value}T${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
-
-        isDay = isoNow >= dailyValues.sunriseTime && isoNow < dailyValues.sunsetTime;
-      } catch (e) {
-        const sunrise = new Date(dailyValues.sunriseTime);
-        const sunset = new Date(dailyValues.sunsetTime);
-        isDay = now >= sunrise && now < sunset;
-      }
-    } else {
-      const sunrise = new Date(dailyValues.sunriseTime);
-      const sunset = new Date(dailyValues.sunsetTime);
-      isDay = now >= sunrise && now < sunset;
-    }
-  } else if (timezone) {
-    // Fallback using timezone
-    try {
-      const hourString = new Date().toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: timezone,
-      });
-      const hour = parseInt(hourString, 10);
-      isDay = hour >= 6 && hour < 22;
-    } catch (e) {
-      console.warn("Invalid timezone for background:", timezone);
-    }
-  }
+  // Use isDay from API, default to 1 (Day) if not available
+  const isDay = currentWeather?.isDay !== undefined ? currentWeather.isDay : 1;
 
   return (
     <Container className={`mx-auto text-center m-4`}>
@@ -205,6 +178,8 @@ function App() {
       <Row className="mt-4 main-layout-row">
         {/* Left Sidebar: Current Weather & Daily Forecast */}
         <Col md={4} className="mb-4">
+
+
           <div id="current-section" className="mb-4">
             <CurrentWeather
               weatherData={currentHourData}
@@ -212,6 +187,7 @@ function App() {
               loading={forecastLoading}
               error={forecastError}
               cityName={displayCityName}
+              location={locationToFetch}
               timezone={timezone}
               darkMode={darkMode}
               toggleDarkMode={toggleDarkMode}
@@ -230,6 +206,8 @@ function App() {
             />
           </div>
 
+
+
           {/* Webcam Feed */}
           <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
 
@@ -240,16 +218,6 @@ function App() {
 
         {/* Main Area: Chart & Hourly Forecast */}
         <Col md={8}>
-          {!forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
-            <div id="chart-section" className="mb-4" style={{ minHeight: "300px" }}>
-              <h3 className="mb-3">Temperature Trend</h3>
-              <TemperatureChart
-                data={forecastData.timelines.hourly.slice(0, 24)}
-                darkMode={darkMode}
-                timezone={timezone}
-              />
-            </div>
-          )}
           <div id="hourly-section">
             <HourlyForecast
               hourlyData={forecastData?.timelines?.hourly}
@@ -258,6 +226,17 @@ function App() {
               error={forecastError}
               timezone={timezone}
               darkMode={darkMode}
+              activeDate={selectedDate}
+              onDateChange={setSelectedDate}
+              chart={
+                !forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
+                  <TemperatureChart
+                    data={chartData}
+                    darkMode={darkMode}
+                    timezone={timezone}
+                  />
+                )
+              }
             />
           </div>
 

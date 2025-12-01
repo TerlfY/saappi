@@ -65,6 +65,7 @@ const fetchWeather = async ({ queryKey }) => {
       daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max",
       timezone: "auto",
       windspeed_unit: "ms",
+      forecast_days: 16,
     },
   };
 
@@ -78,6 +79,7 @@ const fetchWeather = async ({ queryKey }) => {
       hourly: "snow_depth",
       models: "icon_seamless", // Explicitly use ICON for snow
       timezone: "auto",
+      forecast_days: 16,
     },
   };
 

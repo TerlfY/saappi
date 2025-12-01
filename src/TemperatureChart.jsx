@@ -12,17 +12,34 @@ import {
 import { useState } from "react";
 import { Form } from "react-bootstrap";
 
-const TemperatureChart = ({ data, darkMode, timezone }) => {
+const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowAllDays }) => {
     const [visibleSeries, setVisibleSeries] = useState({ temp: true, uv: false, pop: false, wind: false });
 
     // Format data for Recharts
     const chartData = data.map((hour) => {
         // Parse hour directly from ISO string "YYYY-MM-DDTHH:MM"
+        const dateObj = new Date(hour.time);
         const hourStr = hour.time.split("T")[1].slice(0, 2);
         const hourInt = parseInt(hourStr, 10);
+
+        // Format label for X-axis
+        let timeLabel;
+        if (showAllDays) {
+            // For 16-day view, use date (e.g., "1.12")
+            const day = dateObj.getDate();
+            const month = dateObj.getMonth() + 1;
+            timeLabel = `${day}.${month}.`;
+            // Only show label for noon or midnight to avoid clutter? 
+            // Or just pass the full date string and let tickFormatter handle it
+            timeLabel = hour.time;
+        } else {
+            timeLabel = hourInt;
+        }
+
         return {
-            time: hourInt, // Just the number
-            fullTime: `${hourInt}:00`, // For tooltip
+            time: showAllDays ? hour.time : hourInt, // Use full ISO string for all days to track unique points
+            displayTime: showAllDays ? `${dateObj.getDate()}.${dateObj.getMonth() + 1}. ${hourInt}:00` : `${hourInt}:00`,
+            fullTime: `${hour.time.slice(0, 10)} ${hourInt}:00`, // For tooltip
             temp: Math.round(hour.values.temperature),
             uvIndex: hour.values.uvIndex || 0,
             pop: hour.values.precipitationProbability || 0,
@@ -30,11 +47,12 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
         };
     });
 
+    // ... (keep existing currentHour logic) ...
     // Calculate current hour in the target timezone
     let currentHour = null;
 
     // Check if the data belongs to "today"
-    const isToday = data.length > 0 && (() => {
+    const isToday = !showAllDays && data.length > 0 && (() => {
         const dataDate = data[0].time.slice(0, 10);
         let todayDate = new Date().toISOString().slice(0, 10);
 
@@ -76,6 +94,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
         }
     }
 
+    // ... (keep existing gradient logic) ...
     // Calculate min and max for gradient offset
     const temps = chartData.map(d => d.temp);
     const min = Math.min(...temps);
@@ -94,41 +113,68 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
     const tooltipText = darkMode ? "#fff" : "#000";
     const referenceLineColor = darkMode ? "#ff4d4d" : "#ff0000"; // Red for visibility
 
+    // Custom tick formatter for X-axis
+    const formatXAxis = (tickItem) => {
+        if (showAllDays) {
+            // tickItem is ISO string
+            const date = new Date(tickItem);
+            const hour = date.getHours();
+            // Show date label only at noon (12:00) to reduce clutter
+            if (hour === 12) {
+                return `${date.getDate()}.${date.getMonth() + 1}.`;
+            }
+            return "";
+        }
+        return tickItem;
+    };
+
     return (
         <div style={{ width: "100%", height: 300, minWidth: 0 }}>
-            <div className="d-flex justify-content-end gap-3 mb-2 px-2 flex-wrap">
+            <div className="d-flex justify-content-between align-items-center mb-2 px-2 flex-wrap">
+                {/* Zoom Toggle */}
                 <Form.Check
                     type="switch"
-                    id="temp-switch"
-                    label="Temp"
-                    checked={visibleSeries.temp}
-                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, temp: e.target.checked }))}
-                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                    id="zoom-switch"
+                    label={showAllDays ? "16 Days" : "1 Day"}
+                    checked={showAllDays}
+                    onChange={onToggleShowAllDays}
+                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem", fontWeight: "bold" }}
                 />
-                <Form.Check
-                    type="switch"
-                    id="pop-switch"
-                    label="Rain"
-                    checked={visibleSeries.pop}
-                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, pop: e.target.checked }))}
-                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
-                />
-                <Form.Check
-                    type="switch"
-                    id="wind-switch"
-                    label="Wind"
-                    checked={visibleSeries.wind}
-                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, wind: e.target.checked }))}
-                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
-                />
-                <Form.Check
-                    type="switch"
-                    id="uv-switch"
-                    label="UV"
-                    checked={visibleSeries.uv}
-                    onChange={(e) => setVisibleSeries(prev => ({ ...prev, uv: e.target.checked }))}
-                    style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
-                />
+
+                <div className="d-flex gap-3 flex-wrap">
+                    <Form.Check
+                        type="switch"
+                        id="temp-switch"
+                        label="Temp"
+                        checked={visibleSeries.temp}
+                        onChange={(e) => setVisibleSeries(prev => ({ ...prev, temp: e.target.checked }))}
+                        style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                    />
+                    <Form.Check
+                        type="switch"
+                        id="pop-switch"
+                        label="Rain"
+                        checked={visibleSeries.pop}
+                        onChange={(e) => setVisibleSeries(prev => ({ ...prev, pop: e.target.checked }))}
+                        style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                    />
+                    <Form.Check
+                        type="switch"
+                        id="wind-switch"
+                        label="Wind"
+                        checked={visibleSeries.wind}
+                        onChange={(e) => setVisibleSeries(prev => ({ ...prev, wind: e.target.checked }))}
+                        style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                    />
+                    <Form.Check
+                        type="switch"
+                        id="uv-switch"
+                        label="UV"
+                        checked={visibleSeries.uv}
+                        onChange={(e) => setVisibleSeries(prev => ({ ...prev, uv: e.target.checked }))}
+                        style={{ color: darkMode ? "#ccc" : "#333", fontSize: "0.9rem" }}
+                    />
+                </div>
             </div>
             <ResponsiveContainer debounce={50} minWidth={0}>
                 <ComposedChart
@@ -159,6 +205,8 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                         tick={{ fontSize: 12, fill: axisColor }}
                         tickLine={false}
                         axisLine={false}
+                        tickFormatter={formatXAxis}
+                        interval={showAllDays ? 11 : 0} // Show fewer ticks in 16-day view
                     />
                     {visibleSeries.temp && (
                         <YAxis
@@ -222,10 +270,11 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                             type="monotone"
                             dataKey="temp"
                             stroke="url(#splitColor)"
-                            strokeWidth={3}
+                            strokeWidth={showAllDays ? 2 : 3} // Thinner line for more data
                             fillOpacity={1}
                             fill="url(#splitFill)"
                             activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
+                            dot={false}
                         />
                     )}
                     {visibleSeries.pop && (
@@ -261,7 +310,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                             activeDot={{ r: 4, fill: "#9C27B0" }}
                         />
                     )}
-                    {currentHour !== null && (
+                    {currentHour !== null && !showAllDays && (
                         <ReferenceLine
                             yAxisId="left"
                             x={currentHour}

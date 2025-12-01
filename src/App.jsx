@@ -20,6 +20,7 @@ import useCitySearch from "./useCitySearch";
 import { formatLocationName, getCurrentHourData } from "./utils";
 import useFavorites from "./useFavorites";
 import useTimezone from "./useTimezone";
+import useScrollDirection from "./useScrollDirection";
 
 
 import BackgroundManager from "./BackgroundManager";
@@ -31,6 +32,7 @@ import WeatherEffects from "./WeatherEffects";
 
 function App() {
   const { darkMode, toggleDarkMode } = useDarkMode();
+  const scrollDirection = useScrollDirection();
 
   // Custom Hooks
   const { currentLocation } = useGeolocation();
@@ -82,6 +84,7 @@ function App() {
   } = useWeatherData("forecast", forecastParams);
 
   const [selectedDate, setSelectedDate] = useState(null);
+  const [showAllDays, setShowAllDays] = useState(false);
 
   // Initialize selectedDate when data loads
   useEffect(() => {
@@ -91,11 +94,19 @@ function App() {
     }
   }, [forecastData, selectedDate]);
 
-  // Filter chart data based on selected date
+  // Filter chart data based on selected date or show all
   const chartData = useMemo(() => {
-    if (!forecastData?.timelines?.hourly || !selectedDate) return [];
+    if (!forecastData?.timelines?.hourly) return [];
+
+    if (showAllDays) {
+      // Return all data, maybe downsample if too large (e.g. every 3rd hour)
+      // For 16 days * 24 hours = 384 points, might be okay for Recharts, but let's take every 2nd hour for smoother performance
+      return forecastData.timelines.hourly.filter((_, i) => i % 2 === 0);
+    }
+
+    if (!selectedDate) return [];
     return forecastData.timelines.hourly.filter(hour => hour.time.startsWith(selectedDate));
-  }, [forecastData, selectedDate]);
+  }, [forecastData, selectedDate, showAllDays]);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -137,7 +148,7 @@ function App() {
       <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
       <WeatherEffects weatherCode={currentWeather?.weatherCode} />
       {/* Header */}
-      <Navbar sticky="top">
+      <Navbar sticky="top" className={`transition-navbar ${scrollDirection === "down" ? "navbar-hidden" : "navbar-visible"}`}>
         <Container>
           <Navbar.Brand>
             <h1 className="fw-bold">Sääppi</h1>
@@ -234,6 +245,9 @@ function App() {
                     data={chartData}
                     darkMode={darkMode}
                     timezone={timezone}
+                    isDay={isDay}
+                    showAllDays={showAllDays}
+                    onToggleShowAllDays={() => setShowAllDays(!showAllDays)}
                   />
                 )
               }

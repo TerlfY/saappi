@@ -163,11 +163,7 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                     {visibleSeries.temp && (
                         <YAxis
                             yAxisId="left"
-                            stroke={axisColor}
-                            tick={{ fontSize: 12, fill: axisColor }}
-                            tickLine={false}
-                            axisLine={false}
-                            label={{ value: '°C', angle: -90, position: 'insideLeft', fill: axisColor, fontSize: 10 }}
+                            hide
                         />
                     )}
                     {visibleSeries.pop && (
@@ -189,13 +185,9 @@ const TemperatureChart = ({ data, darkMode, timezone }) => {
                         <YAxis
                             yAxisId="right_uv"
                             orientation="right"
-                            stroke="#9C27B0" // Purple for UV
-                            tick={{ fontSize: 12, fill: "#9C27B0" }}
-                            tickLine={false}
-                            axisLine={false}
                             domain={[0, 12]}
                             allowDecimals={false}
-                            label={{ value: 'UV', angle: 90, position: 'insideRight', fill: "#9C27B0", fontSize: 10 }}
+                            hide
                         />
                     )}
                     <Tooltip

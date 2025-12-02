@@ -47,30 +47,8 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
     );
   }
 
-  // Calculate isDay
-  let isDay = true;
-  if (dailyValues?.sunriseTime && dailyValues?.sunsetTime && timezone) {
-    try {
-      // Get current time in the target timezone as "YYYY-MM-DD, HH:MM:SS"
-      // and convert to "YYYY-MM-DDTHH:MM:SS" to match Open-Meteo format
-      const localTimeStr = new Date().toLocaleString("en-CA", {
-        timeZone: timezone,
-        hour12: false
-      }).replace(", ", "T");
-
-      // Direct string comparison works because formats are consistent (ISO-like)
-      isDay = localTimeStr >= dailyValues.sunriseTime && localTimeStr < dailyValues.sunsetTime;
-    } catch (e) {
-      console.error("Error calculating isDay:", e);
-      // Fallback to local hour check if timezone conversion fails
-      const hour = new Date().getHours();
-      isDay = hour >= 6 && hour < 22;
-    }
-  } else {
-    // Fallback if no sunrise/sunset data
-    const hour = new Date().getHours();
-    isDay = hour >= 6 && hour < 22;
-  }
+  // Use isDay from API data
+  const isDay = weatherData.values.isDay;
 
   const renderTooltip = (props) => (
     <Tooltip id="button-tooltip" {...props}>

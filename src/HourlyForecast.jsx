@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Row, Col, OverlayTrigger, Tooltip, Nav } from "react-bootstrap";
+import { Container, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
@@ -7,7 +7,6 @@ import useDraggableScroll from "./useDraggableScroll";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
   const scrollContainerRef = React.useRef(null);
-  const mobileScrollContainerRef = React.useRef(null);
   const navContainerRef = React.useRef(null);
 
   useDraggableScroll(scrollContainerRef);
@@ -37,7 +36,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
   // Prepare continuous list of hours
   const allHours = React.useMemo(() => {
     if (!hourlyData || hourlyData.length === 0) return [];
-    // Return all hours without filtering past ones
     return [...hourlyData];
   }, [hourlyData]);
 
@@ -63,7 +61,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
       const hour = parts.find(p => p.type === 'hour')?.value;
 
       if (year && month && day && hour) {
-        // OpenMeteo uses "YYYY-MM-DDTHH:00" format
         return `${year}-${month}-${day}T${hour}:00`;
       }
     } catch (e) {
@@ -89,13 +86,8 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
         if (scrollContainer) {
           const currentIndex = allHours.findIndex(h => h.time.startsWith(currentHourIso.slice(0, 13)));
           if (currentIndex !== -1) {
-            // Logic to scroll
-            const grid = scrollContainer.querySelector('.unified-forecast-grid');
-            // We can estimate width or measure first child
-            // Note: We need to be careful if children aren't rendered yet, but this is in useEffect
             const firstItem = scrollContainer.querySelector('.hour-header');
-            const cellWidth = firstItem ? firstItem.offsetWidth : 60; // Fallback
-
+            const cellWidth = firstItem ? firstItem.offsetWidth : 60;
             const scrollPosition = currentIndex * cellWidth;
 
             scrollContainer.scrollTo({
@@ -128,9 +120,8 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     measureCellWidth();
     window.addEventListener('resize', measureCellWidth);
     return () => window.removeEventListener('resize', measureCellWidth);
-  }, [hourlyData]); // Re-measure if data changes (might affect layout)
+  }, [hourlyData]);
 
-  // Handle Scroll to update active tab (Throttled with rAF)
   const handleScroll = () => {
     if (scrollTimeoutRef.current) return;
 
@@ -205,25 +196,19 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     return `${weekday} ${day}`;
   };
 
-  // Loading/Error states
   if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
   if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
   if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
 
-  // Scroll to Date
   const scrollToDate = (date) => {
     if (onDateChange) onDateChange(date);
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer && allHours.length > 0) {
-      // Find the index of the first hour for the selected date
       const index = allHours.findIndex(h => h.time.startsWith(date));
 
       if (index !== -1) {
-        // Measure cell width dynamically or fallback
         const firstItem = scrollContainer.querySelector('.hour-header');
         const cellWidth = firstItem ? firstItem.offsetWidth : 60;
-
-        // Scroll to the start of that day's section
         const scrollPosition = index * cellWidth;
 
         scrollContainer.scrollTo({
@@ -236,7 +221,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
 
   return (
     <Container className="hourly-forecast-container p-0">
-      {/* Day Navigation Bar */}
       <div className="day-navigation-bar mb-2" ref={navContainerRef}>
         {days.map(day => (
           <button
@@ -335,7 +319,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
                     <span className="precip-prob" style={{ opacity: prob / 100 + 0.3 }}>
                       {prob}%
                     </span>
-                    {/* If we had precip amount, we'd show it here */}
                   </div>
                 )}
               </div>

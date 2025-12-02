@@ -4,6 +4,7 @@ import { getWeatherDescription } from "./weatherDescriptions";
 import SkeletonWeather from "./SkeletonWeather";
 import { getIcon } from "./WeatherIcons";
 import useAirQuality from "./useAirQuality";
+import SunDial from "./SunDial";
 
 const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite, location }) => {
   const { data: aqiData, isLoading: aqiLoading } = useAirQuality(location);
@@ -141,21 +142,13 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <span className="detail-label">UV Index</span>
             <span className="detail-value">{weatherData.values.uvIndex}</span>
           </div>
-          <div className="detail-item">
-            <span className="detail-label">Sunrise</span>
-            <span className="detail-value">
-              {dailyValues?.sunriseTime
-                ? dailyValues.sunriseTime.split("T")[1]
-                : "--:--"}
-            </span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Sunset</span>
-            <span className="detail-value">
-              {dailyValues?.sunsetTime
-                ? dailyValues.sunsetTime.split("T")[1]
-                : "--:--"}
-            </span>
+          <div className="detail-item" style={{ gridColumn: "span 2", padding: "10px 0" }}>
+            <SunDial
+              sunrise={dailyValues?.sunriseTime}
+              sunset={dailyValues?.sunsetTime}
+              timezone={timezone}
+              isDay={isDay}
+            />
           </div>
 
           {/* Air Quality Meter */}

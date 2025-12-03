@@ -151,6 +151,25 @@ const SunDial = ({ sunrise, sunset, timezone, isDay }) => {
                     height: "1px",
                     background: "rgba(255,255,255,0.1)"
                 }} />
+
+                {/* Current Time Clock */}
+                <div style={{
+                    position: "absolute",
+                    top: "0",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    textShadow: "0 0 5px rgba(0, 0, 0, 0.5)",
+                    background: "rgba(0,0,0,0.1)",
+                    padding: "1px 6px",
+                    borderRadius: "8px",
+                    backdropFilter: "blur(1px)",
+                    border: "1px solid rgba(255,255,255,0.05)"
+                }}>
+                    {formatTime(nowStr)}
+                </div>
             </div>
 
             {/* Labels */}

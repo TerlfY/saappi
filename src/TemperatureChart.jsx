@@ -11,8 +11,10 @@ import {
 } from "recharts";
 import { useState } from "react";
 import { Form } from "react-bootstrap";
+import { useUnits } from "./UnitContext";
 
 const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowAllDays }) => {
+    const { getTemperature, getSpeed, unitLabels, unit, formatDate } = useUnits();
     const [visibleSeries, setVisibleSeries] = useState({ temp: true, uv: false, pop: false, wind: false });
 
     // Format data for Recharts
@@ -38,12 +40,12 @@ const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowA
 
         return {
             time: showAllDays ? hour.time : hourInt, // Use full ISO string for all days to track unique points
-            displayTime: showAllDays ? `${dateObj.getDate()}.${dateObj.getMonth() + 1}. ${hourInt}:00` : `${hourInt}:00`,
-            fullTime: `${hour.time.slice(0, 10)} ${hourInt}:00`, // For tooltip
-            temp: Math.round(hour.values.temperature),
+            displayTime: showAllDays ? `${formatDate(hour.time)} ${hourInt}:00` : `${hourInt}:00`,
+            fullTime: `${formatDate(hour.time, { includeYear: true })} ${hourInt}:00`, // For tooltip
+            temp: getTemperature(hour.values.temperature, 1),
             uvIndex: hour.values.uvIndex || 0,
             pop: hour.values.precipitationProbability || 0,
-            windSpeed: Math.round(hour.values.windSpeed) || 0,
+            windSpeed: getSpeed(hour.values.windSpeed) || 0,
         };
     });
 
@@ -99,11 +101,12 @@ const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowA
     const temps = chartData.map(d => d.temp);
     const min = Math.min(...temps);
     const max = Math.max(...temps);
+    const freezingPoint = unit === "imperial" ? 32 : 0;
 
     const gradientOffset = () => {
-        if (max <= 0) return 0;
-        if (min >= 0) return 1;
-        return max / (max - min);
+        if (max <= freezingPoint) return 0;
+        if (min >= freezingPoint) return 1;
+        return (max - freezingPoint) / (max - min);
     };
 
     const off = gradientOffset();
@@ -121,7 +124,7 @@ const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowA
             const hour = date.getHours();
             // Show date label only at noon (12:00) to reduce clutter
             if (hour === 12) {
-                return `${date.getDate()}.${date.getMonth() + 1}.`;
+                return formatDate(tickItem);
             }
             return "";
         }
@@ -212,6 +215,7 @@ const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowA
                         <YAxis
                             yAxisId="left"
                             hide
+                            domain={['dataMin - 2', 'dataMax + 2']}
                         />
                     )}
                     {visibleSeries.pop && (
@@ -257,10 +261,10 @@ const TemperatureChart = ({ data, darkMode, timezone, showAllDays, onToggleShowA
                         }}
                         cursor={{ stroke: axisColor, strokeWidth: 1, strokeDasharray: "5 5" }}
                         formatter={(value, name) => {
-                            if (name === "temp") return [`${value}°C`, "Temperature"];
+                            if (name === "temp") return [`${value}${unitLabels.temperature}`, "Temperature"];
                             if (name === "uvIndex") return [value, "UV Index"];
                             if (name === "pop") return [`${value}%`, "Rain Probability"];
-                            if (name === "windSpeed") return [`${value} m/s`, "Wind Speed"];
+                            if (name === "windSpeed") return [`${value} ${unitLabels.speed}`, "Wind Speed"];
                             return [value, name];
                         }}
                     />

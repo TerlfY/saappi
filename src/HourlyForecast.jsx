@@ -4,8 +4,10 @@ import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
 import useDraggableScroll from "./useDraggableScroll";
+import { useUnits } from "./UnitContext";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
+  const { getTemperature, getSpeed, getPrecip, formatDate, unitLabels } = useUnits();
   const scrollContainerRef = React.useRef(null);
   const navContainerRef = React.useRef(null);
 
@@ -191,9 +193,8 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     if (dateStr === todayStr) return "Today";
     if (dateStr === tomorrowStr) return "Tomorrow";
 
-    const day = date.getDate();
     const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
-    return `${weekday} ${day}`;
+    return `${weekday} ${formatDate(dateStr)}`;
   };
 
   if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
@@ -281,7 +282,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
 
             return (
               <div key={`temp-${i}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                {Math.round(hourData.values.temperature)}°
+                {getTemperature(hourData.values.temperature)}{unitLabels.temperature}
               </div>
             );
           })}
@@ -300,7 +301,9 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
                   >
                     ↓
                   </span>
-                  <span className="wind-speed">{Math.round(hourData.values.windSpeed)}</span>
+                  <span className="wind-speed" style={{ fontSize: "0.8rem" }}>
+                    {getSpeed(hourData.values.windSpeed)} <span style={{ fontSize: "0.6rem" }}>{unitLabels.speed}</span>
+                  </span>
                 </div>
               </div>
             );
@@ -311,16 +314,22 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
             const isPast = currentHourIso && hourData.time < currentHourIso;
             const prob = hourData.values.precipitationProbability;
+            const amount = hourData.values.precipitation;
 
             return (
               <div key={`precip-${i}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                {prob > 0 && (
-                  <div className="precip-data">
-                    <span className="precip-prob" style={{ opacity: prob / 100 + 0.3 }}>
+                <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                  {prob >= 10 && (
+                    <span className="precip-prob" style={{ opacity: prob / 100 + 0.3, fontSize: "0.75rem" }}>
                       {prob}%
                     </span>
-                  </div>
-                )}
+                  )}
+                  {amount > 0 && (
+                    <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
+                      {getPrecip(amount)}{unitLabels.precip}
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}

@@ -5,9 +5,11 @@ import SkeletonWeather from "./SkeletonWeather";
 import { getIcon } from "./WeatherIcons";
 import useAirQuality from "./useAirQuality";
 import SunDial from "./SunDial";
+import { useUnits } from "./UnitContext";
 
 const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite, location }) => {
   const { data: aqiData, isLoading: aqiLoading } = useAirQuality(location);
+  const { getTemperature, getSpeed, getPrecip, unitLabels } = useUnits();
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -109,15 +111,13 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             alt="Weather Icon"
           />
         </OverlayTrigger>
-        <p className="fs-1 fw-bold">{`${Math.round(
-          weatherData.values.temperature
-        )}°C`}</p>
+        <p className="fs-1 fw-bold">{`${getTemperature(weatherData.values.temperature)}${unitLabels.temperature}`}</p>
 
         {/* Weather Details Grid */}
         <div className="weather-details-grid mt-4">
           <div className="detail-item">
             <span className="detail-label">Feels Like</span>
-            <span className="detail-value">{Math.round(weatherData.values.temperatureApparent)}°C</span>
+            <span className="detail-value">{getTemperature(weatherData.values.temperatureApparent)}{unitLabels.temperature}</span>
           </div>
           <div className="detail-item">
             <span className="detail-label">Wind</span>
@@ -125,12 +125,12 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
               placement="top"
               overlay={
                 <Tooltip id="wind-tooltip">
-                  Gusts: {Math.round(weatherData.values.windGusts)} m/s
+                  Gusts: {getSpeed(weatherData.values.windGusts)} {unitLabels.speed}
                 </Tooltip>
               }
             >
               <span className="detail-value" style={{ cursor: "help", textDecoration: "underline dotted" }}>
-                {Math.round(weatherData.values.windSpeed)} m/s
+                {getSpeed(weatherData.values.windSpeed)} {unitLabels.speed}
               </span>
             </OverlayTrigger>
           </div>
@@ -138,6 +138,12 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <span className="detail-label">Humidity</span>
             <span className="detail-value">{Math.round(weatherData.values.humidity)}%</span>
           </div>
+          {weatherData.values.precipitation > 0 && (
+            <div className="detail-item">
+              <span className="detail-label">Precip</span>
+              <span className="detail-value">{getPrecip(weatherData.values.precipitation)} {unitLabels.precip}</span>
+            </div>
+          )}
           <div className="detail-item">
             <span className="detail-label">UV Index</span>
             <span className="detail-value">{weatherData.values.uvIndex}</span>

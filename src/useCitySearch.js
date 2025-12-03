@@ -15,7 +15,28 @@ const fetchCitySearch = async ({ queryKey }) => {
 
 const useCitySearch = () => {
     const [searchCity, setSearchCity] = useState("");
-    const [searchedLocation, setSearchedLocation] = useState(null);
+    const [searchedLocation, setSearchedLocation] = useState(() => {
+        try {
+            const stored = localStorage.getItem("weatherApp_searchedLocation");
+            return stored ? JSON.parse(stored) : null;
+        } catch (error) {
+            console.error("Error loading location from localStorage:", error);
+            return null;
+        }
+    });
+
+    // Persist searchedLocation to localStorage
+    useEffect(() => {
+        try {
+            if (searchedLocation) {
+                localStorage.setItem("weatherApp_searchedLocation", JSON.stringify(searchedLocation));
+            } else {
+                localStorage.removeItem("weatherApp_searchedLocation");
+            }
+        } catch (error) {
+            console.error("Error saving location to localStorage:", error);
+        }
+    }, [searchedLocation]);
     const [searchError, setSearchError] = useState(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectionMade, setSelectionMade] = useState(false);

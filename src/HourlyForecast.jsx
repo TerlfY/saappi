@@ -7,7 +7,7 @@ import useDraggableScroll from "./useDraggableScroll";
 import { useUnits } from "./UnitContext";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
-  const { getTemperature, getSpeed, getPrecip, formatDate, unitLabels } = useUnits();
+  const { getTemperature, getSpeed, getPrecip, formatDate, formatTime, unitLabels } = useUnits();
   const scrollContainerRef = React.useRef(null);
   const navContainerRef = React.useRef(null);
 
@@ -197,11 +197,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     return `${weekday} ${formatDate(dateStr)}`;
   };
 
-  if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
-  if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
-  if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
-
-  const scrollToDate = (date) => {
+  const scrollToDate = React.useCallback((date) => {
     if (onDateChange) onDateChange(date);
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer && allHours.length > 0) {
@@ -218,7 +214,34 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
         });
       }
     }
-  };
+  }, [onDateChange, allHours]);
+
+  // Handle Keyboard Navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if typing in an input
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if (e.key === 'ArrowLeft') {
+        const currentIndex = availableDates.indexOf(activeDate);
+        if (currentIndex > 0) {
+          scrollToDate(availableDates[currentIndex - 1]);
+        }
+      } else if (e.key === 'ArrowRight') {
+        const currentIndex = availableDates.indexOf(activeDate);
+        if (currentIndex < availableDates.length - 1) {
+          scrollToDate(availableDates[currentIndex + 1]);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [availableDates, activeDate, scrollToDate]);
+
+  if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
+  if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
+  if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
 
   return (
     <Container className="hourly-forecast-container p-0">
@@ -243,15 +266,14 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
           className="unified-forecast-grid"
           style={{ '--total-hours': allHours.length }}
         >
-          {/* Row 2: Hour Headers */}
+          {/* Row 1: Hours */}
           {allHours.map((hourData, i) => {
-            const hour = getLocalHour(hourData.time);
             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
             const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div key={`hour-${i}`} className={`grid-cell hour-header ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                {hour}
+              <div key={`time-${i}`} className={`grid-cell time-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                {formatTime(hourData.time, { hourOnly: true })}
               </div>
             );
           })}
@@ -313,17 +335,11 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
           {allHours.map((hourData, i) => {
             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
             const isPast = currentHourIso && hourData.time < currentHourIso;
-            const prob = hourData.values.precipitationProbability;
             const amount = hourData.values.precipitation;
 
             return (
               <div key={`precip-${i}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
-                  {prob >= 10 && (
-                    <span className="precip-prob" style={{ opacity: prob / 100 + 0.3, fontSize: "0.75rem" }}>
-                      {prob}%
-                    </span>
-                  )}
                   {amount > 0 && (
                     <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
                       {getPrecip(amount)}{unitLabels.precip}

@@ -1,7 +1,10 @@
 import React from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { useUnits } from "./UnitContext";
 
 const SunDial = ({ sunrise, sunset, timezone, isDay }) => {
+    const { formatTime } = useUnits();
+
     if (!sunrise || !sunset) return null;
 
     // Parse times
@@ -86,9 +89,6 @@ const SunDial = ({ sunrise, sunset, timezone, isDay }) => {
     const rad = (angle * Math.PI) / 180;
     const sunX = cx + r * Math.cos(rad);
     const sunY = cy - r * Math.sin(rad); // Y is inverted in SVG
-
-    // Formatting times for display (HH:MM)
-    const formatTime = (isoStr) => isoStr.split("T")[1].slice(0, 5);
 
     return (
         <div className="sun-dial-container" style={{ width: "100%", textAlign: "center", position: "relative" }}>

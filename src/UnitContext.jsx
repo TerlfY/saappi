@@ -69,6 +69,16 @@ export const UnitProvider = ({ children }) => {
         return `${day}.${month}.`;
     };
 
+    const formatTime = (dateInput, options = {}) => {
+        const date = new Date(dateInput);
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: options.hourOnly ? undefined : '2-digit',
+            hour12: unit === "imperial",
+            hourCycle: unit === "imperial" ? 'h12' : 'h23'
+        });
+    };
+
     const unitLabels = {
         temperature: unit === "metric" ? "°C" : "°F",
         speed: unit === "metric" ? "m/s" : "mph",
@@ -77,7 +87,7 @@ export const UnitProvider = ({ children }) => {
 
     return (
         <UnitContext.Provider
-            value={{ unit, toggleUnit, getTemperature, getSpeed, getPrecip, formatDate, unitLabels }}
+            value={{ unit, toggleUnit, getTemperature, getSpeed, getPrecip, formatDate, formatTime, unitLabels }}
         >
             {children}
         </UnitContext.Provider>

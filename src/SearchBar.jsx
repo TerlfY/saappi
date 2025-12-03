@@ -19,7 +19,32 @@ const SearchBar = ({
     onFavoriteSelect,
 }) => {
     const inputRef = useRef(null);
+    const timeoutRef = useRef(null);
     const [isFocused, setIsFocused] = React.useState(false);
+
+    const handleFocus = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        setIsFocused(true);
+    };
+
+    const handleBlur = () => {
+        timeoutRef.current = setTimeout(() => setIsFocused(false), 200);
+    };
+
+    // Global listener workaround for missing input events
+    useEffect(() => {
+        const handleGlobalKeyDown = (e) => {
+            if (e.defaultPrevented) return; // Already handled
+            if (document.activeElement === inputRef.current) {
+                if (onKeyDown) onKeyDown(e);
+            }
+        };
+
+        window.addEventListener("keydown", handleGlobalKeyDown);
+        return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+    }, [onKeyDown]);
 
     // ...
 
@@ -27,10 +52,7 @@ const SearchBar = ({
         <div className="search-bar-container">
             <Form className="position-relative w-100" onSubmit={onSubmit}>
                 <div className="search-input-wrapper">
-                    {/* Search Icon */}
-                    <span className="search-icon">🔍</span>
-
-                    {/* Input Field */}
+                    {/* ... */}
                     <input
                         ref={inputRef}
                         type="text"
@@ -39,8 +61,8 @@ const SearchBar = ({
                         value={value}
                         onChange={onChange}
                         onKeyDown={onKeyDown}
-                        onFocus={() => setIsFocused(true)}
-                        onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow click
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
                         aria-label="Search City"
                     />
 
@@ -90,7 +112,7 @@ const SearchBar = ({
                             {favorites.map((fav, index) => (
                                 <div
                                     key={`fav-${index}`}
-                                    className="suggestion-item"
+                                    className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""}`}
                                     onClick={() => {
                                         onFavoriteSelect(fav);
                                         setIsFocused(false);

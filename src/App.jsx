@@ -40,6 +40,8 @@ function AppContent() {
   // Custom Hooks
   const { currentLocation } = useGeolocation();
   const { cityName: reverseGeocodedCityName } = useReverseGeocode(currentLocation);
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
+
   const {
     searchCity,
     searchedLocation,
@@ -53,9 +55,7 @@ function AppContent() {
     handleSearchInputChange,
     handleKeyDown,
     highlightedIndex,
-  } = useCitySearch();
-
-  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
+  } = useCitySearch({ favorites });
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
@@ -185,7 +185,6 @@ function AppContent() {
               error={searchError}
               highlightedIndex={highlightedIndex}
               onKeyDown={(e) => {
-                handleEnterKey(e);
                 handleKeyDown(e);
               }}
               showSuggestions={showSuggestions}

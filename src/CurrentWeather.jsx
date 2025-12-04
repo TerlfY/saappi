@@ -140,7 +140,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <span className="detail-label">{t("humidity")}</span>
             <span className="detail-value">{Math.round(weatherData.values.humidity)}%</span>
           </div>
-          {weatherData.values.precipitation > 0 && (
+          {weatherData.values.precipitation > 0 && (weatherData.values.snowfall || 0) === 0 && (
             <div className="detail-item">
               <span className="detail-label">{t("precip")}</span>
               <span className="detail-value">{getPrecip(weatherData.values.precipitation)} {unitLabels.precip}</span>
@@ -207,6 +207,14 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                     transition: "width 0.5s ease-out"
                   }}
                 />
+              </div>
+            </div>
+          )}
+          {(weatherData.values.snowfall || 0) > 0 && (
+            <div className="detail-item" style={{ gridColumn: "span 2" }}>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <span className="detail-label">{t("snowfall")}</span>
+                <span className="detail-value">{weatherData.values.snowfall} cm</span>
               </div>
             </div>
           )}

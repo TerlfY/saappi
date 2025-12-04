@@ -248,15 +248,27 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
   return (
     <Container className="hourly-forecast-container p-0">
       <div className="day-navigation-bar mb-2" ref={navContainerRef}>
-        {days.map(day => (
-          <button
-            key={day.date}
-            className={`day-nav-item ${activeDate === day.date ? 'active' : ''}`}
-            onClick={() => scrollToDate(day.date)}
-          >
-            {formatDateLabel(day.date)}
-          </button>
-        ))}
+        {days.map(day => {
+          const dayData = dailyData.find(d => d.time === day.date);
+          const snowSum = dayData?.values?.snowfallSum || 0;
+
+          return (
+            <button
+              key={day.date}
+              className={`day-nav-item ${activeDate === day.date ? 'active' : ''}`}
+              onClick={() => scrollToDate(day.date)}
+            >
+              <div className="d-flex flex-column align-items-center">
+                <span>{formatDateLabel(day.date)}</span>
+                {snowSum > 0 && (
+                  <span style={{ fontSize: "0.75rem", color: "#aaddff", marginTop: "2px" }}>
+                    ❄️ {snowSum} cm
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <div
@@ -338,13 +350,33 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
             const isPast = currentHourIso && hourData.time < currentHourIso;
             const amount = hourData.values.precipitation;
+            const snowAmount = hourData.values.snowfall || 0;
 
             return (
               <div key={`precip-${i}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
-                  {amount > 0 && (
+                  {amount > 0 && snowAmount === 0 && (
                     <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
                       {getPrecip(amount)}{unitLabels.precip}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Row 7: Snowfall (Conditional) */}
+          {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData, i) => {
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
+            const amount = hourData.values.snowfall || 0;
+
+            return (
+              <div key={`snow-${i}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                  {amount > 0 && (
+                    <span className="snow-amount" style={{ fontSize: "0.7rem", color: "#ffffff" }}>
+                      {amount} cm
                     </span>
                   )}
                 </div>

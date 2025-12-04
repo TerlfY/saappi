@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { Form, Spinner } from "react-bootstrap";
 import { formatLocationName } from "./utils";
 import "./SearchBar.css";
+import { useLanguage } from "./LanguageContext";
 
 const SearchBar = ({
     value,
@@ -18,6 +19,7 @@ const SearchBar = ({
     favorites,
     onFavoriteSelect,
 }) => {
+    const { t } = useLanguage();
     const inputRef = useRef(null);
     const timeoutRef = useRef(null);
     const [isFocused, setIsFocused] = React.useState(false);
@@ -57,7 +59,7 @@ const SearchBar = ({
                         ref={inputRef}
                         type="text"
                         className="search-input form-control"
-                        placeholder="Search city..."
+                        placeholder={t("searchPlaceholder")}
                         value={value}
                         onChange={onChange}
                         onKeyDown={onKeyDown}
@@ -108,7 +110,7 @@ const SearchBar = ({
                     /* Favorites Dropdown */
                     isFocused && !value && favorites && favorites.length > 0 && (
                         <div className="suggestions-dropdown">
-                            <div className="dropdown-header px-3 py-2 text-muted small">Favorites</div>
+                            <div className="dropdown-header px-3 py-2 text-muted small">{t("favorites")}</div>
                             {favorites.map((fav, index) => (
                                 <div
                                     key={`fav-${index}`}

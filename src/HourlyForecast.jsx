@@ -5,9 +5,11 @@ import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
 import useDraggableScroll from "./useDraggableScroll";
 import { useUnits } from "./UnitContext";
+import { useLanguage } from "./LanguageContext";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
   const { getTemperature, getSpeed, getPrecip, formatDate, formatTime, unitLabels } = useUnits();
+  const { t, language } = useLanguage();
   const scrollContainerRef = React.useRef(null);
   const navContainerRef = React.useRef(null);
 
@@ -177,7 +179,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
 
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
-      {getWeatherDescription(code)}
+      {getWeatherDescription(code, language)}
     </Tooltip>
   );
 
@@ -190,8 +192,8 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     const todayStr = today.toISOString().slice(0, 10);
     const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
-    if (dateStr === todayStr) return "Today";
-    if (dateStr === tomorrowStr) return "Tomorrow";
+    if (dateStr === todayStr) return t("today");
+    if (dateStr === tomorrowStr) return t("tomorrow");
 
     const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
     return `${weekday} ${formatDate(dateStr)}`;

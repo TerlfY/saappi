@@ -31,11 +31,13 @@ import WeatherRadar from "./WeatherRadar";
 import WeatherEffects from "./WeatherEffects";
 
 import { UnitProvider, useUnits } from "./UnitContext";
+import { LanguageProvider, useLanguage } from "./LanguageContext";
 
 function AppContent() {
   const { darkMode, toggleDarkMode } = useDarkMode();
   const scrollDirection = useScrollDirection();
   const { unit, toggleUnit, unitLabels } = useUnits();
+  const { language, toggleLanguage, t } = useLanguage();
 
   // Custom Hooks
   const { currentLocation } = useGeolocation();
@@ -123,7 +125,7 @@ function AppContent() {
   };
 
   const displayCityName =
-    searchedLocation?.name || reverseGeocodedCityName || "Loading city...";
+    searchedLocation?.name || reverseGeocodedCityName || t("loadingCity");
 
   useEffect(() => {
     if (darkMode) {
@@ -170,6 +172,20 @@ function AppContent() {
               }}
             >
               {unit === "metric" ? "°C" : "°F"}
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={toggleLanguage}
+              className="rounded-pill px-3"
+              style={{
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(255,255,255,0.1)",
+                color: darkMode ? "white" : "black",
+                border: "1px solid rgba(255,255,255,0.2)"
+              }}
+            >
+              {language === "en" ? "FI" : "EN"}
             </Button>
           </div>
 
@@ -293,7 +309,9 @@ function AppContent() {
 function App() {
   return (
     <UnitProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </UnitProvider>
   );
 }

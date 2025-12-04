@@ -4,6 +4,7 @@ import axios from "axios";
 import { openMeteoGeocodingSchema } from "./schemas";
 import useDebounce from "./useDebounce";
 import { formatLocationName } from "./utils";
+import { useLanguage } from "./LanguageContext";
 
 const fetchCitySearch = async ({ queryKey }) => {
     const [_, city] = queryKey;
@@ -14,6 +15,7 @@ const fetchCitySearch = async ({ queryKey }) => {
 };
 
 const useCitySearch = () => {
+    const { t } = useLanguage();
     const [searchCity, setSearchCity] = useState("");
     const [searchedLocation, setSearchedLocation] = useState(() => {
         try {
@@ -80,7 +82,7 @@ const useCitySearch = () => {
             setHighlightedIndex(-1); // Reset highlight when results change
         } else if (searchResults && searchResults.length === 0) {
             setShowSuggestions(false);
-            setSearchError("City not found.");
+            setSearchError(t("cityNotFound"));
         }
     }, [searchResults, selectionMade]);
 
@@ -88,7 +90,7 @@ const useCitySearch = () => {
     useEffect(() => {
         if (queryError) {
             console.error("Error searching for the city:", queryError);
-            setSearchError("City search failed. Please try again.");
+            setSearchError(t("searchFailed"));
         }
     }, [queryError]);
 

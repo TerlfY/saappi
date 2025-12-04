@@ -1,25 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const useScrollDirection = () => {
     const [scrollDirection, setScrollDirection] = useState("up");
+    const lastScrollY = useRef(0);
+    const ticking = useRef(false);
 
     useEffect(() => {
-        let lastScrollY = window.pageYOffset;
-
         const updateScrollDirection = () => {
             const scrollY = window.pageYOffset;
-            const direction = scrollY > lastScrollY ? "down" : "up";
-            if (direction !== scrollDirection && (scrollY - lastScrollY > 5 || scrollY - lastScrollY < -5)) {
-                setScrollDirection(direction);
+
+            // Force "up" when at the top of the page to ensure navbar is visible
+            if (scrollY < 10) {
+                setScrollDirection("up");
+                lastScrollY.current = scrollY > 0 ? scrollY : 0;
+                ticking.current = false;
+                return;
             }
-            lastScrollY = scrollY > 0 ? scrollY : 0;
+
+            const direction = scrollY > lastScrollY.current ? "down" : "up";
+            const diff = Math.abs(scrollY - lastScrollY.current);
+
+            // Only update if difference is significant to avoid jitter
+            if (diff > 5) {
+                setScrollDirection(direction);
+                lastScrollY.current = scrollY > 0 ? scrollY : 0;
+            }
+
+            ticking.current = false;
         };
 
-        window.addEventListener("scroll", updateScrollDirection); // add event listener
-        return () => {
-            window.removeEventListener("scroll", updateScrollDirection); // clean up
-        }
-    }, [scrollDirection]);
+        const onScroll = () => {
+            if (!ticking.current) {
+                window.requestAnimationFrame(updateScrollDirection);
+                ticking.current = true;
+            }
+        };
+
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []); // Empty dependency array ensures listener is attached once
 
     return scrollDirection;
 };

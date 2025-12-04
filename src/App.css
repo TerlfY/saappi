@@ -469,15 +469,3 @@ body.body-dark-mode .precip-prob {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-
-.navbar-hidden {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.navbar-visible {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}

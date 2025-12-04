@@ -7,7 +7,7 @@ import useDraggableScroll from "./useDraggableScroll";
 import { useUnits } from "./UnitContext";
 import { useLanguage } from "./LanguageContext";
 
-const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
+const HourlyForecast = React.memo(({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
   const { getTemperature, getSpeed, getPrecip, formatDate, formatTime, unitLabels } = useUnits();
   const { t, language } = useLanguage();
   const scrollContainerRef = React.useRef(null);
@@ -286,7 +286,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div key={`time-${i}`} className={`grid-cell time-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+              <div key={`time-${hourData.time}`} className={`grid-cell time-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 {formatTime(hourData.time, { hourOnly: true })}
               </div>
             );
@@ -299,7 +299,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div key={`icon-${i}`} className={`grid-cell icon-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+              <div key={`icon-${hourData.time}`} className={`grid-cell icon-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
                   <img
                     className="hourlyIcons"
@@ -317,7 +317,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div key={`temp-${i}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+              <div key={`temp-${hourData.time}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 {getTemperature(hourData.values.temperature)}{unitLabels.temperature}
               </div>
             );
@@ -329,7 +329,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div key={`wind-${i}`} className={`grid-cell wind-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+              <div key={`wind-${hourData.time}`} className={`grid-cell wind-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <div className="d-flex flex-column align-items-center">
                   <span
                     className="wind-arrow"
@@ -353,7 +353,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const snowAmount = hourData.values.snowfall || 0;
 
             return (
-              <div key={`precip-${i}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+              <div key={`precip-${hourData.time}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
                   {amount > 0 && snowAmount === 0 && (
                     <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
@@ -372,7 +372,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
             const amount = hourData.values.snowfall || 0;
 
             return (
-              <div key={`snow-${i}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+              <div key={`snow-${hourData.time}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                 <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
                   {amount > 0 && (
                     <span className="snow-amount" style={{ fontSize: "0.7rem", color: "#ffffff" }}>
@@ -394,6 +394,6 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
       )}
     </Container>
   );
-};
+});
 
 export default HourlyForecast;

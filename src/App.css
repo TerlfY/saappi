@@ -444,6 +444,23 @@ body.body-dark-mode .precip-prob {
   #radar-section {
     order: 6;
   }
+
+  /* Navbar Mobile Layout */
+  .navbar-content {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 1rem;
+  }
+
+  .brand-and-toggles {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-container {
+    width: 100%;
+    margin-left: 0 !important;
+  }
 }
 
 /* Smart Navbar Transitions */

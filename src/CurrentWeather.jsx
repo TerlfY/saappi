@@ -8,7 +8,7 @@ import SunDial from "./SunDial";
 import { useUnits } from "./UnitContext";
 import { useLanguage } from "./LanguageContext";
 
-const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite, location }) => {
+const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, onLocationReset, isFavorite, onToggleFavorite, location }) => {
   const { data: aqiData, isLoading: aqiLoading } = useAirQuality(location);
   const { getTemperature, getSpeed, getPrecip, unitLabels } = useUnits();
   const { t, language } = useLanguage();
@@ -70,20 +70,14 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           className="control-btn"
           title={t("useCurrentLocation")}
         >
-          📍
-        </Button>
-        <Button
-          variant="link"
-          onClick={toggleDarkMode}
-          className="control-btn"
-          title={darkMode ? t("switchToLight") : t("switchToDark")}
-        >
-          {darkMode ? "☀️" : "🌙"}
+          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: "80%", height: "80%" }}>
+            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+          </svg>
         </Button>
       </div>
 
       <div>
-        <div className="d-flex justify-content-center align-items-center gap-2 mt-3">
+        <div className="d-flex justify-content-center align-items-center gap-2" style={{ paddingTop: "60px" }}>
           <h2 className="text-truncate m-0" style={{ maxWidth: "80%" }} title={cityName}>
             {cityName}
           </h2>
@@ -220,7 +214,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           )}
         </div>
       </div>
-    </Container>
+    </Container >
   );
 };
 

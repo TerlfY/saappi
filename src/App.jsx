@@ -6,6 +6,8 @@ import {
   Navbar,
   Button,
   Alert,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import HourlyForecast from "./HourlyForecast";
 import CurrentWeather from "./CurrentWeather";
@@ -154,42 +156,77 @@ function AppContent() {
       <WeatherEffects weatherCode={currentWeather?.weatherCode} />
       {/* Header */}
       <Navbar sticky="top" className={`transition-navbar ${scrollDirection === "down" ? "navbar-hidden" : "navbar-visible"}`}>
-        <Container className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-3" style={{ flex: 1 }}>
-            <Navbar.Brand>
-              <h1 className="fw-bold m-0">Sääppi</h1>
-            </Navbar.Brand>
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              onClick={toggleUnit}
-              className="rounded-pill px-3"
-              style={{
-                backdropFilter: "blur(5px)",
-                backgroundColor: "rgba(255,255,255,0.1)",
-                color: darkMode ? "white" : "black",
-                border: "1px solid rgba(255,255,255,0.2)"
-              }}
-            >
-              {unit === "metric" ? "°C" : "°F"}
-            </Button>
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              onClick={toggleLanguage}
-              className="rounded-pill px-3"
-              style={{
-                backdropFilter: "blur(5px)",
-                backgroundColor: "rgba(255,255,255,0.1)",
-                color: darkMode ? "white" : "black",
-                border: "1px solid rgba(255,255,255,0.2)"
-              }}
-            >
-              {language === "en" ? "FI" : "EN"}
-            </Button>
+        <Container className="d-flex justify-content-between align-items-center navbar-content">
+          <div className="d-flex align-items-center justify-content-between brand-and-toggles">
+            <div className="d-flex align-items-center gap-3">
+              <Navbar.Brand>
+                <h1 className="fw-bold m-0">Sääppi</h1>
+              </Navbar.Brand>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <OverlayTrigger
+                placement="bottom"
+                overlay={<Tooltip>{unit === "metric" ? t("switchToFahrenheit") : t("switchToCelsius")}</Tooltip>}
+              >
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={toggleUnit}
+                  className="rounded-pill px-3"
+                  style={{
+                    backdropFilter: "blur(5px)",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    color: darkMode ? "white" : "black",
+                    border: "1px solid rgba(255,255,255,0.2)"
+                  }}
+                >
+                  {unit === "metric" ? "°C" : "°F"}
+                </Button>
+              </OverlayTrigger>
+
+              <OverlayTrigger
+                placement="bottom"
+                overlay={<Tooltip>{language === "en" ? t("switchToFinnish") : t("switchToEnglish")}</Tooltip>}
+              >
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={toggleLanguage}
+                  className="rounded-pill px-3"
+                  style={{
+                    backdropFilter: "blur(5px)",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    color: darkMode ? "white" : "black",
+                    border: "1px solid rgba(255,255,255,0.2)"
+                  }}
+                >
+                  {language === "en" ? "FI" : "EN"}
+                </Button>
+              </OverlayTrigger>
+
+              <OverlayTrigger
+                placement="bottom"
+                overlay={<Tooltip>{darkMode ? t("switchToLight") : t("switchToDark")}</Tooltip>}
+              >
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={toggleDarkMode}
+                  className="rounded-pill px-3"
+                  style={{
+                    backdropFilter: "blur(5px)",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    color: darkMode ? "white" : "black",
+                    border: "1px solid rgba(255,255,255,0.2)"
+                  }}
+                >
+                  {darkMode ? "☀️" : "🌙"}
+                </Button>
+              </OverlayTrigger>
+            </div>
           </div>
 
-          <div style={{ flex: 2 }}>
+          <div className="search-container" style={{ flex: 2 }}>
             <SearchBar
               value={searchCity}
               onChange={handleSearchInputChange}
@@ -238,7 +275,6 @@ function AppContent() {
               location={locationToFetch}
               timezone={timezone}
               darkMode={darkMode}
-              toggleDarkMode={toggleDarkMode}
               onLocationReset={() => {
                 setSearchedLocation(null);
                 handleSearchInputChange({ target: { value: "" } });

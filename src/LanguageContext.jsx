@@ -48,8 +48,15 @@ export const LanguageProvider = ({ children }) => {
         setLanguage(prev => prev === 'en' ? 'fi' : 'en');
     };
 
+    const contextValue = React.useMemo(() => ({
+        language,
+        setLanguage,
+        toggleLanguage,
+        t
+    }), [language]);
+
     return (
-        <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
+        <LanguageContext.Provider value={contextValue}>
             {children}
         </LanguageContext.Provider>
     );

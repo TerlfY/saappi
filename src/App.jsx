@@ -150,6 +150,10 @@ function AppContent() {
   // Use isDay from API, default to 1 (Day) if not available
   const isDay = currentWeather?.isDay !== undefined ? currentWeather.isDay : 1;
 
+  // Memoize data extraction to ensure stable references for HourlyForecast
+  const hourlyData = useMemo(() => forecastData?.timelines?.hourly, [forecastData]);
+  const dailyData = useMemo(() => forecastData?.timelines?.daily, [forecastData]);
+
   const chartElement = useMemo(() => {
     if (!forecastLoading && !forecastError && forecastData?.timelines?.hourly) {
       return (
@@ -320,8 +324,8 @@ function AppContent() {
         <Col md={8}>
           <div id="hourly-section">
             <HourlyForecast
-              hourlyData={forecastData?.timelines?.hourly}
-              dailyData={forecastData?.timelines?.daily}
+              hourlyData={hourlyData}
+              dailyData={dailyData}
               loading={forecastLoading}
               error={forecastError}
               timezone={timezone}

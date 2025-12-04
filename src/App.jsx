@@ -150,6 +150,22 @@ function AppContent() {
   // Use isDay from API, default to 1 (Day) if not available
   const isDay = currentWeather?.isDay !== undefined ? currentWeather.isDay : 1;
 
+  const chartElement = useMemo(() => {
+    if (!forecastLoading && !forecastError && forecastData?.timelines?.hourly) {
+      return (
+        <TemperatureChart
+          data={chartData}
+          darkMode={darkMode}
+          timezone={timezone}
+          isDay={isDay}
+          showAllDays={showAllDays}
+          onToggleShowAllDays={() => setShowAllDays(!showAllDays)}
+        />
+      );
+    }
+    return null;
+  }, [forecastLoading, forecastError, forecastData, chartData, darkMode, timezone, isDay, showAllDays]);
+
   return (
     <Container className={`mx-auto text-center m-4`}>
       <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
@@ -312,18 +328,7 @@ function AppContent() {
               darkMode={darkMode}
               activeDate={selectedDate}
               onDateChange={setSelectedDate}
-              chart={
-                !forecastLoading && !forecastError && forecastData?.timelines?.hourly && (
-                  <TemperatureChart
-                    data={chartData}
-                    darkMode={darkMode}
-                    timezone={timezone}
-                    isDay={isDay}
-                    showAllDays={showAllDays}
-                    onToggleShowAllDays={() => setShowAllDays(!showAllDays)}
-                  />
-                )
-              }
+              chart={chartElement}
             />
           </div>
 

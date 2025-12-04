@@ -466,7 +466,6 @@ body.body-dark-mode .precip-prob {
 /* Smart Navbar Transitions */
 .transition-navbar {
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }

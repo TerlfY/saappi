@@ -94,7 +94,7 @@ const SearchBar = ({
                                 key={index}
                                 className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""
                                     }`}
-                                onClick={() => {
+                                onMouseDown={() => {
                                     onSuggestionClick(result);
                                     setIsFocused(false);
                                     inputRef.current?.blur();
@@ -113,7 +113,7 @@ const SearchBar = ({
                                 <div
                                     key={`fav-${index}`}
                                     className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""}`}
-                                    onClick={() => {
+                                    onMouseDown={() => {
                                         onFavoriteSelect(fav);
                                         setIsFocused(false);
                                         inputRef.current?.blur();

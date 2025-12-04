@@ -131,6 +131,7 @@ const useCitySearch = () => {
                 }
             } else if (e.key === "Escape") {
                 setHighlightedIndex(-1);
+                e.target.blur(); // Also blur on escape
             }
             return;
         }
@@ -153,6 +154,7 @@ const useCitySearch = () => {
             }
         } else if (e.key === "Escape") {
             setShowSuggestions(false);
+            setHighlightedIndex(-1);
         }
     };
 

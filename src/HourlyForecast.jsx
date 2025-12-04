@@ -396,4 +396,45 @@ const HourlyForecast = React.memo(({ hourlyData, dailyData, loading, error, time
   );
 });
 
-export default HourlyForecast;
+// Custom comparison function for React.memo to prevent unnecessary re-renders
+// Only re-render if data actually changes, not just references
+const areEqual = (prevProps, nextProps) => {
+  // Check primitive props
+  if (
+    prevProps.loading !== nextProps.loading ||
+    prevProps.error !== nextProps.error ||
+    prevProps.timezone !== nextProps.timezone ||
+    prevProps.darkMode !== nextProps.darkMode ||
+    prevProps.activeDate !== nextProps.activeDate
+  ) {
+    return false;
+  }
+
+  // Check if data arrays are the same reference (optimization)
+  if (prevProps.hourlyData === nextProps.hourlyData && prevProps.dailyData === nextProps.dailyData) {
+    return true;
+  }
+
+  // Deep check: compare array lengths and first/last items
+  if (prevProps.hourlyData?.length !== nextProps.hourlyData?.length ||
+    prevProps.dailyData?.length !== nextProps.dailyData?.length) {
+    return false;
+  }
+
+  // If lengths match and both exist, check first and last items as a heuristic
+  if (prevProps.hourlyData?.length > 0 && nextProps.hourlyData?.length > 0) {
+    const prevFirst = prevProps.hourlyData[0];
+    const nextFirst = nextProps.hourlyData[0];
+    const prevLast = prevProps.hourlyData[prevProps.hourlyData.length - 1];
+    const nextLast = nextProps.hourlyData[nextProps.hourlyData.length - 1];
+
+    if (prevFirst?.time !== nextFirst?.time || prevLast?.time !== nextLast?.time) {
+      return false;
+    }
+  }
+
+  // Chart and callbacks should be stable if we've memoized properly
+  return true;
+};
+
+export default React.memo(HourlyForecast, areEqual);

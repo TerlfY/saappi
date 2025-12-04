@@ -85,10 +85,19 @@ export const UnitProvider = ({ children }) => {
         precip: unit === "metric" ? "mm" : "in",
     };
 
+    const contextValue = React.useMemo(() => ({
+        unit,
+        toggleUnit,
+        getTemperature,
+        getSpeed,
+        getPrecip,
+        formatDate,
+        formatTime,
+        unitLabels
+    }), [unit]);
+
     return (
-        <UnitContext.Provider
-            value={{ unit, toggleUnit, getTemperature, getSpeed, getPrecip, formatDate, formatTime, unitLabels }}
-        >
+        <UnitContext.Provider value={contextValue}>
             {children}
         </UnitContext.Provider>
     );

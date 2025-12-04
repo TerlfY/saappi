@@ -18,7 +18,6 @@ const WeatherRadar = ({ location }) => {
                 frameBorder="0"
                 title="Weather Radar"
                 style={{ border: 'none' }}
-                allow="geolocation"
             ></iframe>
         </div>
     );

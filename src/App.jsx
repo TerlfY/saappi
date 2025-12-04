@@ -30,13 +30,20 @@ import WebcamFeed from "./WebcamFeed";
 import WeatherRadar from "./WeatherRadar";
 import WeatherEffects from "./WeatherEffects";
 
-function App() {
+import { UnitProvider, useUnits } from "./UnitContext";
+import { LanguageProvider, useLanguage } from "./LanguageContext";
+
+function AppContent() {
   const { darkMode, toggleDarkMode } = useDarkMode();
   const scrollDirection = useScrollDirection();
+  const { unit, toggleUnit, unitLabels } = useUnits();
+  const { language, toggleLanguage, t } = useLanguage();
 
   // Custom Hooks
   const { currentLocation } = useGeolocation();
   const { cityName: reverseGeocodedCityName } = useReverseGeocode(currentLocation);
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
+
   const {
     searchCity,
     searchedLocation,
@@ -50,9 +57,7 @@ function App() {
     handleSearchInputChange,
     handleKeyDown,
     highlightedIndex,
-  } = useCitySearch();
-
-  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
+  } = useCitySearch({ favorites });
 
   // --- Determine the location to use for weather fetching ---
   const locationToFetch = useMemo(() => {
@@ -120,7 +125,7 @@ function App() {
   };
 
   const displayCityName =
-    searchedLocation?.name || reverseGeocodedCityName || "Loading city...";
+    searchedLocation?.name || reverseGeocodedCityName || t("loadingCity");
 
   useEffect(() => {
     if (darkMode) {
@@ -149,31 +154,63 @@ function App() {
       <WeatherEffects weatherCode={currentWeather?.weatherCode} />
       {/* Header */}
       <Navbar sticky="top" className={`transition-navbar ${scrollDirection === "down" ? "navbar-hidden" : "navbar-visible"}`}>
-        <Container>
-          <Navbar.Brand>
-            <h1 className="fw-bold">Sääppi</h1>
-          </Navbar.Brand>
-          <SearchBar
-            value={searchCity}
-            onChange={handleSearchInputChange}
-            onSubmit={handleSearch}
-            onClear={() => handleSearchInputChange({ target: { value: "" } })}
-            suggestions={searchResults}
-            onSuggestionClick={handleSuggestionClick}
-            loading={searchLoading}
-            error={searchError}
-            highlightedIndex={highlightedIndex}
-            onKeyDown={(e) => {
-              handleEnterKey(e);
-              handleKeyDown(e);
-            }}
-            showSuggestions={showSuggestions}
-            favorites={favorites}
-            onFavoriteSelect={(fav) => {
-              setSearchedLocation(fav);
-              handleSearchInputChange({ target: { value: "" } });
-            }}
-          />
+        <Container className="d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center gap-3" style={{ flex: 1 }}>
+            <Navbar.Brand>
+              <h1 className="fw-bold m-0">Sääppi</h1>
+            </Navbar.Brand>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={toggleUnit}
+              className="rounded-pill px-3"
+              style={{
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(255,255,255,0.1)",
+                color: darkMode ? "white" : "black",
+                border: "1px solid rgba(255,255,255,0.2)"
+              }}
+            >
+              {unit === "metric" ? "°C" : "°F"}
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={toggleLanguage}
+              className="rounded-pill px-3"
+              style={{
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(255,255,255,0.1)",
+                color: darkMode ? "white" : "black",
+                border: "1px solid rgba(255,255,255,0.2)"
+              }}
+            >
+              {language === "en" ? "FI" : "EN"}
+            </Button>
+          </div>
+
+          <div style={{ flex: 2 }}>
+            <SearchBar
+              value={searchCity}
+              onChange={handleSearchInputChange}
+              onSubmit={handleSearch}
+              onClear={() => handleSearchInputChange({ target: { value: "" } })}
+              suggestions={searchResults}
+              onSuggestionClick={handleSuggestionClick}
+              loading={searchLoading}
+              error={searchError}
+              highlightedIndex={highlightedIndex}
+              onKeyDown={(e) => {
+                handleKeyDown(e);
+              }}
+              showSuggestions={showSuggestions}
+              favorites={favorites}
+              onFavoriteSelect={(fav) => {
+                setSearchedLocation(fav);
+                handleSearchInputChange({ target: { value: "" } });
+              }}
+            />
+          </div>
         </Container>
       </Navbar>
 
@@ -266,6 +303,16 @@ function App() {
         </Col>
       </Row>
     </Container>
+  );
+}
+
+function App() {
+  return (
+    <UnitProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </UnitProvider>
   );
 }
 

@@ -5,9 +5,13 @@ import SkeletonWeather from "./SkeletonWeather";
 import { getIcon } from "./WeatherIcons";
 import useAirQuality from "./useAirQuality";
 import SunDial from "./SunDial";
+import { useUnits } from "./UnitContext";
+import { useLanguage } from "./LanguageContext";
 
 const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, timezone, darkMode, toggleDarkMode, onLocationReset, isFavorite, onToggleFavorite, location }) => {
   const { data: aqiData, isLoading: aqiLoading } = useAirQuality(location);
+  const { getTemperature, getSpeed, getPrecip, unitLabels } = useUnits();
+  const { t, language } = useLanguage();
   // --- Rendering Logic ---
 
   // 1. Handle Loading State
@@ -30,7 +34,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
         style={{ height: "100%" }}
       >
         <Alert variant="danger">
-          {error.message || "Error fetching weather data."}
+          {error.message || t("error")}
         </Alert>
       </Container>
     );
@@ -43,7 +47,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
         className="d-flex justify-content-center align-items-center"
         style={{ height: "100%" }}
       >
-        <p>Waiting for weather data...</p>
+        <p>{t("loading")}</p>
       </Container>
     );
   }
@@ -53,7 +57,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
 
   const renderTooltip = (props) => (
     <Tooltip id="button-tooltip" {...props}>
-      {getWeatherDescription(weatherData.values.weatherCode)}
+      {getWeatherDescription(weatherData.values.weatherCode, language)}
     </Tooltip>
   );
 
@@ -64,7 +68,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           variant="link"
           onClick={onLocationReset}
           className="control-btn"
-          title="Use Current Location"
+          title={t("useCurrentLocation")}
         >
           📍
         </Button>
@@ -72,7 +76,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           variant="link"
           onClick={toggleDarkMode}
           className="control-btn"
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={darkMode ? t("switchToLight") : t("switchToDark")}
         >
           {darkMode ? "☀️" : "🌙"}
         </Button>
@@ -88,7 +92,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             onClick={onToggleFavorite}
             className="p-0 text-decoration-none"
             style={{ fontSize: "1.5rem", lineHeight: 1, color: isFavorite ? "#FFD700" : (darkMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)") }}
-            title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+            title={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
           >
             {isFavorite ? "★" : "☆"}
           </Button>
@@ -109,37 +113,41 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             alt="Weather Icon"
           />
         </OverlayTrigger>
-        <p className="fs-1 fw-bold">{`${Math.round(
-          weatherData.values.temperature
-        )}°C`}</p>
+        <p className="fs-1 fw-bold">{`${getTemperature(weatherData.values.temperature)}${unitLabels.temperature}`}</p>
 
         {/* Weather Details Grid */}
         <div className="weather-details-grid mt-4">
           <div className="detail-item">
-            <span className="detail-label">Feels Like</span>
-            <span className="detail-value">{Math.round(weatherData.values.temperatureApparent)}°C</span>
+            <span className="detail-label">{t("feelsLike")}</span>
+            <span className="detail-value">{getTemperature(weatherData.values.temperatureApparent)}{unitLabels.temperature}</span>
           </div>
           <div className="detail-item">
-            <span className="detail-label">Wind</span>
+            <span className="detail-label">{t("wind")}</span>
             <OverlayTrigger
               placement="top"
               overlay={
                 <Tooltip id="wind-tooltip">
-                  Gusts: {Math.round(weatherData.values.windGusts)} m/s
+                  {t("gusts")}: {getSpeed(weatherData.values.windGusts)} {unitLabels.speed}
                 </Tooltip>
               }
             >
               <span className="detail-value" style={{ cursor: "help", textDecoration: "underline dotted" }}>
-                {Math.round(weatherData.values.windSpeed)} m/s
+                {getSpeed(weatherData.values.windSpeed)} {unitLabels.speed}
               </span>
             </OverlayTrigger>
           </div>
           <div className="detail-item">
-            <span className="detail-label">Humidity</span>
+            <span className="detail-label">{t("humidity")}</span>
             <span className="detail-value">{Math.round(weatherData.values.humidity)}%</span>
           </div>
+          {weatherData.values.precipitation > 0 && (weatherData.values.snowfall || 0) === 0 && (
+            <div className="detail-item">
+              <span className="detail-label">{t("precip")}</span>
+              <span className="detail-value">{getPrecip(weatherData.values.precipitation)} {unitLabels.precip}</span>
+            </div>
+          )}
           <div className="detail-item">
-            <span className="detail-label">UV Index</span>
+            <span className="detail-label">{t("uvIndex")}</span>
             <span className="detail-value">{weatherData.values.uvIndex}</span>
           </div>
           <div className="detail-item" style={{ gridColumn: "span 2", padding: "10px 0" }}>
@@ -156,13 +164,13 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
             <div className="detail-item" style={{ gridColumn: "span 2" }}>
               {(() => {
                 const aqi = aqiData.current.european_aqi;
-                let status = "Good";
+                let status = t("aqi.good");
                 let color = "success";
-                if (aqi > 20) { status = "Fair"; color = "info"; }
-                if (aqi > 40) { status = "Moderate"; color = "warning"; }
-                if (aqi > 60) { status = "Poor"; color = "danger"; }
-                if (aqi > 80) { status = "Very Poor"; color = "danger"; }
-                if (aqi > 100) { status = "Extremely Poor"; color = "dark"; }
+                if (aqi > 20) { status = t("aqi.fair"); color = "info"; }
+                if (aqi > 40) { status = t("aqi.moderate"); color = "warning"; }
+                if (aqi > 60) { status = t("aqi.poor"); color = "danger"; }
+                if (aqi > 80) { status = t("aqi.veryPoor"); color = "danger"; }
+                if (aqi > 100) { status = t("aqi.extremelyPoor"); color = "dark"; }
 
                 // Invert percentage: 0 AQI (Good) = 100% Bar, 100 AQI (Bad) = 0% Bar
                 const percentage = Math.max(0, 100 - aqi);
@@ -170,7 +178,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                 return (
                   <>
                     <div className="d-flex justify-content-between align-items-center mb-1">
-                      <span className="detail-label">Air Quality</span>
+                      <span className="detail-label">{t("airQuality")}</span>
                       <span className={`detail-value text-${color}`} style={{ fontSize: "0.9rem" }}>{status} ({aqi})</span>
                     </div>
                     <ProgressBar
@@ -186,7 +194,7 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
           {(weatherData.values.snowDepth || 0) * 100 >= 1 && (
             <div className="detail-item" style={{ gridColumn: "span 2" }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <span className="detail-label">Snow Depth</span>
+                <span className="detail-label">{t("snowDepth")}</span>
                 <span className="detail-value">{weatherData.values.snowDepth ? (weatherData.values.snowDepth * 100).toFixed(0) : 0} cm</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
@@ -199,6 +207,14 @@ const CurrentWeather = ({ weatherData, dailyValues, loading, error, cityName, ti
                     transition: "width 0.5s ease-out"
                   }}
                 />
+              </div>
+            </div>
+          )}
+          {(weatherData.values.snowfall || 0) > 0 && (
+            <div className="detail-item" style={{ gridColumn: "span 2" }}>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <span className="detail-label">{t("snowfall")}</span>
+                <span className="detail-value">{weatherData.values.snowfall} cm</span>
               </div>
             </div>
           )}

@@ -58,6 +58,7 @@ export const openMeteoSchema = z.object({
         uv_index: z.array(z.number().nullable()),
         cloudcover: z.array(z.number().nullable()),
         snow_depth: z.array(z.number().nullable()).optional(),
+        snowfall: z.array(z.number().nullable()).optional(),
         precipitation_probability: z.array(z.number().nullable()).optional(),
     }).passthrough(),
     daily_units: z.object({}).passthrough().optional(),
@@ -69,6 +70,7 @@ export const openMeteoSchema = z.object({
         sunrise: z.array(z.string()),
         sunset: z.array(z.string()),
         precipitation_probability_max: z.array(z.number().nullable()).optional(),
+        snowfall_sum: z.array(z.number().nullable()).optional(),
     }).passthrough(),
 }).passthrough();
 

@@ -1,7 +1,10 @@
 import React from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { useUnits } from "./UnitContext";
 
 const SunDial = ({ sunrise, sunset, timezone, isDay }) => {
+    const { formatTime } = useUnits();
+
     if (!sunrise || !sunset) return null;
 
     // Parse times
@@ -87,9 +90,6 @@ const SunDial = ({ sunrise, sunset, timezone, isDay }) => {
     const sunX = cx + r * Math.cos(rad);
     const sunY = cy - r * Math.sin(rad); // Y is inverted in SVG
 
-    // Formatting times for display (HH:MM)
-    const formatTime = (isoStr) => isoStr.split("T")[1].slice(0, 5);
-
     return (
         <div className="sun-dial-container" style={{ width: "100%", textAlign: "center", position: "relative" }}>
             <div style={{ position: "relative", height: "60px", overflow: "hidden" }}>
@@ -151,6 +151,25 @@ const SunDial = ({ sunrise, sunset, timezone, isDay }) => {
                     height: "1px",
                     background: "rgba(255,255,255,0.1)"
                 }} />
+
+                {/* Current Time Clock */}
+                <div style={{
+                    position: "absolute",
+                    top: "0",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    textShadow: "0 0 5px rgba(0, 0, 0, 0.5)",
+                    background: "rgba(0,0,0,0.1)",
+                    padding: "1px 6px",
+                    borderRadius: "8px",
+                    backdropFilter: "blur(1px)",
+                    border: "1px solid rgba(255,255,255,0.05)"
+                }}>
+                    {formatTime(nowStr)}
+                </div>
             </div>
 
             {/* Labels */}

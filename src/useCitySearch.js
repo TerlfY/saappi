@@ -4,6 +4,7 @@ import axios from "axios";
 import { openMeteoGeocodingSchema } from "./schemas";
 import useDebounce from "./useDebounce";
 import { formatLocationName } from "./utils";
+import { useLanguage } from "./LanguageContext";
 
 const fetchCitySearch = async ({ queryKey }) => {
     const [_, city] = queryKey;
@@ -14,6 +15,7 @@ const fetchCitySearch = async ({ queryKey }) => {
 };
 
 const useCitySearch = () => {
+    const { t } = useLanguage();
     const [searchCity, setSearchCity] = useState("");
     const [searchedLocation, setSearchedLocation] = useState(() => {
         try {
@@ -80,7 +82,7 @@ const useCitySearch = () => {
             setHighlightedIndex(-1); // Reset highlight when results change
         } else if (searchResults && searchResults.length === 0) {
             setShowSuggestions(false);
-            setSearchError("City not found.");
+            setSearchError(t("cityNotFound"));
         }
     }, [searchResults, selectionMade]);
 
@@ -88,7 +90,7 @@ const useCitySearch = () => {
     useEffect(() => {
         if (queryError) {
             console.error("Error searching for the city:", queryError);
-            setSearchError("City search failed. Please try again.");
+            setSearchError(t("searchFailed"));
         }
     }, [queryError]);
 
@@ -109,10 +111,34 @@ const useCitySearch = () => {
     const handleSearchInputChange = (e) => {
         setSearchCity(e.target.value);
         setSelectionMade(false);
+        setHighlightedIndex(-1); // Reset highlight
         if (e.target.value === "") setShowSuggestions(false);
     };
 
     const handleKeyDown = (e) => {
+        // Handle Favorites Navigation (when search is empty)
+        if (!searchCity && favorites && favorites.length > 0) {
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setHighlightedIndex((prev) =>
+                    prev < favorites.length - 1 ? prev + 1 : prev
+                );
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (highlightedIndex >= 0 && favorites[highlightedIndex]) {
+                    handleSuggestionClick(favorites[highlightedIndex]);
+                }
+            } else if (e.key === "Escape") {
+                setHighlightedIndex(-1);
+                e.target.blur(); // Also blur on escape
+            }
+            return;
+        }
+
+        // Handle Search Results Navigation
         if (!showSuggestions || !searchResults) return;
 
         if (e.key === "ArrowDown") {
@@ -130,6 +156,7 @@ const useCitySearch = () => {
             }
         } else if (e.key === "Escape") {
             setShowSuggestions(false);
+            setHighlightedIndex(-1);
         }
     };
 

@@ -4,8 +4,12 @@ import { getIcon } from "./WeatherIcons";
 import { getWeatherDescription } from "./weatherDescriptions";
 import "./HourlyForecast.css";
 import useDraggableScroll from "./useDraggableScroll";
+import { useUnits } from "./UnitContext";
+import { useLanguage } from "./LanguageContext";
 
 const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activeDate, onDateChange, chart }) => {
+  const { getTemperature, getSpeed, getPrecip, formatDate, formatTime, unitLabels } = useUnits();
+  const { t, language } = useLanguage();
   const scrollContainerRef = React.useRef(null);
   const navContainerRef = React.useRef(null);
 
@@ -86,7 +90,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
         if (scrollContainer) {
           const currentIndex = allHours.findIndex(h => h.time.startsWith(currentHourIso.slice(0, 13)));
           if (currentIndex !== -1) {
-            const firstItem = scrollContainer.querySelector('.hour-header');
+            const firstItem = scrollContainer.querySelector('.time-cell');
             const cellWidth = firstItem ? firstItem.offsetWidth : 60;
             const scrollPosition = currentIndex * cellWidth;
 
@@ -110,7 +114,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
   React.useEffect(() => {
     const measureCellWidth = () => {
       if (scrollContainerRef.current) {
-        const firstItem = scrollContainerRef.current.querySelector('.hour-header');
+        const firstItem = scrollContainerRef.current.querySelector('.time-cell');
         if (firstItem) {
           cellWidthRef.current = firstItem.offsetWidth;
         }
@@ -175,7 +179,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
 
   const renderTooltip = (code) => (props) => (
     <Tooltip id={`tooltip-${code}`} {...props}>
-      {getWeatherDescription(code)}
+      {getWeatherDescription(code, language)}
     </Tooltip>
   );
 
@@ -188,26 +192,21 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
     const todayStr = today.toISOString().slice(0, 10);
     const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
-    if (dateStr === todayStr) return "Today";
-    if (dateStr === tomorrowStr) return "Tomorrow";
+    if (dateStr === todayStr) return t("today");
+    if (dateStr === tomorrowStr) return t("tomorrow");
 
-    const day = date.getDate();
     const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
-    return `${weekday} ${day}`;
+    return `${weekday} ${formatDate(dateStr)}`;
   };
 
-  if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
-  if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
-  if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
-
-  const scrollToDate = (date) => {
+  const scrollToDate = React.useCallback((date) => {
     if (onDateChange) onDateChange(date);
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer && allHours.length > 0) {
       const index = allHours.findIndex(h => h.time.startsWith(date));
 
       if (index !== -1) {
-        const firstItem = scrollContainer.querySelector('.hour-header');
+        const firstItem = scrollContainer.querySelector('.time-cell');
         const cellWidth = firstItem ? firstItem.offsetWidth : 60;
         const scrollPosition = index * cellWidth;
 
@@ -217,20 +216,59 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
         });
       }
     }
-  };
+  }, [onDateChange, allHours]);
+
+  // Handle Keyboard Navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if typing in an input
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if (e.key === 'ArrowLeft') {
+        const currentIndex = availableDates.indexOf(activeDate);
+        if (currentIndex > 0) {
+          scrollToDate(availableDates[currentIndex - 1]);
+        }
+      } else if (e.key === 'ArrowRight') {
+        const currentIndex = availableDates.indexOf(activeDate);
+        if (currentIndex < availableDates.length - 1) {
+          scrollToDate(availableDates[currentIndex + 1]);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [availableDates, activeDate, scrollToDate]);
+
+  if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
+  if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
+  if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
 
   return (
     <Container className="hourly-forecast-container p-0">
       <div className="day-navigation-bar mb-2" ref={navContainerRef}>
-        {days.map(day => (
-          <button
-            key={day.date}
-            className={`day-nav-item ${activeDate === day.date ? 'active' : ''}`}
-            onClick={() => scrollToDate(day.date)}
-          >
-            {formatDateLabel(day.date)}
-          </button>
-        ))}
+        {days.map(day => {
+          const dayData = dailyData.find(d => d.time === day.date);
+          const snowSum = dayData?.values?.snowfallSum || 0;
+
+          return (
+            <button
+              key={day.date}
+              className={`day-nav-item ${activeDate === day.date ? 'active' : ''}`}
+              onClick={() => scrollToDate(day.date)}
+            >
+              <div className="d-flex flex-column align-items-center">
+                <span>{formatDateLabel(day.date)}</span>
+                {snowSum > 0 && (
+                  <span style={{ fontSize: "0.75rem", color: "#aaddff", marginTop: "2px" }}>
+                    ❄️ {snowSum} cm
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <div
@@ -242,15 +280,14 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
           className="unified-forecast-grid"
           style={{ '--total-hours': allHours.length }}
         >
-          {/* Row 2: Hour Headers */}
+          {/* Row 1: Hours */}
           {allHours.map((hourData, i) => {
-            const hour = getLocalHour(hourData.time);
             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
             const isPast = currentHourIso && hourData.time < currentHourIso;
 
             return (
-              <div key={`hour-${i}`} className={`grid-cell hour-header ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                {hour}
+              <div key={`time-${i}`} className={`grid-cell time-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                {formatTime(hourData.time, { hourOnly: true })}
               </div>
             );
           })}
@@ -281,7 +318,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
 
             return (
               <div key={`temp-${i}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                {Math.round(hourData.values.temperature)}°
+                {getTemperature(hourData.values.temperature)}{unitLabels.temperature}
               </div>
             );
           })}
@@ -300,7 +337,9 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
                   >
                     ↓
                   </span>
-                  <span className="wind-speed">{Math.round(hourData.values.windSpeed)}</span>
+                  <span className="wind-speed" style={{ fontSize: "0.8rem" }}>
+                    {getSpeed(hourData.values.windSpeed)} <span style={{ fontSize: "0.6rem" }}>{unitLabels.speed}</span>
+                  </span>
                 </div>
               </div>
             );
@@ -310,17 +349,37 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
           {allHours.map((hourData, i) => {
             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
             const isPast = currentHourIso && hourData.time < currentHourIso;
-            const prob = hourData.values.precipitationProbability;
+            const amount = hourData.values.precipitation;
+            const snowAmount = hourData.values.snowfall || 0;
 
             return (
               <div key={`precip-${i}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                {prob > 0 && (
-                  <div className="precip-data">
-                    <span className="precip-prob" style={{ opacity: prob / 100 + 0.3 }}>
-                      {prob}%
+                <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                  {amount > 0 && snowAmount === 0 && (
+                    <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
+                      {getPrecip(amount)}{unitLabels.precip}
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Row 7: Snowfall (Conditional) */}
+          {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData, i) => {
+            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+            const isPast = currentHourIso && hourData.time < currentHourIso;
+            const amount = hourData.values.snowfall || 0;
+
+            return (
+              <div key={`snow-${i}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                  {amount > 0 && (
+                    <span className="snow-amount" style={{ fontSize: "0.7rem", color: "#ffffff" }}>
+                      {amount} cm
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}

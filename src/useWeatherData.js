@@ -18,7 +18,9 @@ const transformOpenMeteoData = (data) => {
 
       cloudCover: data.hourly.cloudcover[index],
       snowDepth: data.hourly.snow_depth ? data.hourly.snow_depth[index] : 0,
+      snowfall: data.hourly.snowfall ? data.hourly.snowfall[index] : 0,
       precipitationProbability: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[index] : 0,
+      precipitation: data.hourly.precipitation ? data.hourly.precipitation[index] : 0,
       isDay: data.hourly.is_day ? data.hourly.is_day[index] : 1, // Default to 1 (day) if missing
     },
   }));
@@ -32,6 +34,8 @@ const transformOpenMeteoData = (data) => {
       sunriseTime: data.daily.sunrise[index],
       sunsetTime: data.daily.sunset[index],
       precipitationProbabilityMax: data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[index] : 0,
+      precipitationSum: data.daily.precipitation_sum ? data.daily.precipitation_sum[index] : 0,
+      snowfallSum: data.daily.snowfall_sum ? data.daily.snowfall_sum[index] : 0,
     },
   }));
 
@@ -61,8 +65,8 @@ const fetchWeather = async ({ queryKey }) => {
     params: {
       latitude: lat,
       longitude: lon,
-      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,winddirection_10m,uv_index,cloudcover,precipitation_probability,is_day",
-      daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max",
+      hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,winddirection_10m,uv_index,cloudcover,precipitation_probability,precipitation,snowfall,is_day",
+      daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,snowfall_sum",
       timezone: "auto",
       windspeed_unit: "ms",
       forecast_days: 16,

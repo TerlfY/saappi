@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { Form, Spinner } from "react-bootstrap";
 import { formatLocationName } from "./utils";
 import "./SearchBar.css";
+import { useLanguage } from "./LanguageContext";
 
 const SearchBar = ({
     value,
@@ -18,8 +19,34 @@ const SearchBar = ({
     favorites,
     onFavoriteSelect,
 }) => {
+    const { t } = useLanguage();
     const inputRef = useRef(null);
+    const timeoutRef = useRef(null);
     const [isFocused, setIsFocused] = React.useState(false);
+
+    const handleFocus = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        setIsFocused(true);
+    };
+
+    const handleBlur = () => {
+        timeoutRef.current = setTimeout(() => setIsFocused(false), 200);
+    };
+
+    // Global listener workaround for missing input events
+    useEffect(() => {
+        const handleGlobalKeyDown = (e) => {
+            if (e.defaultPrevented) return; // Already handled
+            if (document.activeElement === inputRef.current) {
+                if (onKeyDown) onKeyDown(e);
+            }
+        };
+
+        window.addEventListener("keydown", handleGlobalKeyDown);
+        return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+    }, [onKeyDown]);
 
     // ...
 
@@ -27,20 +54,17 @@ const SearchBar = ({
         <div className="search-bar-container">
             <Form className="position-relative w-100" onSubmit={onSubmit}>
                 <div className="search-input-wrapper">
-                    {/* Search Icon */}
-                    <span className="search-icon">🔍</span>
-
-                    {/* Input Field */}
+                    {/* ... */}
                     <input
                         ref={inputRef}
                         type="text"
                         className="search-input form-control"
-                        placeholder="Search city..."
+                        placeholder={t("searchPlaceholder")}
                         value={value}
                         onChange={onChange}
                         onKeyDown={onKeyDown}
-                        onFocus={() => setIsFocused(true)}
-                        onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow click
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
                         aria-label="Search City"
                     />
 
@@ -72,7 +96,7 @@ const SearchBar = ({
                                 key={index}
                                 className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""
                                     }`}
-                                onClick={() => {
+                                onMouseDown={() => {
                                     onSuggestionClick(result);
                                     setIsFocused(false);
                                     inputRef.current?.blur();
@@ -86,12 +110,12 @@ const SearchBar = ({
                     /* Favorites Dropdown */
                     isFocused && !value && favorites && favorites.length > 0 && (
                         <div className="suggestions-dropdown">
-                            <div className="dropdown-header px-3 py-2 text-muted small">Favorites</div>
+                            <div className="dropdown-header px-3 py-2 text-muted small">{t("favorites")}</div>
                             {favorites.map((fav, index) => (
                                 <div
                                     key={`fav-${index}`}
-                                    className="suggestion-item"
-                                    onClick={() => {
+                                    className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""}`}
+                                    onMouseDown={() => {
                                         onFavoriteSelect(fav);
                                         setIsFocused(false);
                                         inputRef.current?.blur();

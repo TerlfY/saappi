@@ -127,6 +127,8 @@ const HourlyForecast = React.memo(({ hourlyData, dailyData, loading, error, time
   }, [hourlyData]);
 
   const handleScroll = () => {
+    return; // TEMPORARILY DISABLED TO TEST
+
     if (scrollTimeoutRef.current) return;
 
     scrollTimeoutRef.current = requestAnimationFrame(() => {

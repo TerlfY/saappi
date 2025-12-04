@@ -22,7 +22,7 @@ import useCitySearch, { SearchedLocation } from "./useCitySearch";
 import { getCurrentHourData } from "./utils";
 import useFavorites from "./useFavorites";
 import useTimezone from "./useTimezone";
-import useScrollDirection from "./useScrollDirection";
+
 
 
 import BackgroundManager from "./BackgroundManager";
@@ -38,7 +38,6 @@ import { Location } from "./types";
 
 function AppContent() {
     const { darkMode, toggleDarkMode } = useDarkMode();
-    const scrollDirection = useScrollDirection();
     const { unit, toggleUnit } = useUnits();
     const { language, toggleLanguage, t } = useLanguage();
 
@@ -166,7 +165,7 @@ function AppContent() {
             <BackgroundManager weatherCode={currentWeather?.weatherCode} isDay={isDay} />
             <WeatherEffects weatherCode={currentWeather?.weatherCode} />
             {/* Header */}
-            <Navbar sticky="top" className={`transition-navbar ${scrollDirection === "down" ? "navbar-hidden" : "navbar-visible"}`}>
+            <Navbar className="transition-navbar">
                 <Container className="d-flex justify-content-between align-items-center navbar-content">
                     <div className="d-flex align-items-center justify-content-between brand-and-toggles">
                         <div className="d-flex align-items-center gap-3">

@@ -88,7 +88,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
         if (scrollContainer) {
           const currentIndex = allHours.findIndex(h => h.time.startsWith(currentHourIso.slice(0, 13)));
           if (currentIndex !== -1) {
-            const firstItem = scrollContainer.querySelector('.hour-header');
+            const firstItem = scrollContainer.querySelector('.time-cell');
             const cellWidth = firstItem ? firstItem.offsetWidth : 60;
             const scrollPosition = currentIndex * cellWidth;
 
@@ -112,7 +112,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
   React.useEffect(() => {
     const measureCellWidth = () => {
       if (scrollContainerRef.current) {
-        const firstItem = scrollContainerRef.current.querySelector('.hour-header');
+        const firstItem = scrollContainerRef.current.querySelector('.time-cell');
         if (firstItem) {
           cellWidthRef.current = firstItem.offsetWidth;
         }
@@ -204,7 +204,7 @@ const HourlyForecast = ({ hourlyData, dailyData, loading, error, timezone, activ
       const index = allHours.findIndex(h => h.time.startsWith(date));
 
       if (index !== -1) {
-        const firstItem = scrollContainer.querySelector('.hour-header');
+        const firstItem = scrollContainer.querySelector('.time-cell');
         const cellWidth = firstItem ? firstItem.offsetWidth : 60;
         const scrollPosition = index * cellWidth;
 

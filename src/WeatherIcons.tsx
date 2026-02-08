@@ -63,7 +63,7 @@ const weatherIcons: Record<number, IconEntry> = {
     99: { day: ThunderstormIcon, night: ThunderstormIcon }, // Thunderstorm with heavy hail
 };
 
-export function getIcon(weatherCode: number, isDay: boolean | number = true, cloudCover: number | null = null): string {
+export function getIcon(weatherCode: number, isDay: boolean | number = true, _cloudCover: number | null = null): string {
     const iconEntry = weatherIcons[weatherCode];
     if (!iconEntry) return cloudyIcon; // Default fallback
 

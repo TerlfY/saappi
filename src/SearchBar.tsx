@@ -60,7 +60,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
     const { t } = useLanguage();
     const inputRef = useRef<HTMLInputElement>(null);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [isFocused, setIsFocused] = React.useState(false);
 
     const handleFocus = () => {
@@ -129,7 +129,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     <div className="suggestions-dropdown">
                         {suggestions.map((result, index) => (
                             <div
-                                key={index}
+                                key={result.id}
                                 className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""
                                     }`}
                                 onMouseDown={() => {
@@ -149,7 +149,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                             <div className="dropdown-header px-3 py-2 text-muted small">{t("favorites")}</div>
                             {favorites.map((fav, index) => (
                                 <div
-                                    key={`fav-${index}`}
+                                    key={`fav-${fav.latitude}-${fav.longitude}`}
                                     className={`suggestion-item ${index === highlightedIndex ? "highlighted" : ""}`}
                                     onMouseDown={() => {
                                         onFavoriteSelect(fav);

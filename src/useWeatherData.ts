@@ -13,6 +13,12 @@ interface TransformedData {
 }
 
 const transformOpenMeteoData = (data: OpenMeteoResponse): TransformedData => {
+    const getSeriesValue = (
+        series: Array<number | null> | undefined,
+        index: number,
+        fallback = 0
+    ) => series?.[index] ?? fallback;
+
     const hourly = data.hourly.time.map((time, index) => ({
         time: time,
         values: {
@@ -26,10 +32,10 @@ const transformOpenMeteoData = (data: OpenMeteoResponse): TransformedData => {
             uvIndex: data.hourly.uv_index[index] ?? 0,
 
             cloudCover: data.hourly.cloudcover[index] ?? 0,
-            snowDepth: data.hourly.snow_depth ? data.hourly.snow_depth[index] ?? 0 : 0,
-            snowfall: data.hourly.snowfall ? data.hourly.snowfall[index] ?? 0 : 0,
-            precipitationProbability: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[index] ?? 0 : 0,
-            precipitation: data.hourly.precipitation ? data.hourly.precipitation[index] ?? 0 : 0, // Added precipitation
+            snowDepth: getSeriesValue(data.hourly.snow_depth, index),
+            snowfall: getSeriesValue(data.hourly.snowfall, index),
+            precipitationProbability: getSeriesValue(data.hourly.precipitation_probability, index),
+            precipitation: getSeriesValue(data.hourly.precipitation, index), // Added precipitation
             isDay: data.hourly.is_day ? data.hourly.is_day[index] ?? 1 : 1, // Default to 1 (day) if missing
         },
     }));
@@ -67,7 +73,7 @@ interface WeatherParams {
 }
 
 const fetchWeather = async ({ queryKey }: { queryKey: [string, string, WeatherParams] }): Promise<TransformedData | null> => {
-    const [_, endpoint, params] = queryKey;
+    const [, , params] = queryKey;
 
     if (!params?.location) {
         return null;
@@ -149,14 +155,14 @@ const fetchWeather = async ({ queryKey }: { queryKey: [string, string, WeatherPa
                 message: "Data validation failed. API response format changed.",
                 status: "VALIDATION_ERROR",
             };
-            console.error("Zod Validation Errors:", err.errors);
+            console.error("Zod Validation Errors:", err.issues);
         } else if (axios.isAxiosError(err) && err.response) {
             const status = err.response.status;
             errorPayload = {
                 message: `Error: ${status} - ${err.response.statusText}. Please try again.`,
                 status: status,
             };
-        } else if ((err as any).request) {
+        } else if (axios.isAxiosError(err) && err.request) {
             errorPayload = {
                 message: "Network error. Please check your connection and try again.",
                 status: null,

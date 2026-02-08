@@ -12,7 +12,7 @@ interface HourlyForecastProps {
     hourlyData: WeatherData[];
     dailyData: DailyForecast[];
     loading: boolean;
-    error: any;
+    error: unknown;
     timezone: string;
     activeDate: string;
     onDateChange: (date: string) => void;
@@ -259,7 +259,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
     if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
 
     return (
-        <Container className="hourly-forecast-container p-0">
+        <Container className={`hourly-forecast-container p-0 ${darkMode ? "dark-mode" : ""}`}>
             <div className="day-navigation-bar mb-2" ref={navContainerRef}>
                 {days.map(day => {
                     const dayData = dailyData.find(d => d.time === day.date);
@@ -294,7 +294,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     style={{ '--total-hours': allHours.length } as React.CSSProperties}
                 >
                     {/* Row 1: Hours */}
-                    {allHours.map((hourData, i) => {
+                    {allHours.map((hourData) => {
                         const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                         const isPast = currentHourIso && hourData.time < currentHourIso;
 
@@ -306,7 +306,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     })}
 
                     {/* Row 3: Icons */}
-                    {allHours.map((hourData, i) => {
+                    {allHours.map((hourData) => {
                         const isDay = getIsDaytime(hourData.time);
                         const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                         const isPast = currentHourIso && hourData.time < currentHourIso;
@@ -325,7 +325,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     })}
 
                     {/* Row 4: Temperature */}
-                    {allHours.map((hourData, i) => {
+                    {allHours.map((hourData) => {
                         const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                         const isPast = currentHourIso && hourData.time < currentHourIso;
 
@@ -337,7 +337,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     })}
 
                     {/* Row 5: Wind */}
-                    {allHours.map((hourData, i) => {
+                    {allHours.map((hourData) => {
                         const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                         const isPast = currentHourIso && hourData.time < currentHourIso;
 
@@ -359,7 +359,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     })}
 
                     {/* Row 6: Precipitation */}
-                    {allHours.map((hourData, i) => {
+                    {allHours.map((hourData) => {
                         const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                         const isPast = currentHourIso && hourData.time < currentHourIso;
                         const amount = hourData.values.precipitation;
@@ -379,7 +379,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     })}
 
                     {/* Row 7: Snowfall (Conditional) */}
-                    {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData, i) => {
+                    {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData) => {
                         const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                         const isPast = currentHourIso && hourData.time < currentHourIso;
                         const amount = hourData.values.snowfall || 0;

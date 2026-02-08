@@ -18,7 +18,7 @@ import useWeatherData from "./useWeatherData";
 import "./App.css";
 import useGeolocation from "./useGeolocation";
 import useReverseGeocode from "./useReverseGeocode";
-import useCitySearch, { SearchedLocation } from "./useCitySearch";
+import useCitySearch from "./useCitySearch";
 import { getCurrentHourData } from "./utils";
 import useFavorites from "./useFavorites";
 import useTimezone from "./useTimezone";
@@ -121,6 +121,9 @@ function AppContent() {
 
     const displayCityName =
         searchedLocation?.name || reverseGeocodedCityName || t("loadingCity") || "";
+    const favoriteCandidate = locationToFetch
+        ? { ...locationToFetch, name: displayCityName }
+        : null;
 
     useEffect(() => {
         if (darkMode) {
@@ -289,13 +292,13 @@ function AppContent() {
                                 setSearchedLocation(null);
                                 handleSearchInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
                             }}
-                            isFavorite={isFavorite(locationToFetch as SearchedLocation)}
+                            isFavorite={isFavorite(favoriteCandidate)}
                             onToggleFavorite={() => {
-                                if (locationToFetch) {
-                                    if (isFavorite(locationToFetch as SearchedLocation)) {
-                                        removeFavorite(locationToFetch as SearchedLocation);
+                                if (favoriteCandidate) {
+                                    if (isFavorite(favoriteCandidate)) {
+                                        removeFavorite(favoriteCandidate);
                                     } else {
-                                        addFavorite({ ...locationToFetch, name: displayCityName });
+                                        addFavorite(favoriteCandidate);
                                     }
                                 }
                             }}
@@ -305,7 +308,7 @@ function AppContent() {
 
 
                     {/* Webcam Feed */}
-                    <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone} />
+                    <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone || "UTC"} />
 
 
 
@@ -320,7 +323,7 @@ function AppContent() {
                             dailyData={dailyData}
                             loading={forecastLoading}
                             error={forecastError}
-                            timezone={timezone}
+                            timezone={timezone || "UTC"}
                             darkMode={darkMode}
                             activeDate={selectedDate}
                             onDateChange={setSelectedDate}

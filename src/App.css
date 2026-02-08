@@ -466,17 +466,6 @@ body.body-dark-mode .precip-prob {
 /* Smart Navbar Transitions */
 .transition-navbar {
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-}
-
-.navbar-hidden {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-  /* Prevent clicks when hidden */
-}
-
-.navbar-visible {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }

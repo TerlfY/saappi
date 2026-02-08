@@ -29,19 +29,20 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
 
     // Format data for Recharts
     const chartData = data.map((hour) => {
-        // Parse hour directly from ISO string "YYYY-MM-DDTHH:MM"
-        const dateObj = new Date(hour.time);
         const hourStr = hour.time.split("T")[1].slice(0, 2);
         const hourInt = parseInt(hourStr, 10);
+        const hasValidTemp = typeof hour.values.temperature === "number" && Number.isFinite(hour.values.temperature);
+        const hasValidPrecip = typeof hour.values.precipitation === "number" && Number.isFinite(hour.values.precipitation);
+        const hasValidWind = typeof hour.values.windSpeed === "number" && Number.isFinite(hour.values.windSpeed);
 
         return {
             time: showAllDays ? hour.time : hourInt, // Use full ISO string for all days to track unique points
             displayTime: showAllDays ? `${formatDate(hour.time)} ${formatTime(hour.time, { hourOnly: true })}` : `${formatTime(hour.time, { hourOnly: true })}`,
             fullTime: `${formatDate(hour.time, { includeYear: true })} ${formatTime(hour.time)}`, // For tooltip
-            temp: getTemperature(hour.values.temperature, 1),
+            temp: hasValidTemp ? getTemperature(hour.values.temperature, 1) : null,
             uvIndex: hour.values.uvIndex || 0,
-            precipAmount: getPrecip(hour.values.precipitation) || 0,
-            windSpeed: getSpeed(hour.values.windSpeed) || 0,
+            precipAmount: hasValidPrecip ? getPrecip(hour.values.precipitation) : "0",
+            windSpeed: hasValidWind ? getSpeed(hour.values.windSpeed) : 0,
         };
     });
 
@@ -92,10 +93,12 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
     }
 
     // Calculate min and max for gradient offset
-    const temps = chartData.map(d => d.temp);
-    const min = Math.min(...temps);
-    const max = Math.max(...temps);
     const freezingPoint = unit === "imperial" ? 32 : 0;
+    const temps = chartData
+        .map((d) => d.temp)
+        .filter((temp): temp is number => typeof temp === "number" && Number.isFinite(temp));
+    const min = temps.length > 0 ? Math.min(...temps) : freezingPoint;
+    const max = temps.length > 0 ? Math.max(...temps) : freezingPoint;
 
     // Calculate max precipitation for scaling
     const precips = chartData.map(d => Number(d.precipAmount));

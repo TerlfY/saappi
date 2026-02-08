@@ -3,9 +3,9 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 interface UnitContextType {
     unit: "metric" | "imperial";
     toggleUnit: () => void;
-    getTemperature: (celsius: number, decimals?: number) => number;
-    getSpeed: (ms: number) => number;
-    getPrecip: (mm: number) => string;
+    getTemperature: (celsius: number | null | undefined, decimals?: number) => number;
+    getSpeed: (ms: number | null | undefined) => number;
+    getPrecip: (mm: number | null | undefined) => string;
     formatDate: (dateStr: string, options?: { includeYear?: boolean }) => string;
     formatTime: (dateInput: string | Date, options?: { hourOnly?: boolean }) => string;
     unitLabels: {
@@ -50,10 +50,18 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
         setUnit((prev) => (prev === "metric" ? "imperial" : "metric"));
     };
 
-    const getTemperature = (celsius: number, decimals = 0) => {
-        let value = celsius;
+    const normalizeNumber = (value: number | null | undefined, fallback = 0) => {
+        if (typeof value === "number" && Number.isFinite(value)) {
+            return value;
+        }
+        return fallback;
+    };
+
+    const getTemperature = (celsius: number | null | undefined, decimals = 0) => {
+        const safeCelsius = normalizeNumber(celsius);
+        let value = safeCelsius;
         if (unit === "imperial") {
-            value = (celsius * 9) / 5 + 32;
+            value = (safeCelsius * 9) / 5 + 32;
         }
 
         if (decimals > 0) {
@@ -62,21 +70,23 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
         return Math.round(value);
     };
 
-    const getSpeed = (ms: number) => {
+    const getSpeed = (ms: number | null | undefined) => {
+        const safeMs = normalizeNumber(ms);
         if (unit === "imperial") {
             // m/s to mph
-            return Math.round(ms * 2.23694);
+            return Math.round(safeMs * 2.23694);
         }
         // m/s
-        return Math.round(ms);
+        return Math.round(safeMs);
     };
 
-    const getPrecip = (mm: number) => {
+    const getPrecip = (mm: number | null | undefined) => {
+        const safeMm = normalizeNumber(mm);
         if (unit === "imperial") {
             // mm to inches
-            return (mm / 25.4).toFixed(2);
+            return (safeMm / 25.4).toFixed(2);
         }
-        return mm.toFixed(1); // Keep 1 decimal for mm
+        return safeMm.toFixed(1); // Keep 1 decimal for mm
     };
 
     const formatDate = (dateStr: string, options: { includeYear?: boolean } = {}) => {

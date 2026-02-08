@@ -14,7 +14,7 @@ interface CurrentWeatherProps {
     weatherData: { values: WeatherData["values"] } | null;
     dailyValues: DailyForecast["values"] | null;
     loading: boolean;
-    error: any;
+    error: { message?: string } | null;
     cityName: string;
     timezone: string;
     darkMode: boolean;
@@ -37,7 +37,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
     onToggleFavorite,
     location
 }) => {
-    const { data: aqiData, isLoading: aqiLoading } = useAirQuality(location);
+    const { data: aqiData } = useAirQuality(location);
     const { getTemperature, getSpeed, getPrecip, unitLabels } = useUnits();
     const { t, language } = useLanguage();
 
@@ -82,7 +82,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
     }
 
     // Use isDay from API data
-    const isDay = weatherData.values.isDay;
+    const isDay = weatherData.values.isDay ?? 1;
 
     const renderTooltip = (props: any) => (
         <Tooltip id="button-tooltip" {...props}>

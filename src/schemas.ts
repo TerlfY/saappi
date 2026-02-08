@@ -26,13 +26,13 @@ const weatherValueSchema = z.object({
     weatherCodeMax: z.number().optional(),
 }).passthrough();
 
-const hourlyIntervalSchema = z.object({
+export const hourlyIntervalSchema = z.object({
     time: z.string().optional(),
     startTime: z.string().optional(), // Keep both just in case
     values: weatherValueSchema,
 }).passthrough();
 
-const dailyIntervalSchema = z.object({
+export const dailyIntervalSchema = z.object({
     time: z.string().optional(),
     startTime: z.string().optional(), // Keep both just in case
     values: weatherValueSchema,
@@ -61,6 +61,8 @@ export const openMeteoSchema = z.object({
         snow_depth: z.array(z.number().nullable()).optional(),
         snowfall: z.array(z.number().nullable()).optional(),
         precipitation_probability: z.array(z.number().nullable()).optional(),
+        precipitation: z.array(z.number().nullable()).optional(),
+        is_day: z.array(z.number().nullable()).optional(),
     }).passthrough(),
     daily_units: z.object({}).passthrough().optional(),
     daily: z.object({
@@ -71,6 +73,7 @@ export const openMeteoSchema = z.object({
         sunrise: z.array(z.string()),
         sunset: z.array(z.string()),
         precipitation_probability_max: z.array(z.number().nullable()).optional(),
+        precipitation_sum: z.array(z.number().nullable()).optional(),
         snowfall_sum: z.array(z.number().nullable()).optional(),
     }).passthrough(),
 }).passthrough();

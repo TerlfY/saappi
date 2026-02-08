@@ -10,6 +10,7 @@ export interface WeatherData {
         precipitationProbability: number;
         precipitation: number;
         rainAccumulation?: number;
+        snowDepth?: number;
         snowfall?: number;
         snowfallSum?: number;
         sleetAccumulation?: number;

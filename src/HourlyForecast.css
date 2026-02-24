@@ -184,13 +184,13 @@ body.body-dark-mode .scroll-arrow:hover {
 /* Removed standalone .precip-prob-cell since it is now combined into .precip-cell */
 
 .temp-cell {
-  grid-row: 4;
+  grid-row: 3;
   font-weight: bold;
   font-size: 1.1rem;
 }
 
 .wind-cell {
-  grid-row: 5;
+  grid-row: 4;
   font-size: 0.8rem;
 }
 
@@ -200,6 +200,12 @@ body.body-dark-mode .scroll-arrow:hover {
   min-height: 48px;
   /* Taller to fit both prob and amount */
   padding-bottom: 4px;
+}
+
+.snow-cell {
+  grid-row: 6;
+  font-size: 0.8rem;
+  min-height: 30px;
 }
 
 /* Styling Details */

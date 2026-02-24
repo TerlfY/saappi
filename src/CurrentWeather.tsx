@@ -110,15 +110,14 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                     <h2 className="text-truncate m-0" style={{ maxWidth: "80%" }} title={cityName}>
                         {cityName}
                     </h2>
-                    <Button
-                        variant="link"
+                    <button
                         onClick={onToggleFavorite}
-                        className="p-0 text-decoration-none"
-                        style={{ fontSize: "1.5rem", lineHeight: 1, color: isFavorite ? "#FFD700" : (darkMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)") }}
+                        className={`favorite-star text-decoration-none ${isFavorite ? 'is-active' : ''}`}
                         title={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
+                        aria-label={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
                     >
                         {isFavorite ? "★" : "☆"}
-                    </Button>
+                    </button>
                 </div>
                 <OverlayTrigger
                     placement="bottom"

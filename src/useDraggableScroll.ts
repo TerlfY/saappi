@@ -40,19 +40,26 @@ const useDraggableScroll = (ref: RefObject<HTMLElement>) => {
         // Set initial cursor
         element.style.cursor = 'grab';
 
-        // Cast to any because TS might complain about specific event types on generic HTMLElement
-        // but standard addEventListener works fine.
+        // Wheel scroll: convert vertical scroll to horizontal
+        const onWheel = (e: WheelEvent) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                element.scrollLeft += e.deltaY;
+            }
+        };
+
         element.addEventListener('mousedown', onMouseDown as any);
         element.addEventListener('mouseleave', onMouseLeave as any);
         element.addEventListener('mouseup', onMouseUp as any);
         element.addEventListener('mousemove', onMouseMove as any);
+        element.addEventListener('wheel', onWheel, { passive: false });
 
         return () => {
             element.removeEventListener('mousedown', onMouseDown as any);
             element.removeEventListener('mouseleave', onMouseLeave as any);
             element.removeEventListener('mouseup', onMouseUp as any);
             element.removeEventListener('mousemove', onMouseMove as any);
-            // Clean up cursor style
+            element.removeEventListener('wheel', onWheel);
             if (element) element.style.cursor = '';
         };
     }, [ref]);

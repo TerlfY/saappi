@@ -1,3 +1,107 @@
+/* Scroll Container Wrapper with Fade Indicators */
+.scroll-container-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-container-wrapper::before,
+.scroll-container-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-container-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(200, 210, 220, 0.95) 0%, transparent 100%);
+}
+
+.scroll-container-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(200, 210, 220, 0.95) 0%, transparent 100%);
+}
+
+.scroll-container-wrapper.can-scroll-left::before {
+  opacity: 1;
+}
+
+.scroll-container-wrapper.can-scroll-right::after {
+  opacity: 1;
+}
+
+/* Dark mode fade colors */
+body.body-dark-mode .scroll-container-wrapper::before {
+  background: linear-gradient(to right, rgba(30, 30, 40, 0.95) 0%, transparent 100%);
+}
+
+body.body-dark-mode .scroll-container-wrapper::after {
+  background: linear-gradient(to left, rgba(30, 30, 40, 0.95) 0%, transparent 100%);
+}
+
+/* Scroll Arrow Buttons */
+.scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  line-height: 1;
+}
+
+.scroll-arrow:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scroll-arrow-left {
+  left: 4px;
+}
+
+.scroll-arrow-right {
+  right: 4px;
+}
+
+body.body-dark-mode .scroll-arrow {
+  background: rgba(50, 50, 65, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.body-dark-mode .scroll-arrow:hover {
+  background: rgba(70, 70, 90, 0.95);
+  color: white;
+}
+
+/* Hide scroll arrows on touch devices */
+@media (hover: none) {
+  .scroll-arrow {
+    display: none;
+  }
+}
+
 /* Unified Forecast Grid Layout */
 .unified-forecast-scroll-container {
   overflow-x: auto;
@@ -9,13 +113,13 @@
 .unified-forecast-grid {
   display: grid;
   grid-template-columns: repeat(var(--total-hours), minmax(50px, 1fr));
-  grid-template-rows: auto auto auto auto auto;
-  /* Hour, Icon, Temp, Wind, Precip */
+  grid-template-rows: auto auto auto auto auto auto;
+  /* Hour, Icon, PrecipProb, Temp, Wind, Precip */
   gap: 0;
   min-width: max-content;
   /* Ensure it scrolls instead of shrinking too much */
   content-visibility: auto;
-  contain-intrinsic-size: 2000px 230px;
+  contain-intrinsic-size: 2000px 260px;
 }
 
 /* Row 1: Day Headers - REMOVED */
@@ -43,26 +147,31 @@
 
 .icon-cell {
   grid-row: 2;
-  /* Was 3 */
   padding: 5px 0;
 }
 
-.temp-cell {
+.precip-prob-cell {
   grid-row: 3;
-  /* Was 4 */
+  font-size: 0.65rem;
+  min-height: 22px;
+  color: rgba(13, 202, 240, 0.7);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.temp-cell {
+  grid-row: 4;
   font-weight: bold;
   font-size: 1.1rem;
 }
 
 .wind-cell {
-  grid-row: 4;
-  /* Was 5 */
+  grid-row: 5;
   font-size: 0.8rem;
 }
 
 .precip-cell {
-  grid-row: 5;
-  /* Was 6 */
+  grid-row: 6;
   font-size: 0.8rem;
   min-height: 30px;
 }
@@ -176,6 +285,13 @@ body.body-dark-mode .day-nav-item.active {
   transform: scale(1.05);
 }
 
+/* Snow row */
+.snow-cell {
+  grid-row: 7;
+  font-size: 0.8rem;
+  min-height: 30px;
+}
+
 /* Virtualized Column Layout */
 .virtualized-column {
   display: flex;
@@ -189,7 +305,6 @@ body.body-dark-mode .day-nav-item.active {
 .virtualized-column .grid-cell {
   width: 100%;
   border-right: none;
-  /* Border is on the column now */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,6 +316,10 @@ body.body-dark-mode .day-nav-item.active {
 
 .virtualized-column .icon-cell {
   height: 50px;
+}
+
+.virtualized-column .precip-prob-cell {
+  height: 28px;
 }
 
 .virtualized-column .temp-cell {
@@ -218,5 +337,4 @@ body.body-dark-mode .day-nav-item.active {
 /* Mobile specific overrides if needed, but grid should handle it */
 #hourly-mobile {
   display: none;
-  /* Hide old mobile view if it still exists in DOM, but we replaced it */
 }

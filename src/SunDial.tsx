@@ -97,9 +97,10 @@ const SunDial: React.FC<SunDialProps> = ({ sunrise, sunset, timezone, isDay }) =
                     <path
                         d="M 10 50 A 40 40 0 0 1 90 50"
                         fill="none"
-                        stroke="rgba(255,255,255,0.2)"
+                        stroke="rgba(0,0,0,0.25)"
                         strokeWidth="2"
                         strokeDasharray="4 4"
+                        className="sun-dial-track"
                     />
 
                     {/* Sun Icon */}
@@ -123,30 +124,30 @@ const SunDial: React.FC<SunDialProps> = ({ sunrise, sunset, timezone, isDay }) =
                 </svg>
 
                 {/* Horizon Line */}
-                <div style={{
+                <div className="sun-dial-horizon" style={{
                     position: "absolute",
                     bottom: "10px",
                     left: "10%",
                     right: "10%",
                     height: "1px",
-                    background: "rgba(255,255,255,0.1)"
+                    background: "rgba(0,0,0,0.15)"
                 }} />
 
                 {/* Current Time Clock */}
-                <div style={{
+                <div className="sun-dial-clock" style={{
                     position: "absolute",
                     top: "0",
                     left: "50%",
                     transform: "translateX(-50%)",
                     fontSize: "0.8rem",
                     fontWeight: "bold",
-                    color: "rgba(255, 255, 255, 0.9)",
-                    textShadow: "0 0 5px rgba(0, 0, 0, 0.5)",
-                    background: "rgba(0,0,0,0.1)",
+                    color: "rgba(0, 0, 0, 0.7)",
+                    textShadow: "none",
+                    background: "rgba(0,0,0,0.08)",
                     padding: "1px 6px",
                     borderRadius: "8px",
                     backdropFilter: "blur(1px)",
-                    border: "1px solid rgba(255,255,255,0.05)"
+                    border: "1px solid rgba(0,0,0,0.08)"
                 }}>
                     {formatTime(nowStr)}
                 </div>

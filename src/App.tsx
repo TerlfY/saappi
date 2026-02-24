@@ -31,6 +31,8 @@ import SearchBar from "./SearchBar";
 import WebcamFeed from "./WebcamFeed";
 import WeatherRadar from "./WeatherRadar";
 import WeatherEffects from "./WeatherEffects";
+import WeatherAlerts from "./WeatherAlerts";
+import useWeatherAlerts from "./useWeatherAlerts";
 
 import { UnitProvider, useUnits } from "./UnitContext";
 import { LanguageProvider, useLanguage } from "./LanguageContext";
@@ -88,6 +90,9 @@ function AppContent() {
         loading: forecastLoading,
         error: forecastError,
     } = useWeatherData("forecast", forecastParams);
+
+    // Fetch weather alerts
+    const { alerts: weatherAlerts } = useWeatherAlerts(locationToFetch);
 
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [showAllDays, setShowAllDays] = useState(false);
@@ -271,6 +276,9 @@ function AppContent() {
                         "An error occurred while fetching weather data."}
                 </Alert>
             )}
+
+            {/* Weather Alerts */}
+            <WeatherAlerts alerts={weatherAlerts} timezone={timezone || "UTC"} />
 
             {/* Dashboard Layout */}
             <Row className="mt-4 main-layout-row">

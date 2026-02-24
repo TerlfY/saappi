@@ -62,3 +62,82 @@ body.body-dark-mode .control-btn {
 body.body-dark-mode .control-btn:hover {
     background: rgba(0, 0, 0, 0.5) !important;
 }
+
+/* Favorite Star Animation */
+.favorite-star {
+    font-size: 1.6rem;
+    line-height: 1;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.3s ease, filter 0.3s ease;
+    color: rgba(0, 0, 0, 0.2);
+    filter: none;
+}
+
+.favorite-star:hover {
+    transform: scale(1.3);
+    color: #FFC107;
+    filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5));
+}
+
+.favorite-star:active {
+    transform: scale(0.9);
+}
+
+.favorite-star.is-active {
+    color: #FFD700;
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+    animation: favoritePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+body.body-dark-mode .favorite-star {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+body.body-dark-mode .favorite-star:hover {
+    color: #FFC107;
+}
+
+body.body-dark-mode .favorite-star.is-active {
+    color: #FFD700;
+}
+
+@keyframes favoritePop {
+    0% {
+        transform: scale(1);
+    }
+
+    30% {
+        transform: scale(1.4);
+    }
+
+    50% {
+        transform: scale(0.9);
+    }
+
+    70% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* SunDial dark mode overrides */
+body.body-dark-mode .sun-dial-track {
+    stroke: rgba(255, 255, 255, 0.25);
+}
+
+body.body-dark-mode .sun-dial-horizon {
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.body-dark-mode .sun-dial-clock {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5) !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}

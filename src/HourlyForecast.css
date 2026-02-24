@@ -181,14 +181,7 @@ body.body-dark-mode .scroll-arrow:hover {
   padding: 5px 0;
 }
 
-.precip-prob-cell {
-  grid-row: 3;
-  font-size: 0.65rem;
-  min-height: 22px;
-  color: rgba(13, 202, 240, 0.7);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-}
+/* Removed standalone .precip-prob-cell since it is now combined into .precip-cell */
 
 .temp-cell {
   grid-row: 4;
@@ -202,9 +195,11 @@ body.body-dark-mode .scroll-arrow:hover {
 }
 
 .precip-cell {
-  grid-row: 6;
+  grid-row: 5;
   font-size: 0.8rem;
-  min-height: 30px;
+  min-height: 48px;
+  /* Taller to fit both prob and amount */
+  padding-bottom: 4px;
 }
 
 /* Styling Details */
@@ -228,9 +223,9 @@ body.body-dark-mode .hourlyIcons {
 
 .precip-prob {
   color: #0dcaf0;
-  /* Bootstrap info color */
-  font-weight: bold;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: -0.02em;
 }
 
 /* Past / Current Styling */

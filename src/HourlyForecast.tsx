@@ -370,22 +370,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                             );
                         })}
 
-                        {/* Row 3: Precipitation Probability */}
-                        {allHours.map((hourData) => {
-                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                            const isPast = currentHourIso && hourData.time < currentHourIso;
-                            const prob = hourData.values.precipitationProbability;
-
-                            return (
-                                <div key={`prob-${hourData.time}`} className={`grid-cell precip-prob-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                    {prob >= 20 && (
-                                        <span className="precip-prob">💧{prob}%</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-
-                        {/* Row 4: Temperature */}
+                        {/* Row 3: Temperature */}
                         {allHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
@@ -397,7 +382,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                             );
                         })}
 
-                        {/* Row 5: Wind */}
+                        {/* Row 4: Wind */}
                         {allHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
@@ -419,18 +404,24 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                             );
                         })}
 
-                        {/* Row 6: Precipitation */}
+                        {/* Row 5: Precipitation (Combined Prob & Amount) */}
                         {allHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
                             const amount = hourData.values.precipitation;
+                            const prob = hourData.values.precipitationProbability;
                             const snowAmount = hourData.values.snowfall || 0;
 
                             return (
                                 <div key={`precip-${hourData.time}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                    <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                                    <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%", gap: "2px" }}>
+                                        {/* Probability */}
+                                        {prob >= 20 && (
+                                            <span className="precip-prob">💧{prob}%</span>
+                                        )}
+                                        {/* Amount */}
                                         {amount > 0 && snowAmount === 0 && (
-                                            <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
+                                            <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff", fontWeight: 500 }}>
                                                 {getPrecip(amount)}{unitLabels.precip}
                                             </span>
                                         )}
@@ -439,7 +430,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                             );
                         })}
 
-                        {/* Row 7: Snowfall (Conditional) */}
+                        {/* Row 6: Snowfall (Conditional) */}
                         {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;

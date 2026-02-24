@@ -415,15 +415,23 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                             return (
                                 <div key={`precip-${hourData.time}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                                     <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%", gap: "2px" }}>
-                                        {/* Probability */}
-                                        {prob >= 20 && (
-                                            <span className="precip-prob">💧{prob}%</span>
-                                        )}
-                                        {/* Amount */}
-                                        {amount > 0 && snowAmount === 0 && (
-                                            <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff", fontWeight: 500 }}>
-                                                {getPrecip(amount)}{unitLabels.precip}
-                                            </span>
+                                        {amount > 0 && snowAmount === 0 ? (
+                                            <OverlayTrigger
+                                                placement="top"
+                                                overlay={
+                                                    <Tooltip id={`prob-tooltip-${hourData.time}`}>
+                                                        💧 {prob}%
+                                                    </Tooltip>
+                                                }
+                                            >
+                                                <span className="precip-amount" style={{ fontSize: "0.75rem", color: "#aaddff", fontWeight: 500, cursor: "help", borderBottom: prob > 0 ? "1px dotted rgba(170, 221, 255, 0.5)" : "none" }}>
+                                                    {getPrecip(amount)}{unitLabels.precip}
+                                                </span>
+                                            </OverlayTrigger>
+                                        ) : (
+                                            prob >= 20 && snowAmount === 0 && (
+                                                <span className="precip-prob">💧{prob}%</span>
+                                            )
                                         )}
                                     </div>
                                 </div>

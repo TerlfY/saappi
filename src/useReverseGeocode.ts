@@ -6,16 +6,19 @@ const fetchReverseGeocode = async ({ queryKey }: { queryKey: [string, number | u
     const [_, lat, lon] = queryKey;
     if (lat === undefined || lon === undefined) return null;
 
-    // Use Open-Meteo geocoding API (reverse via nearest city search)
-    // Open-Meteo doesn't have a direct reverse geocode, so we use a coordinate-based
-    // search with the Nominatim-compatible endpoint
     try {
-        const response = await axios.get(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fi`,
-            { headers: { "User-Agent": "Saappi-Weather-App" } }
+        // Use native fetch to avoid Axios default headers that might trigger CORS preflights.
+        // We cannot set User-Agent in browser anyway (it is a forbidden header),
+        // so we use the 'email' param for Nominatim's usage policy.
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fi&email=saappiapp@example.com`
         );
 
-        const data = response.data;
+        if (!response.ok) {
+            throw new Error(`Reverse geocode HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
         if (data?.address) {
             const name = data.address.city || data.address.town || data.address.village || data.address.municipality || data.address.county || "";
             return { name, country: data.address.country || "" };

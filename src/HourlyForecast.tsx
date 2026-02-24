@@ -418,11 +418,11 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                                         {amount > 0 && snowAmount === 0 ? (
                                             <OverlayTrigger
                                                 placement="top"
-                                                overlay={
-                                                    <Tooltip id={`prob-tooltip-${hourData.time}`}>
+                                                overlay={(props) => (
+                                                    <Tooltip id={`prob-tooltip-${hourData.time}`} {...props}>
                                                         💧 {prob}%
                                                     </Tooltip>
-                                                }
+                                                )}
                                             >
                                                 <span className="precip-amount" style={{ fontSize: "0.75rem", color: "#aaddff", fontWeight: 500, cursor: "help", borderBottom: prob > 0 ? "1px dotted rgba(170, 221, 255, 0.5)" : "none" }}>
                                                     {getPrecip(amount)}{unitLabels.precip}

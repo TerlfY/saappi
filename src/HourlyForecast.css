@@ -10,21 +10,21 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 40px;
+  width: 80px;
   z-index: 10;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease-in-out;
 }
 
 .scroll-container-wrapper::before {
   left: 0;
-  background: linear-gradient(to right, rgba(200, 210, 220, 0.95) 0%, transparent 100%);
+  background: linear-gradient(to right, rgba(200, 210, 220, 1) 0%, rgba(200, 210, 220, 0.8) 30%, transparent 100%);
 }
 
 .scroll-container-wrapper::after {
   right: 0;
-  background: linear-gradient(to left, rgba(200, 210, 220, 0.95) 0%, transparent 100%);
+  background: linear-gradient(to left, rgba(200, 210, 220, 1) 0%, rgba(200, 210, 220, 0.8) 30%, transparent 100%);
 }
 
 .scroll-container-wrapper.can-scroll-left::before {
@@ -37,62 +37,93 @@
 
 /* Dark mode fade colors */
 body.body-dark-mode .scroll-container-wrapper::before {
-  background: linear-gradient(to right, rgba(30, 30, 40, 0.95) 0%, transparent 100%);
+  background: linear-gradient(to right, rgba(30, 30, 40, 1) 0%, rgba(30, 30, 40, 0.8) 30%, transparent 100%);
 }
 
 body.body-dark-mode .scroll-container-wrapper::after {
-  background: linear-gradient(to left, rgba(30, 30, 40, 0.95) 0%, transparent 100%);
+  background: linear-gradient(to left, rgba(30, 30, 40, 1) 0%, rgba(30, 30, 40, 0.8) 30%, transparent 100%);
 }
 
 /* Scroll Arrow Buttons */
 .scroll-arrow {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(0.9);
   z-index: 15;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
+  width: 36px;
+  height: 48px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
   color: rgba(0, 0, 0, 0.6);
-  font-size: 1.2rem;
-  font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.5);
   padding: 0;
-  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Slide in animations controlled by wrapper class */
+.scroll-container-wrapper.can-scroll-left .scroll-arrow-left {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+  left: 12px;
+}
+
+.scroll-container-wrapper.can-scroll-right .scroll-arrow-right {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+  right: 12px;
 }
 
 .scroll-arrow:hover {
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 1);
+  color: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .scroll-arrow-left {
-  left: 4px;
+  left: -20px;
+  /* starts off slightly hidden */
 }
 
 .scroll-arrow-right {
-  right: 4px;
+  right: -20px;
+  /* starts off slightly hidden */
+}
+
+.scroll-arrow svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+
+.scroll-arrow-left:hover svg {
+  transform: translateX(-2px);
+}
+
+.scroll-arrow-right:hover svg {
+  transform: translateX(2px);
 }
 
 body.body-dark-mode .scroll-arrow {
-  background: rgba(50, 50, 65, 0.8);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(40, 40, 50, 0.85);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 body.body-dark-mode .scroll-arrow:hover {
-  background: rgba(70, 70, 90, 0.95);
+  background: rgba(60, 60, 75, 0.95);
   color: white;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 /* Hide scroll arrows on touch devices */

@@ -25,6 +25,8 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
     const { t, language } = useLanguage();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
     const navContainerRef = React.useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = React.useState(false);
+    const [canScrollRight, setCanScrollRight] = React.useState(false);
 
     useDraggableScroll(scrollContainerRef);
     useDraggableScroll(navContainerRef);
@@ -139,7 +141,16 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
         return () => window.removeEventListener('resize', measureCellWidth);
     }, [hourlyData]);
 
+    const updateScrollIndicators = React.useCallback(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        setCanScrollLeft(el.scrollLeft > 10);
+        setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+    }, []);
+
     const handleScroll = () => {
+        updateScrollIndicators();
+
         if (scrollTimeoutRef.current) return;
 
         scrollTimeoutRef.current = requestAnimationFrame(() => {
@@ -162,6 +173,12 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
             scrollTimeoutRef.current = null;
         });
     };
+
+    // Initialize scroll indicators after data loads
+    React.useEffect(() => {
+        const timer = setTimeout(updateScrollIndicators, 200);
+        return () => clearTimeout(timer);
+    }, [hourlyData, updateScrollIndicators]);
 
     // Group hours by day for the header row
     const days = React.useMemo(() => {
@@ -285,117 +302,158 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
             </div>
 
             <div
-                className="unified-forecast-scroll-container"
-                ref={scrollContainerRef}
-                onScroll={handleScroll}
+                className={`scroll-container-wrapper ${canScrollLeft ? 'can-scroll-left' : ''} ${canScrollRight ? 'can-scroll-right' : ''}`}
             >
+                {canScrollLeft && (
+                    <button
+                        className="scroll-arrow scroll-arrow-left"
+                        onClick={() => {
+                            scrollContainerRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
+                        }}
+                        aria-label="Scroll left"
+                    >
+                        ‹
+                    </button>
+                )}
+                {canScrollRight && (
+                    <button
+                        className="scroll-arrow scroll-arrow-right"
+                        onClick={() => {
+                            scrollContainerRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
+                        }}
+                        aria-label="Scroll right"
+                    >
+                        ›
+                    </button>
+                )}
                 <div
-                    className="unified-forecast-grid"
-                    style={{ '--total-hours': allHours.length } as React.CSSProperties}
+                    className="unified-forecast-scroll-container"
+                    ref={scrollContainerRef}
+                    onScroll={handleScroll}
                 >
-                    {/* Row 1: Hours */}
-                    {allHours.map((hourData) => {
-                        const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                        const isPast = currentHourIso && hourData.time < currentHourIso;
+                    <div
+                        className="unified-forecast-grid"
+                        style={{ '--total-hours': allHours.length } as React.CSSProperties}
+                    >
+                        {/* Row 1: Hours */}
+                        {allHours.map((hourData) => {
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
 
-                        return (
-                            <div key={`time-${hourData.time}`} className={`grid-cell time-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                {formatTime(hourData.time, { hourOnly: true })}
-                            </div>
-                        );
-                    })}
-
-                    {/* Row 3: Icons */}
-                    {allHours.map((hourData) => {
-                        const isDay = getIsDaytime(hourData.time);
-                        const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                        const isPast = currentHourIso && hourData.time < currentHourIso;
-
-                        return (
-                            <div key={`icon-${hourData.time}`} className={`grid-cell icon-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
-                                    <img
-                                        className="hourlyIcons"
-                                        src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
-                                        alt="Weather Icon"
-                                    />
-                                </OverlayTrigger>
-                            </div>
-                        );
-                    })}
-
-                    {/* Row 4: Temperature */}
-                    {allHours.map((hourData) => {
-                        const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                        const isPast = currentHourIso && hourData.time < currentHourIso;
-
-                        return (
-                            <div key={`temp-${hourData.time}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                {getTemperature(hourData.values.temperature)}{unitLabels.temperature}
-                            </div>
-                        );
-                    })}
-
-                    {/* Row 5: Wind */}
-                    {allHours.map((hourData) => {
-                        const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                        const isPast = currentHourIso && hourData.time < currentHourIso;
-
-                        return (
-                            <div key={`wind-${hourData.time}`} className={`grid-cell wind-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                <div className="d-flex flex-column align-items-center">
-                                    <span
-                                        className="wind-arrow"
-                                        style={{ transform: `rotate(${hourData.values.windDirection || 0}deg)` }}
-                                    >
-                                        ↓
-                                    </span>
-                                    <span className="wind-speed" style={{ fontSize: "0.8rem" }}>
-                                        {getSpeed(hourData.values.windSpeed)} <span style={{ fontSize: "0.6rem" }}>{unitLabels.speed}</span>
-                                    </span>
+                            return (
+                                <div key={`time-${hourData.time}`} className={`grid-cell time-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    {formatTime(hourData.time, { hourOnly: true })}
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
 
-                    {/* Row 6: Precipitation */}
-                    {allHours.map((hourData) => {
-                        const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                        const isPast = currentHourIso && hourData.time < currentHourIso;
-                        const amount = hourData.values.precipitation;
-                        const snowAmount = hourData.values.snowfall || 0;
+                        {/* Row 3: Icons */}
+                        {allHours.map((hourData) => {
+                            const isDay = getIsDaytime(hourData.time);
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
 
-                        return (
-                            <div key={`precip-${hourData.time}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
-                                    {amount > 0 && snowAmount === 0 && (
-                                        <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
-                                            {getPrecip(amount)}{unitLabels.precip}
-                                        </span>
+                            return (
+                                <div key={`icon-${hourData.time}`} className={`grid-cell icon-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
+                                        <img
+                                            className="hourlyIcons"
+                                            src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
+                                            alt="Weather Icon"
+                                        />
+                                    </OverlayTrigger>
+                                </div>
+                            );
+                        })}
+
+                        {/* Row 3: Precipitation Probability */}
+                        {allHours.map((hourData) => {
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
+                            const prob = hourData.values.precipitationProbability;
+
+                            return (
+                                <div key={`prob-${hourData.time}`} className={`grid-cell precip-prob-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    {prob >= 20 && (
+                                        <span className="precip-prob">💧{prob}%</span>
                                     )}
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
 
-                    {/* Row 7: Snowfall (Conditional) */}
-                    {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData) => {
-                        const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
-                        const isPast = currentHourIso && hourData.time < currentHourIso;
-                        const amount = hourData.values.snowfall || 0;
+                        {/* Row 4: Temperature */}
+                        {allHours.map((hourData) => {
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
 
-                        return (
-                            <div key={`snow-${hourData.time}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
-                                    {amount > 0 && (
-                                        <span className="snow-amount" style={{ fontSize: "0.7rem", color: "#ffffff" }}>
-                                            {amount} cm
-                                        </span>
-                                    )}
+                            return (
+                                <div key={`temp-${hourData.time}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    {getTemperature(hourData.values.temperature)}{unitLabels.temperature}
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+
+                        {/* Row 5: Wind */}
+                        {allHours.map((hourData) => {
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
+
+                            return (
+                                <div key={`wind-${hourData.time}`} className={`grid-cell wind-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    <div className="d-flex flex-column align-items-center">
+                                        <span
+                                            className="wind-arrow"
+                                            style={{ transform: `rotate(${hourData.values.windDirection || 0}deg)` }}
+                                        >
+                                            ↓
+                                        </span>
+                                        <span className="wind-speed" style={{ fontSize: "0.8rem" }}>
+                                            {getSpeed(hourData.values.windSpeed)} <span style={{ fontSize: "0.6rem" }}>{unitLabels.speed}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {/* Row 6: Precipitation */}
+                        {allHours.map((hourData) => {
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
+                            const amount = hourData.values.precipitation;
+                            const snowAmount = hourData.values.snowfall || 0;
+
+                            return (
+                                <div key={`precip-${hourData.time}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                                        {amount > 0 && snowAmount === 0 && (
+                                            <span className="precip-amount" style={{ fontSize: "0.7rem", color: "#aaddff" }}>
+                                                {getPrecip(amount)}{unitLabels.precip}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {/* Row 7: Snowfall (Conditional) */}
+                        {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData) => {
+                            const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
+                            const isPast = currentHourIso && hourData.time < currentHourIso;
+                            const amount = hourData.values.snowfall || 0;
+
+                            return (
+                                <div key={`snow-${hourData.time}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
+                                    <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+                                        {amount > 0 && (
+                                            <span className="snow-amount" style={{ fontSize: "0.7rem", color: "#ffffff" }}>
+                                                {amount} cm
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 

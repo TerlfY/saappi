@@ -11,7 +11,6 @@ Sääppi is a modern weather dashboard built with React + Vite + TypeScript. It 
 - Unit toggle (°C/°F) and language toggle (FI/EN)
 - Dark mode
 - Weather radar map (Windy embed)
-- PWA support (installable; caches some API responses)
 - Optional nearby webcam carousel (Windy Webcams API)
 
 ## Tech stack
@@ -21,7 +20,6 @@ Sääppi is a modern weather dashboard built with React + Vite + TypeScript. It 
 - Open‑Meteo API for forecast + geocoding
 - Recharts for charts
 - Bootstrap / React-Bootstrap for UI
-- vite-plugin-pwa for PWA packaging
 
 ## Getting started
 

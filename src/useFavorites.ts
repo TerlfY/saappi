@@ -1,24 +1,54 @@
 import { useState, useEffect } from "react";
 import { SearchedLocation } from "./useCitySearch";
+import {
+    parsePersistedLocations,
+    resolvePersistedLocations,
+    serializePersistedLocations,
+} from "./locationPersistence";
 
 const useFavorites = () => {
-    const [favorites, setFavorites] = useState<SearchedLocation[]>(() => {
-        try {
-            const stored = localStorage.getItem("weatherFavorites");
-            return stored ? JSON.parse(stored) : [];
-        } catch (e) {
-            console.error("Error loading favorites:", e);
-            return [];
-        }
-    });
+    const [favorites, setFavorites] = useState<SearchedLocation[]>([]);
+    const [hasLoadedStoredFavorites, setHasLoadedStoredFavorites] = useState(false);
 
     useEffect(() => {
+        let isActive = true;
+
+        const hydrateFavorites = async () => {
+            try {
+                const stored = localStorage.getItem("weatherFavorites");
+                const persistedFavorites = parsePersistedLocations(stored);
+
+                if (persistedFavorites.length === 0) return;
+
+                const resolvedFavorites = await resolvePersistedLocations(persistedFavorites);
+                if (isActive) {
+                    setFavorites(resolvedFavorites);
+                }
+            } catch (e) {
+                console.error("Error loading favorites:", e);
+            } finally {
+                if (isActive) {
+                    setHasLoadedStoredFavorites(true);
+                }
+            }
+        };
+
+        hydrateFavorites();
+
+        return () => {
+            isActive = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!hasLoadedStoredFavorites) return;
+
         try {
-            localStorage.setItem("weatherFavorites", JSON.stringify(favorites));
+            localStorage.setItem("weatherFavorites", serializePersistedLocations(favorites));
         } catch (e) {
             console.error("Error saving favorites:", e);
         }
-    }, [favorites]);
+    }, [favorites, hasLoadedStoredFavorites]);
 
     const addFavorite = (location: SearchedLocation) => {
         if (!location) return;

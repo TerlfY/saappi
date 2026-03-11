@@ -5,6 +5,11 @@ import { openMeteoGeocodingSchema, OpenMeteoGeocodingResponse } from "./schemas"
 import useDebounce from "./useDebounce";
 import { formatLocationName } from "./utils";
 import { useLanguage } from "./LanguageContext";
+import {
+    parsePersistedLocation,
+    resolvePersistedLocation,
+    serializePersistedLocation,
+} from "./locationPersistence";
 
 interface SearchResult {
     id: number;
@@ -24,6 +29,7 @@ interface SearchResult {
 }
 
 export interface SearchedLocation {
+    id?: number;
     latitude: number;
     longitude: number;
     name: string;
@@ -40,28 +46,53 @@ const fetchCitySearch = async ({ queryKey }: { queryKey: [string, string] }): Pr
 const useCitySearch = () => {
     const { t } = useLanguage();
     const [searchCity, setSearchCity] = useState<string>("");
-    const [searchedLocation, setSearchedLocation] = useState<SearchedLocation | null>(() => {
-        try {
-            const stored = localStorage.getItem("weatherApp_searchedLocation");
-            return stored ? JSON.parse(stored) : null;
-        } catch (error) {
-            console.error("Error loading location from localStorage:", error);
-            return null;
-        }
-    });
+    const [searchedLocation, setSearchedLocation] = useState<SearchedLocation | null>(null);
+    const [hasLoadedStoredLocation, setHasLoadedStoredLocation] = useState(false);
+
+    useEffect(() => {
+        let isActive = true;
+
+        const hydrateStoredLocation = async () => {
+            try {
+                const stored = localStorage.getItem("weatherApp_searchedLocation");
+                const persistedLocation = parsePersistedLocation(stored);
+
+                if (!persistedLocation) return;
+
+                const resolvedLocation = await resolvePersistedLocation(persistedLocation);
+                if (isActive && resolvedLocation) {
+                    setSearchedLocation(resolvedLocation);
+                }
+            } catch (error) {
+                console.error("Error loading location from localStorage:", error);
+            } finally {
+                if (isActive) {
+                    setHasLoadedStoredLocation(true);
+                }
+            }
+        };
+
+        hydrateStoredLocation();
+
+        return () => {
+            isActive = false;
+        };
+    }, []);
 
     // Persist searchedLocation to localStorage
     useEffect(() => {
+        if (!hasLoadedStoredLocation) return;
+
         try {
             if (searchedLocation) {
-                localStorage.setItem("weatherApp_searchedLocation", JSON.stringify(searchedLocation));
+                localStorage.setItem("weatherApp_searchedLocation", serializePersistedLocation(searchedLocation));
             } else {
                 localStorage.removeItem("weatherApp_searchedLocation");
             }
         } catch (error) {
             console.error("Error saving location to localStorage:", error);
         }
-    }, [searchedLocation]);
+    }, [searchedLocation, hasLoadedStoredLocation]);
     const [searchError, setSearchError] = useState<string | null>(null);
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
     const [selectionMade, setSelectionMade] = useState<boolean>(false);
@@ -122,6 +153,7 @@ const useCitySearch = () => {
         const formattedName = formatLocationName(result);
 
         setSearchedLocation({
+            id: result.id,
             latitude: result.latitude,
             longitude: result.longitude,
             name: formattedName,

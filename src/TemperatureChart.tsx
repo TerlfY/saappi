@@ -6,11 +6,10 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
     ReferenceLine,
     Bar,
 } from "recharts";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
 import { useUnits } from "./UnitContext";
 import { WeatherData } from "./types";
@@ -26,6 +25,29 @@ interface TemperatureChartProps {
 const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, timezone, showAllDays, onToggleShowAllDays }) => {
     const { getTemperature, getSpeed, getPrecip, unitLabels, unit, formatDate, formatTime } = useUnits();
     const [visibleSeries, setVisibleSeries] = useState({ temp: true, uv: false, precip: false, wind: false });
+    const chartContainerRef = useRef<HTMLDivElement>(null);
+    const [chartSize, setChartSize] = useState({ width: 0, height: 0 });
+
+    useEffect(() => {
+        const container = chartContainerRef.current;
+        if (!container) return;
+
+        const updateMeasurement = () => {
+            setChartSize({
+                width: container.clientWidth,
+                height: container.clientHeight,
+            });
+        };
+
+        updateMeasurement();
+
+        const observer = new ResizeObserver(updateMeasurement);
+        observer.observe(container);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
 
     // Format data for Recharts
     const chartData = data.map((hour) => {
@@ -137,7 +159,7 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
     };
 
     return (
-        <div style={{ width: "100%", height: 300, minWidth: 0 }}>
+        <div style={{ width: "100%", minWidth: 0 }}>
             <div className="d-flex justify-content-between align-items-center mb-2 px-2 flex-wrap">
                 {/* Zoom Toggle */}
                 <Form.Check
@@ -184,156 +206,160 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
                     />
                 </div>
             </div>
-            <ResponsiveContainer debounce={50} minWidth={0}>
-                <ComposedChart
-                    data={chartData}
-                    margin={{
-                        top: 20,
-                        right: 30,
-                        left: 0,
-                        bottom: 0,
-                    }}
-                >
-                    <defs>
-                        <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset={off} stopColor="#ff7300" stopOpacity={1} />
-                            <stop offset={off} stopColor="#2F80ED" stopOpacity={1} />
-                        </linearGradient>
-                        <linearGradient id="splitFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset={0} stopColor="#ff7300" stopOpacity={0.8} />
-                            <stop offset={off} stopColor="#ff7300" stopOpacity={0.1} />
-                            <stop offset={off} stopColor="#2F80ED" stopOpacity={0.1} />
-                            <stop offset={1} stopColor="#2F80ED" stopOpacity={0.8} />
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} opacity={0.3} />
-                    <XAxis
-                        dataKey="time"
-                        stroke={axisColor}
-                        tick={{ fontSize: 12, fill: axisColor }}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={formatXAxis}
-                        interval={showAllDays ? 11 : 0} // Show fewer ticks in 16-day view
-                    />
-                    {visibleSeries.temp && (
-                        <YAxis
-                            yAxisId="left"
-                            hide
-                            domain={['dataMin - 2', 'dataMax + 2']}
-                        />
-                    )}
-                    {visibleSeries.precip && (
-                        <YAxis
-                            yAxisId="right_precip"
-                            orientation="right"
-                            domain={[0, precipDomainMax]}
-                            hide
-                        />
-                    )}
-                    {visibleSeries.wind && (
-                        <YAxis
-                            yAxisId="right_wind"
-                            orientation="right"
-                            hide
-                        />
-                    )}
-                    {visibleSeries.uv && (
-                        <YAxis
-                            yAxisId="right_uv"
-                            orientation="right"
-                            domain={[0, 12]}
-                            allowDecimals={false}
-                            hide
-                        />
-                    )}
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: darkMode ? "rgba(33, 37, 41, 0.7)" : "rgba(255, 255, 255, 0.7)",
-                            backdropFilter: "blur(10px)",
-                            borderRadius: "15px",
-                            border: "1px solid rgba(255, 255, 255, 0.2)",
-                            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                            color: tooltipText,
+            <div ref={chartContainerRef} style={{ width: "100%", height: 260, minWidth: 0, minHeight: 260 }}>
+                {chartSize.width > 0 && chartSize.height > 0 && (
+                    <ComposedChart
+                        width={chartSize.width}
+                        height={chartSize.height}
+                        data={chartData}
+                        margin={{
+                            top: 20,
+                            right: 30,
+                            left: 0,
+                            bottom: 0,
                         }}
-                        itemStyle={{ color: tooltipText }}
-                        labelStyle={{ color: tooltipText, fontWeight: "bold", marginBottom: "5px" }}
-                        labelFormatter={(label, payload) => {
-                            if (payload && payload.length > 0) {
-                                return payload[0].payload.fullTime;
-                            }
-                            return label;
-                        }}
-                        cursor={{ stroke: axisColor, strokeWidth: 1, strokeDasharray: "5 5" }}
-                        formatter={(value, name) => {
-                            if (name === "temp") return [`${value}${unitLabels.temperature}`, "Temperature"];
-                            if (name === "uvIndex") return [value, "UV Index"];
-                            if (name === "precipAmount") return [`${value} ${unitLabels.precip}`, "Precipitation"];
-                            if (name === "windSpeed") return [`${value} ${unitLabels.speed}`, "Wind Speed"];
-                            return [value, name];
-                        }}
-                    />
-                    {visibleSeries.temp && (
-                        <Area
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="temp"
-                            stroke="url(#splitColor)"
-                            strokeWidth={showAllDays ? 2 : 3} // Thinner line for more data
-                            fillOpacity={1}
-                            fill="url(#splitFill)"
-                            activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
-                            dot={false}
+                    >
+                        <defs>
+                            <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset={off} stopColor="#ff7300" stopOpacity={1} />
+                                <stop offset={off} stopColor="#2F80ED" stopOpacity={1} />
+                            </linearGradient>
+                            <linearGradient id="splitFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset={0} stopColor="#ff7300" stopOpacity={0.8} />
+                                <stop offset={off} stopColor="#ff7300" stopOpacity={0.1} />
+                                <stop offset={off} stopColor="#2F80ED" stopOpacity={0.1} />
+                                <stop offset={1} stopColor="#2F80ED" stopOpacity={0.8} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} opacity={0.3} />
+                        <XAxis
+                            dataKey="time"
+                            stroke={axisColor}
+                            tick={{ fontSize: 12, fill: axisColor }}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={formatXAxis}
+                            interval={showAllDays ? 11 : 0} // Show fewer ticks in 16-day view
                         />
-                    )}
-                    {visibleSeries.precip && (
-                        <Bar
-                            yAxisId="right_precip"
-                            dataKey="precipAmount"
-                            fill="#2196F3"
-                            barSize={10}
-                            radius={[2, 2, 0, 0]}
-                        />
-                    )}
-                    {visibleSeries.wind && (
-                        <Line
-                            yAxisId="right_wind"
-                            type="monotone"
-                            dataKey="windSpeed"
-                            stroke="#009688"
-                            strokeWidth={2}
-                            dot={false}
-                            activeDot={{ r: 4, fill: "#009688" }}
-                        />
-                    )}
-                    {visibleSeries.uv && (
-                        <Line
-                            yAxisId="right_uv"
-                            type="monotone"
-                            dataKey="uvIndex"
-                            stroke="#9C27B0"
-                            strokeWidth={2}
-                            dot={false}
-                            activeDot={{ r: 4, fill: "#9C27B0" }}
-                        />
-                    )}
-                    {currentHour !== null && !showAllDays && (
-                        <ReferenceLine
-                            yAxisId="left"
-                            x={currentHour}
-                            stroke={referenceLineColor}
-                            strokeDasharray="3 3"
-                            label={{
-                                value: "Now",
-                                position: "top",
-                                fill: referenceLineColor,
-                                fontSize: 12,
-                                fontWeight: "bold"
+                        {visibleSeries.temp && (
+                            <YAxis
+                                yAxisId="left"
+                                hide
+                                domain={['dataMin - 2', 'dataMax + 2']}
+                            />
+                        )}
+                        {visibleSeries.precip && (
+                            <YAxis
+                                yAxisId="right_precip"
+                                orientation="right"
+                                domain={[0, precipDomainMax]}
+                                hide
+                            />
+                        )}
+                        {visibleSeries.wind && (
+                            <YAxis
+                                yAxisId="right_wind"
+                                orientation="right"
+                                hide
+                            />
+                        )}
+                        {visibleSeries.uv && (
+                            <YAxis
+                                yAxisId="right_uv"
+                                orientation="right"
+                                domain={[0, 12]}
+                                allowDecimals={false}
+                                hide
+                            />
+                        )}
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: darkMode ? "rgba(33, 37, 41, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                                backdropFilter: "blur(10px)",
+                                borderRadius: "15px",
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+                                color: tooltipText,
+                            }}
+                            itemStyle={{ color: tooltipText }}
+                            labelStyle={{ color: tooltipText, fontWeight: "bold", marginBottom: "5px" }}
+                            labelFormatter={(label, payload) => {
+                                if (payload && payload.length > 0) {
+                                    return payload[0].payload.fullTime;
+                                }
+                                return label;
+                            }}
+                            cursor={{ stroke: axisColor, strokeWidth: 1, strokeDasharray: "5 5" }}
+                            formatter={(value, name) => {
+                                if (name === "temp") return [`${value}${unitLabels.temperature}`, "Temperature"];
+                                if (name === "uvIndex") return [value, "UV Index"];
+                                if (name === "precipAmount") return [`${value} ${unitLabels.precip}`, "Precipitation"];
+                                if (name === "windSpeed") return [`${value} ${unitLabels.speed}`, "Wind Speed"];
+                                return [value, name];
                             }}
                         />
-                    )}
-                </ComposedChart>
-            </ResponsiveContainer>
+                        {visibleSeries.temp && (
+                            <Area
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="temp"
+                                stroke="url(#splitColor)"
+                                strokeWidth={showAllDays ? 2 : 3} // Thinner line for more data
+                                fillOpacity={1}
+                                fill="url(#splitFill)"
+                                activeDot={{ r: 6, strokeWidth: 0, fill: "url(#splitColor)" }}
+                                dot={false}
+                            />
+                        )}
+                        {visibleSeries.precip && (
+                            <Bar
+                                yAxisId="right_precip"
+                                dataKey="precipAmount"
+                                fill="#2196F3"
+                                barSize={10}
+                                radius={[2, 2, 0, 0]}
+                            />
+                        )}
+                        {visibleSeries.wind && (
+                            <Line
+                                yAxisId="right_wind"
+                                type="monotone"
+                                dataKey="windSpeed"
+                                stroke="#009688"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4, fill: "#009688" }}
+                            />
+                        )}
+                        {visibleSeries.uv && (
+                            <Line
+                                yAxisId="right_uv"
+                                type="monotone"
+                                dataKey="uvIndex"
+                                stroke="#9C27B0"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4, fill: "#9C27B0" }}
+                            />
+                        )}
+                        {currentHour !== null && !showAllDays && (
+                            <ReferenceLine
+                                yAxisId="left"
+                                x={currentHour}
+                                stroke={referenceLineColor}
+                                strokeDasharray="3 3"
+                                label={{
+                                    value: "Now",
+                                    position: "top",
+                                    fill: referenceLineColor,
+                                    fontSize: 12,
+                                    fontWeight: "bold"
+                                }}
+                            />
+                        )}
+                    </ComposedChart>
+                )}
+            </div>
         </div>
     );
 };

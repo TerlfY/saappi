@@ -22,6 +22,7 @@ const WeatherRadar: React.FC<WeatherRadarProps> = ({ location }) => {
                 src={embedUrl}
                 frameBorder="0"
                 title="Weather Radar"
+                allow="geolocation"
                 style={{ border: 'none' }}
             ></iframe>
         </div>

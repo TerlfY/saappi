@@ -143,7 +143,7 @@ body.body-dark-mode .scroll-arrow:hover {
 
 .unified-forecast-grid {
   display: grid;
-  grid-template-columns: repeat(var(--total-hours), minmax(50px, 1fr));
+  grid-template-columns: repeat(var(--total-hours), var(--hour-cell-width, 56px));
   grid-template-rows: auto auto auto auto auto auto;
   /* Hour, Icon, PrecipProb, Temp, Wind, Precip */
   gap: 0;

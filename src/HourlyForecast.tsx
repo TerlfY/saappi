@@ -8,6 +8,9 @@ import { useUnits } from "./UnitContext";
 import { useLanguage } from "./LanguageContext";
 import { WeatherData, DailyForecast } from "./types";
 
+const HOUR_CELL_WIDTH = 56;
+const HORIZONTAL_SCROLL_STEP = HOUR_CELL_WIDTH * 6;
+
 interface HourlyForecastProps {
     hourlyData: WeatherData[];
     dailyData: DailyForecast[];
@@ -63,6 +66,11 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
         const dates = new Set(allHours.map(h => getLocalDate(h.time)));
         return Array.from(dates).sort();
     }, [allHours]);
+    const effectiveActiveDate = activeDate || availableDates[0] || "";
+    const visibleHours = React.useMemo(() => {
+        if (!effectiveActiveDate) return [];
+        return allHours.filter((hour) => getLocalDate(hour.time) === effectiveActiveDate);
+    }, [allHours, effectiveActiveDate]);
 
     // Calculate current hour ISO for comparison
     const currentHourIso = React.useMemo(() => {
@@ -95,52 +103,6 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
         }
     }, [availableDates, activeDate, onDateChange]);
 
-    // Initial scroll to current hour
-    const hasScrolledToCurrentRef = React.useRef(false);
-
-    React.useEffect(() => {
-        if (currentHourIso && allHours.length > 0 && !hasScrolledToCurrentRef.current) {
-            const timer = setTimeout(() => {
-                const scrollContainer = scrollContainerRef.current;
-                if (scrollContainer) {
-                    const currentIndex = allHours.findIndex(h => h.time.startsWith(currentHourIso.slice(0, 13)));
-                    if (currentIndex !== -1) {
-                        const firstItem = scrollContainer.querySelector('.time-cell') as HTMLElement;
-                        const cellWidth = firstItem ? firstItem.offsetWidth : 60;
-                        const scrollPosition = currentIndex * cellWidth;
-
-                        scrollContainer.scrollTo({
-                            left: scrollPosition,
-                            behavior: 'smooth'
-                        });
-                        hasScrolledToCurrentRef.current = true;
-                    }
-                }
-            }, 100);
-            return () => clearTimeout(timer);
-        }
-    }, [currentHourIso, allHours]);
-
-    // Handle Scroll to update active tab
-    const cellWidthRef = React.useRef(50);
-    const scrollTimeoutRef = React.useRef<number | null>(null);
-
-    // Measure cell width on mount and resize
-    React.useEffect(() => {
-        const measureCellWidth = () => {
-            if (scrollContainerRef.current) {
-                const firstItem = scrollContainerRef.current.querySelector('.time-cell') as HTMLElement;
-                if (firstItem) {
-                    cellWidthRef.current = firstItem.offsetWidth;
-                }
-            }
-        };
-
-        measureCellWidth();
-        window.addEventListener('resize', measureCellWidth);
-        return () => window.removeEventListener('resize', measureCellWidth);
-    }, [hourlyData]);
-
     const updateScrollIndicators = React.useCallback(() => {
         const el = scrollContainerRef.current;
         if (!el) return;
@@ -148,37 +110,39 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
         setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
     }, []);
 
-    const handleScroll = () => {
+    React.useEffect(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (!scrollContainer) return;
+
+        const hasCurrentHourInView = currentHourIso
+            ? visibleHours.findIndex((hour) => hour.time.startsWith(currentHourIso.slice(0, 13)))
+            : -1;
+        const targetScrollLeft = hasCurrentHourInView >= 0 ? hasCurrentHourInView * HOUR_CELL_WIDTH : 0;
+
+        scrollContainer.scrollTo({
+            left: targetScrollLeft,
+            behavior: "smooth",
+        });
+
+        const animationFrame = requestAnimationFrame(updateScrollIndicators);
+        return () => cancelAnimationFrame(animationFrame);
+    }, [currentHourIso, effectiveActiveDate, updateScrollIndicators, visibleHours]);
+
+    React.useEffect(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (!scrollContainer) return;
+
         updateScrollIndicators();
 
-        if (scrollTimeoutRef.current) return;
-
-        scrollTimeoutRef.current = requestAnimationFrame(() => {
-            const scrollContainer = scrollContainerRef.current;
-            if (!scrollContainer) {
-                scrollTimeoutRef.current = null;
-                return;
-            }
-
-            const cellWidth = cellWidthRef.current;
-            const scrollLeft = scrollContainer.scrollLeft;
-            const index = Math.floor((scrollLeft + 10) / cellWidth);
-
-            if (allHours[index]) {
-                const newDate = getLocalDate(allHours[index].time);
-                if (newDate !== activeDate && onDateChange) {
-                    onDateChange(newDate);
-                }
-            }
-            scrollTimeoutRef.current = null;
+        const observer = new ResizeObserver(() => {
+            updateScrollIndicators();
         });
-    };
+        observer.observe(scrollContainer);
 
-    // Initialize scroll indicators after data loads
-    React.useEffect(() => {
-        const timer = setTimeout(updateScrollIndicators, 200);
-        return () => clearTimeout(timer);
-    }, [hourlyData, updateScrollIndicators]);
+        return () => {
+            observer.disconnect();
+        };
+    }, [updateScrollIndicators, visibleHours.length]);
 
     // Group hours by day for the header row
     const days = React.useMemo(() => {
@@ -199,13 +163,13 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
 
     // Scroll active day tab into view
     React.useEffect(() => {
-        if (navContainerRef.current && activeDate) {
+        if (navContainerRef.current && effectiveActiveDate) {
             const activeTab = navContainerRef.current.querySelector('.day-nav-item.active');
             if (activeTab) {
                 activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         }
-    }, [activeDate]);
+    }, [effectiveActiveDate]);
 
     const renderTooltip = (code: number) => (props: any) => (
         <Tooltip id={`tooltip-${code}`} {...props}>
@@ -231,22 +195,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
 
     const scrollToDate = React.useCallback((date: string) => {
         if (onDateChange) onDateChange(date);
-        const scrollContainer = scrollContainerRef.current;
-        if (scrollContainer && allHours.length > 0) {
-            const index = allHours.findIndex(h => h.time.startsWith(date));
-
-            if (index !== -1) {
-                const firstItem = scrollContainer.querySelector('.time-cell') as HTMLElement;
-                const cellWidth = firstItem ? firstItem.offsetWidth : 60;
-                const scrollPosition = index * cellWidth;
-
-                scrollContainer.scrollTo({
-                    left: scrollPosition,
-                    behavior: 'smooth'
-                });
-            }
-        }
-    }, [onDateChange, allHours]);
+    }, [onDateChange]);
 
     // Handle Keyboard Navigation
     React.useEffect(() => {
@@ -255,12 +204,12 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
             if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
             if (e.key === 'ArrowLeft') {
-                const currentIndex = availableDates.indexOf(activeDate);
+                const currentIndex = availableDates.indexOf(effectiveActiveDate);
                 if (currentIndex > 0) {
                     scrollToDate(availableDates[currentIndex - 1]);
                 }
             } else if (e.key === 'ArrowRight') {
-                const currentIndex = availableDates.indexOf(activeDate);
+                const currentIndex = availableDates.indexOf(effectiveActiveDate);
                 if (currentIndex < availableDates.length - 1) {
                     scrollToDate(availableDates[currentIndex + 1]);
                 }
@@ -269,7 +218,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [availableDates, activeDate, scrollToDate]);
+    }, [availableDates, effectiveActiveDate, scrollToDate]);
 
     if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
     if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
@@ -285,7 +234,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     return (
                         <button
                             key={day.date}
-                            className={`day-nav-item ${activeDate === day.date ? 'active' : ''}`}
+                            className={`day-nav-item ${effectiveActiveDate === day.date ? 'active' : ''}`}
                             onClick={() => scrollToDate(day.date)}
                         >
                             <div className="d-flex flex-column align-items-center">
@@ -308,7 +257,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     <button
                         className="scroll-arrow scroll-arrow-left"
                         onClick={() => {
-                            scrollContainerRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
+                            scrollContainerRef.current?.scrollBy({ left: -HORIZONTAL_SCROLL_STEP, behavior: 'smooth' });
                         }}
                         aria-label="Scroll left"
                     >
@@ -321,7 +270,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                     <button
                         className="scroll-arrow scroll-arrow-right"
                         onClick={() => {
-                            scrollContainerRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
+                            scrollContainerRef.current?.scrollBy({ left: HORIZONTAL_SCROLL_STEP, behavior: 'smooth' });
                         }}
                         aria-label="Scroll right"
                     >
@@ -333,14 +282,17 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                 <div
                     className="unified-forecast-scroll-container"
                     ref={scrollContainerRef}
-                    onScroll={handleScroll}
+                    onScroll={updateScrollIndicators}
                 >
                     <div
                         className="unified-forecast-grid"
-                        style={{ '--total-hours': allHours.length } as React.CSSProperties}
+                        style={{
+                            '--total-hours': visibleHours.length,
+                            '--hour-cell-width': `${HOUR_CELL_WIDTH}px`,
+                        } as React.CSSProperties}
                     >
                         {/* Row 1: Hours */}
-                        {allHours.map((hourData) => {
+                        {visibleHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
 
@@ -352,7 +304,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                         })}
 
                         {/* Row 3: Icons */}
-                        {allHours.map((hourData) => {
+                        {visibleHours.map((hourData) => {
                             const isDay = getIsDaytime(hourData.time);
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
@@ -371,7 +323,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                         })}
 
                         {/* Row 3: Temperature */}
-                        {allHours.map((hourData) => {
+                        {visibleHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
 
@@ -383,7 +335,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                         })}
 
                         {/* Row 4: Wind */}
-                        {allHours.map((hourData) => {
+                        {visibleHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
 
@@ -405,7 +357,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                         })}
 
                         {/* Row 5: Precipitation (Combined Prob & Amount) */}
-                        {allHours.map((hourData) => {
+                        {visibleHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
                             const amount = hourData.values.precipitation;
@@ -439,7 +391,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                         })}
 
                         {/* Row 6: Snowfall (Conditional) */}
-                        {allHours.some(h => (h.values.snowfall || 0) > 0) && allHours.map((hourData) => {
+                        {visibleHours.some(h => (h.values.snowfall || 0) > 0) && visibleHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
                             const amount = hourData.values.snowfall || 0;

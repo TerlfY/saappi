@@ -40,6 +40,10 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
     const { data: aqiData } = useAirQuality(location);
     const { getTemperature, getSpeed, getPrecip, unitLabels } = useUnits();
     const { t, language } = useLanguage();
+    const formatWithSuffix = (value: string | number | null | undefined, suffix: string) => {
+        if (value === null || value === undefined) return "—";
+        return `${value} ${suffix}`;
+    };
 
     // --- Rendering Logic ---
 
@@ -76,13 +80,18 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                 className="d-flex justify-content-center align-items-center"
                 style={{ height: "100%" }}
             >
-                <p>{t("loading")}</p>
+                <p>{t("weatherDataUnavailable")}</p>
             </Container>
         );
     }
 
     // Use isDay from API data
     const isDay = weatherData.values.isDay ?? 1;
+    const currentTemp = getTemperature(weatherData.values.temperature);
+    const feelsLikeTemp = getTemperature(weatherData.values.temperatureApparent);
+    const windSpeed = getSpeed(weatherData.values.windSpeed);
+    const windGusts = getSpeed(weatherData.values.windGusts);
+    const precipitation = getPrecip(weatherData.values.precipitation);
 
     const renderTooltip = (props: any) => (
         <Tooltip id="button-tooltip" {...props}>
@@ -124,24 +133,38 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                     delay={{ show: 250, hide: 400 }}
                     overlay={renderTooltip}
                 >
-                    <img
-                        className="mb-3 current-weather-icon"
-                        style={{ height: "120px", width: "auto", objectFit: "contain" }}
-                        src={getIcon(
-                            weatherData.values.weatherCode,
-                            isDay,
-                            weatherData.values.cloudCover
-                        )}
-                        alt="Weather Icon"
-                    />
+                    {weatherData.values.weatherCode !== null && weatherData.values.weatherCode !== undefined ? (
+                        <img
+                            className="mb-3 current-weather-icon"
+                            style={{ height: "120px", width: "auto", objectFit: "contain" }}
+                            src={getIcon(
+                                weatherData.values.weatherCode,
+                                isDay,
+                                weatherData.values.cloudCover
+                            )}
+                            alt="Weather Icon"
+                        />
+                    ) : (
+                        <div
+                            className="mb-3 d-flex align-items-center justify-content-center current-weather-icon"
+                            style={{ height: "120px", width: "120px", fontSize: "3rem" }}
+                            aria-label={t("weatherDataUnavailable")}
+                        >
+                            —
+                        </div>
+                    )}
                 </OverlayTrigger>
-                <p className="fs-1 fw-bold">{`${getTemperature(weatherData.values.temperature)}${unitLabels.temperature}`}</p>
+                <p className="fs-1 fw-bold">
+                    {currentTemp === null ? "—" : `${currentTemp}${unitLabels.temperature}`}
+                </p>
 
                 {/* Weather Details Grid */}
                 <div className="weather-details-grid mt-4">
                     <div className="detail-item">
                         <span className="detail-label">{t("feelsLike")}</span>
-                        <span className="detail-value">{getTemperature(weatherData.values.temperatureApparent || 0)}{unitLabels.temperature}</span>
+                        <span className="detail-value">
+                            {feelsLikeTemp === null ? "—" : `${feelsLikeTemp}${unitLabels.temperature}`}
+                        </span>
                     </div>
                     <div className="detail-item">
                         <span className="detail-label">{t("wind")}</span>
@@ -149,28 +172,37 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                             placement="top"
                             overlay={
                                 <Tooltip id="wind-tooltip">
-                                    {t("gusts")}: {getSpeed(weatherData.values.windGusts || 0)} {unitLabels.speed}
+                                    {t("gusts")}: {formatWithSuffix(windGusts, unitLabels.speed)}
                                 </Tooltip>
                             }
                         >
                             <span className="detail-value" style={{ cursor: "help", textDecoration: "underline dotted" }}>
-                                {getSpeed(weatherData.values.windSpeed)} {unitLabels.speed}
+                                {formatWithSuffix(windSpeed, unitLabels.speed)}
                             </span>
                         </OverlayTrigger>
                     </div>
                     <div className="detail-item">
                         <span className="detail-label">{t("humidity")}</span>
-                        <span className="detail-value">{Math.round(weatherData.values.humidity)}%</span>
+                        <span className="detail-value">
+                            {weatherData.values.humidity === null || weatherData.values.humidity === undefined
+                                ? "—"
+                                : `${Math.round(weatherData.values.humidity)}%`}
+                        </span>
                     </div>
-                    {weatherData.values.precipitation > 0 && (weatherData.values.snowfall || 0) === 0 && (
+                    {weatherData.values.precipitation !== null &&
+                        weatherData.values.precipitation !== undefined &&
+                        weatherData.values.precipitation > 0 &&
+                        (weatherData.values.snowfall ?? 0) === 0 && (
                         <div className="detail-item">
                             <span className="detail-label">{t("precip")}</span>
-                            <span className="detail-value">{getPrecip(weatherData.values.precipitation)} {unitLabels.precip}</span>
+                            <span className="detail-value">
+                                {formatWithSuffix(precipitation, unitLabels.precip)}
+                            </span>
                         </div>
                     )}
                     <div className="detail-item">
                         <span className="detail-label">{t("uvIndex")}</span>
-                        <span className="detail-value">{weatherData.values.uvIndex}</span>
+                        <span className="detail-value">{weatherData.values.uvIndex ?? "—"}</span>
                     </div>
                     <div className="detail-item" style={{ gridColumn: "span 2", padding: "10px 0" }}>
                         <SunDial
@@ -213,17 +245,21 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                             })()}
                         </div>
                     )}
-                    {(weatherData.values.snowDepth || 0) * 100 >= 1 && (
+                    {(weatherData.values.snowDepth ?? 0) * 100 >= 1 && (
                         <div className="detail-item" style={{ gridColumn: "span 2" }}>
                             <div className="d-flex justify-content-between align-items-center mb-1">
                                 <span className="detail-label">{t("snowDepth")}</span>
-                                <span className="detail-value">{weatherData.values.snowDepth ? (weatherData.values.snowDepth * 100).toFixed(0) : 0} cm</span>
+                                <span className="detail-value">
+                                    {weatherData.values.snowDepth !== null && weatherData.values.snowDepth !== undefined
+                                        ? `${(weatherData.values.snowDepth * 100).toFixed(0)} cm`
+                                        : "—"}
+                                </span>
                             </div>
                             <div style={{ height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
                                 <div
                                     style={{
                                         height: "100%",
-                                        width: `${Math.min(((weatherData.values.snowDepth || 0) * 100) / 50 * 100, 100)}%`,
+                                        width: `${Math.min((((weatherData.values.snowDepth ?? 0) * 100) / 50) * 100, 100)}%`,
                                         background: "#fff",
                                         borderRadius: "4px",
                                         transition: "width 0.5s ease-out"
@@ -232,11 +268,11 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                             </div>
                         </div>
                     )}
-                    {(weatherData.values.snowfall || 0) > 0 && (
+                    {(weatherData.values.snowfall ?? 0) > 0 && (
                         <div className="detail-item" style={{ gridColumn: "span 2" }}>
                             <div className="d-flex justify-content-between align-items-center mb-1">
                                 <span className="detail-label">{t("snowfall")}</span>
-                                <span className="detail-value">{weatherData.values.snowfall} cm</span>
+                                <span className="detail-value">{weatherData.values.snowfall ?? "—"} cm</span>
                             </div>
                         </div>
                     )}

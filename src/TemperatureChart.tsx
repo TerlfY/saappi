@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
 import { useUnits } from "./UnitContext";
+import { useLanguage } from "./LanguageContext";
 import { WeatherData } from "./types";
 
 interface TemperatureChartProps {
@@ -23,7 +24,8 @@ interface TemperatureChartProps {
 }
 
 const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, timezone, showAllDays, onToggleShowAllDays }) => {
-    const { getTemperature, getSpeed, getPrecip, unitLabels, unit, formatDate, formatTime } = useUnits();
+    const { getTemperature, getSpeed, unitLabels, unit, formatDate, formatTime } = useUnits();
+    const { t } = useLanguage();
     const [visibleSeries, setVisibleSeries] = useState({ temp: true, uv: false, precip: false, wind: false });
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const [chartSize, setChartSize] = useState({ width: 0, height: 0 });
@@ -62,9 +64,9 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
             displayTime: showAllDays ? `${formatDate(hour.time)} ${formatTime(hour.time, { hourOnly: true })}` : `${formatTime(hour.time, { hourOnly: true })}`,
             fullTime: `${formatDate(hour.time, { includeYear: true })} ${formatTime(hour.time)}`, // For tooltip
             temp: hasValidTemp ? getTemperature(hour.values.temperature, 1) : null,
-            uvIndex: hour.values.uvIndex || 0,
-            precipAmount: hasValidPrecip ? getPrecip(hour.values.precipitation) : "0",
-            windSpeed: hasValidWind ? getSpeed(hour.values.windSpeed) : 0,
+            uvIndex: hour.values.uvIndex ?? null,
+            precipAmount: hasValidPrecip ? hour.values.precipitation : null,
+            windSpeed: hasValidWind ? getSpeed(hour.values.windSpeed) : null,
         };
     });
 
@@ -123,7 +125,9 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
     const max = temps.length > 0 ? Math.max(...temps) : freezingPoint;
 
     // Calculate max precipitation for scaling
-    const precips = chartData.map(d => Number(d.precipAmount));
+    const precips = chartData
+        .map(d => d.precipAmount)
+        .filter((precip): precip is number => typeof precip === "number" && Number.isFinite(precip));
     const maxPrecip = Math.max(...precips, 0);
     const precipDomainMax = unit === "imperial" ? Math.max(maxPrecip, 0.5) : Math.max(maxPrecip, 10);
 
@@ -141,14 +145,14 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
     const referenceLineColor = darkMode ? "#ff4d4d" : "#ff0000"; // Red for visibility
 
     // Custom tick formatter for X-axis
-    const formatXAxis = (tickItem: any) => {
+    const formatXAxis = (tickItem: unknown) => {
         if (showAllDays) {
             // tickItem is ISO string
-            const date = new Date(tickItem);
+            const date = new Date(String(tickItem));
             const hour = date.getHours();
             // Show date label only at noon (12:00) to reduce clutter
             if (hour === 12) {
-                return formatDate(tickItem);
+                return formatDate(String(tickItem));
             }
             return "";
         }
@@ -291,10 +295,15 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
                             }}
                             cursor={{ stroke: axisColor, strokeWidth: 1, strokeDasharray: "5 5" }}
                             formatter={(value, name) => {
-                                if (name === "temp") return [`${value}${unitLabels.temperature}`, "Temperature"];
-                                if (name === "uvIndex") return [value, "UV Index"];
-                                if (name === "precipAmount") return [`${value} ${unitLabels.precip}`, "Precipitation"];
-                                if (name === "windSpeed") return [`${value} ${unitLabels.speed}`, "Wind Speed"];
+                                if (name === "temp") return [value === null || value === undefined ? "—" : `${value}${unitLabels.temperature}`, "Temperature"];
+                                if (name === "uvIndex") return [value === null || value === undefined ? "—" : value, "UV Index"];
+                                if (name === "precipAmount") {
+                                    return [
+                                        value === null || value === undefined ? "—" : `${value} ${unitLabels.precip}`,
+                                        "Precipitation",
+                                    ];
+                                }
+                                if (name === "windSpeed") return [value === null || value === undefined ? "—" : `${value} ${unitLabels.speed}`, "Wind Speed"];
                                 return [value, name];
                             }}
                         />
@@ -359,6 +368,7 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({ data, darkMode, tim
                         )}
                     </ComposedChart>
                 )}
+                {chartSize.width === 0 || chartSize.height === 0 ? <p className="text-muted">{t("chartUnavailable")}</p> : null}
             </div>
         </div>
     );

@@ -16,46 +16,46 @@ const transformOpenMeteoData = (data: OpenMeteoResponse): TransformedData => {
     const getSeriesValue = (
         series: Array<number | null> | undefined,
         index: number,
-        fallback = 0
+        fallback: number | null = null
     ) => series?.[index] ?? fallback;
 
     const hourly = data.hourly.time.map((time, index) => ({
         time: time,
         values: {
-            temperature: data.hourly.temperature_2m[index] ?? 0,
-            temperatureApparent: data.hourly.apparent_temperature[index] ?? 0,
-            humidity: data.hourly.relativehumidity_2m[index] ?? 0,
-            weatherCode: data.hourly.weathercode[index] ?? 0,
-            windSpeed: data.hourly.windspeed_10m[index] ?? 0, // km/h by default, might need conversion if UI expects m/s
-            windGusts: data.hourly.windgusts_10m ? data.hourly.windgusts_10m[index] ?? 0 : 0,
-            windDirection: data.hourly.winddirection_10m ? data.hourly.winddirection_10m[index] ?? 0 : 0,
-            uvIndex: data.hourly.uv_index[index] ?? 0,
+            temperature: data.hourly.temperature_2m[index] ?? null,
+            temperatureApparent: data.hourly.apparent_temperature[index] ?? null,
+            humidity: data.hourly.relativehumidity_2m[index] ?? null,
+            weatherCode: data.hourly.weathercode[index] ?? null,
+            windSpeed: data.hourly.windspeed_10m[index] ?? null, // km/h by default, might need conversion if UI expects m/s
+            windGusts: data.hourly.windgusts_10m ? data.hourly.windgusts_10m[index] ?? null : null,
+            windDirection: data.hourly.winddirection_10m ? data.hourly.winddirection_10m[index] ?? null : null,
+            uvIndex: data.hourly.uv_index[index] ?? null,
 
-            cloudCover: data.hourly.cloudcover[index] ?? 0,
+            cloudCover: data.hourly.cloudcover[index] ?? null,
             snowDepth: getSeriesValue(data.hourly.snow_depth, index),
             snowfall: getSeriesValue(data.hourly.snowfall, index),
             precipitationProbability: getSeriesValue(data.hourly.precipitation_probability, index),
             precipitation: getSeriesValue(data.hourly.precipitation, index), // Added precipitation
-            isDay: data.hourly.is_day ? data.hourly.is_day[index] ?? 1 : 1, // Default to 1 (day) if missing
+            isDay: data.hourly.is_day ? data.hourly.is_day[index] ?? null : null,
         },
     }));
 
     const daily = data.daily.time.map((time, index) => ({
         time: time,
         values: {
-            temperatureMax: data.daily.temperature_2m_max[index] ?? 0,
-            temperatureMin: data.daily.temperature_2m_min[index] ?? 0,
-            weatherCode: data.daily.weathercode[index] ?? 0,
+            temperatureMax: data.daily.temperature_2m_max[index] ?? null,
+            temperatureMin: data.daily.temperature_2m_min[index] ?? null,
+            weatherCode: data.daily.weathercode[index] ?? null,
             sunriseTime: data.daily.sunrise[index],
             sunsetTime: data.daily.sunset[index],
-            precipitationProbabilityMax: data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[index] ?? 0 : 0,
-            precipitationSum: data.daily.precipitation_sum ? data.daily.precipitation_sum[index] ?? 0 : 0,
-            snowfallSum: data.daily.snowfall_sum ? data.daily.snowfall_sum[index] ?? 0 : 0,
+            precipitationProbabilityMax: data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[index] ?? null : null,
+            precipitationSum: data.daily.precipitation_sum ? data.daily.precipitation_sum[index] ?? null : null,
+            snowfallSum: data.daily.snowfall_sum ? data.daily.snowfall_sum[index] ?? null : null,
             // Added missing required fields from DailyForecast interface with default values
-            temperatureAvg: 0, // Not provided by OpenMeteo directly in this call
-            precipitationProbabilityAvg: 0, // Not provided
-            weatherCodeMax: data.daily.weathercode[index] ?? 0, // Using weathercode as max for now
-            moonPhase: 0, // Not provided
+            temperatureAvg: null, // Not provided by OpenMeteo directly in this call
+            precipitationProbabilityAvg: null, // Not provided
+            weatherCodeMax: data.daily.weathercode[index] ?? null, // Using weathercode as max for now
+            moonPhase: null, // Not provided
         },
     }));
 
@@ -80,15 +80,24 @@ const fetchWeather = async ({ queryKey }: { queryKey: [string, string, WeatherPa
     }
 
     // Parse location "lat,lon" string
-    const [lat, lon] = params.location.split(",");
+    const [latRaw, lonRaw] = params.location.split(",");
+    const latitude = Number.parseFloat(latRaw);
+    const longitude = Number.parseFloat(lonRaw);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw {
+            message: "Invalid location coordinates.",
+            status: "INVALID_LOCATION",
+        };
+    }
 
     // 1. Main Weather Request (Best Match / Auto)
     const mainOptions = {
         method: "GET",
         url: `https://api.open-meteo.com/v1/forecast`,
         params: {
-            latitude: lat,
-            longitude: lon,
+            latitude,
+            longitude,
             hourly: "temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,windgusts_10m,winddirection_10m,uv_index,cloudcover,precipitation_probability,precipitation,snowfall,is_day",
             daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,snowfall_sum",
             timezone: "auto",
@@ -102,8 +111,8 @@ const fetchWeather = async ({ queryKey }: { queryKey: [string, string, WeatherPa
         method: "GET",
         url: `https://api.open-meteo.com/v1/forecast`,
         params: {
-            latitude: lat,
-            longitude: lon,
+            latitude,
+            longitude,
             hourly: "snow_depth",
             models: "icon_seamless", // Explicitly use ICON for snow
             timezone: "auto",
@@ -133,11 +142,6 @@ const fetchWeather = async ({ queryKey }: { queryKey: [string, string, WeatherPa
                 parsedData.hourly.snow_depth = snowResponse.data.hourly.snow_depth;
             }
         }
-
-        console.log(
-            `✅ SUCCESS fetching weather for location:`,
-            params?.location
-        );
 
         // Transform to match existing app structure
         return transformOpenMeteoData(parsedData);

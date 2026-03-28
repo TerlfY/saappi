@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { lazy, Suspense, useMemo, useEffect, useState } from "react";
 import {
     Container,
     Row,
@@ -8,6 +8,7 @@ import {
     Alert,
     OverlayTrigger,
     Tooltip,
+    Spinner,
 } from "react-bootstrap";
 import HourlyForecast from "./HourlyForecast";
 import CurrentWeather from "./CurrentWeather";
@@ -26,10 +27,7 @@ import useTimezone from "./useTimezone";
 
 
 import BackgroundManager from "./BackgroundManager";
-import TemperatureChart from "./TemperatureChart";
 import SearchBar from "./SearchBar";
-import WebcamFeed from "./WebcamFeed";
-import WeatherRadar from "./WeatherRadar";
 import WeatherEffects from "./WeatherEffects";
 import WeatherAlerts from "./WeatherAlerts";
 import useWeatherAlerts from "./useWeatherAlerts";
@@ -37,6 +35,10 @@ import useWeatherAlerts from "./useWeatherAlerts";
 import { UnitProvider, useUnits } from "./UnitContext";
 import { LanguageProvider, useLanguage } from "./LanguageContext";
 import { Location } from "./types";
+
+const TemperatureChart = lazy(() => import("./TemperatureChart"));
+const WebcamFeed = lazy(() => import("./WebcamFeed"));
+const WeatherRadar = lazy(() => import("./WeatherRadar"));
 
 function AppContent() {
     const { darkMode, toggleDarkMode } = useDarkMode();
@@ -156,13 +158,19 @@ function AppContent() {
     const chartElement = useMemo(() => {
         if (!forecastLoading && !forecastError && forecastData?.timelines?.hourly) {
             return (
-                <TemperatureChart
-                    data={chartData}
-                    darkMode={darkMode}
-                    timezone={timezone || "UTC"}
-                    showAllDays={showAllDays}
-                    onToggleShowAllDays={() => setShowAllDays(!showAllDays)}
-                />
+                <Suspense fallback={
+                    <div className="d-flex justify-content-center align-items-center py-4">
+                        <Spinner animation="border" size="sm" />
+                    </div>
+                }>
+                    <TemperatureChart
+                        data={chartData}
+                        darkMode={darkMode}
+                        timezone={timezone || "UTC"}
+                        showAllDays={showAllDays}
+                        onToggleShowAllDays={() => setShowAllDays(!showAllDays)}
+                    />
+                </Suspense>
             );
         }
         return null;
@@ -316,7 +324,13 @@ function AppContent() {
 
 
                     {/* Webcam Feed */}
-                    <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone || "UTC"} />
+                    <Suspense fallback={
+                        <div className="d-flex justify-content-center align-items-center py-4">
+                            <Spinner animation="border" size="sm" />
+                        </div>
+                    }>
+                        <WebcamFeed location={locationToFetch} darkMode={darkMode} timezone={timezone || "UTC"} />
+                    </Suspense>
 
 
 
@@ -341,7 +355,13 @@ function AppContent() {
 
                     {/* Weather Radar */}
                     <div id="radar-section" className="mt-4">
-                        <WeatherRadar location={locationToFetch} />
+                        <Suspense fallback={
+                            <div className="d-flex justify-content-center align-items-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        }>
+                            <WeatherRadar location={locationToFetch} />
+                        </Suspense>
                     </div>
                 </Col>
             </Row>

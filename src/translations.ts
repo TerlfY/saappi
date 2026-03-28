@@ -26,6 +26,11 @@ export interface Translation {
     addToFavorites: string;
     removeFromFavorites: string;
     gusts: string;
+    weatherDataUnavailable: string;
+    hourlyDataUnavailable: string;
+    chartUnavailable: string;
+    forecastBasedRisk: string;
+    forecastBasedRiskNote: string;
     aqi: {
         good: string;
         fair: string;
@@ -69,6 +74,11 @@ export const translations: Record<string, Translation> = {
         addToFavorites: "Add to Favorites",
         removeFromFavorites: "Remove from Favorites",
         gusts: "Gusts",
+        weatherDataUnavailable: "Weather data is unavailable right now.",
+        hourlyDataUnavailable: "Hourly forecast data is unavailable.",
+        chartUnavailable: "Chart data is unavailable.",
+        forecastBasedRisk: "Forecast-based risk",
+        forecastBasedRiskNote: "This is derived from forecast thresholds, not an official warning.",
         aqi: {
             good: "Good",
             fair: "Fair",
@@ -137,6 +147,11 @@ export const translations: Record<string, Translation> = {
         addToFavorites: "Lisää suosikkeihin",
         removeFromFavorites: "Poista suosikeista",
         gusts: "Puuskat",
+        weatherDataUnavailable: "Säätietoja ei ole juuri nyt saatavilla.",
+        hourlyDataUnavailable: "Tuntiennusteen tietoja ei ole saatavilla.",
+        chartUnavailable: "Kaavion tiedot eivät ole saatavilla.",
+        forecastBasedRisk: "Ennusteeseen perustuva riski",
+        forecastBasedRiskNote: "Tämä on johdettu ennustekynnyksistä, ei virallinen varoitus.",
         aqi: {
             good: "Hyvä",
             fair: "Kohtalainen",

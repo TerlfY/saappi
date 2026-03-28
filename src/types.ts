@@ -1,26 +1,26 @@
 export interface WeatherData {
     time: string;
     values: {
-        temperature: number;
-        temperatureApparent?: number;
-        humidity: number;
-        windSpeed: number;
-        windDirection: number;
-        windGusts?: number;
-        precipitationProbability: number;
-        precipitation: number;
+        temperature: number | null;
+        temperatureApparent?: number | null;
+        humidity: number | null;
+        windSpeed: number | null;
+        windDirection: number | null;
+        windGusts?: number | null;
+        precipitationProbability: number | null;
+        precipitation: number | null;
         rainAccumulation?: number;
-        snowDepth?: number;
-        snowfall?: number;
+        snowDepth?: number | null;
+        snowfall?: number | null;
         snowfallSum?: number;
         sleetAccumulation?: number;
         iceAccumulation?: number;
-        weatherCode: number;
-        cloudCover: number;
-        uvIndex?: number;
+        weatherCode: number | null;
+        cloudCover: number | null;
+        uvIndex?: number | null;
         visibility?: number;
         pressureSurfaceLevel?: number;
-        isDay?: number;
+        isDay?: number | null;
         sunriseTime?: string;
         sunsetTime?: string;
         moonriseTime?: string;
@@ -32,15 +32,15 @@ export interface WeatherData {
 export interface DailyForecast {
     time: string;
     values: {
-        temperatureAvg: number;
-        temperatureMax: number;
-        temperatureMin: number;
-        precipitationProbabilityAvg: number;
-        weatherCodeMax: number;
+        temperatureAvg: number | null;
+        temperatureMax: number | null;
+        temperatureMin: number | null;
+        precipitationProbabilityAvg: number | null;
+        weatherCodeMax: number | null;
         sunriseTime?: string;
         sunsetTime?: string;
-        moonPhase: number;
-        snowfallSum?: number;
+        moonPhase: number | null;
+        snowfallSum?: number | null;
     };
 }
 

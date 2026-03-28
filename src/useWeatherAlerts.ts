@@ -10,25 +10,18 @@ export interface WeatherAlert {
     description: string;
     onset: string;
     expires: string;
+    source: "forecast";
 }
 
 /**
- * Fetches weather alerts/warnings from Open-Meteo's weather API.
- * Open-Meteo doesn't have a direct alerts endpoint, so we use the
- * FMI open data WFS service for Finnish locations.
+ * Fetches forecast-based risk alerts from Open-Meteo weather data.
+ * These are not official warnings; they are threshold-based indicators.
  */
 const fetchAlerts = async (location: Location | null): Promise<WeatherAlert[]> => {
     if (!location) return [];
 
     try {
-        // Use FMI WFS for weather warnings (Finland-specific)
-        const wfsUrl = `https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::edited::weather::scandinavia::point::simple&place=&latlon=${location.latitude},${location.longitude}&parameters=Temperature&timestep=60&`;
-
-        // Try FMI weather warnings
-        const fmiWarningsUrl = `https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::cities::multipointcoverage`;
-
-        // For now, use a more reliable approach: Open-Meteo's weather interpretation
-        // and generate alerts based on extreme conditions from the forecast data
+        // Use Open-Meteo data and derive threshold-based risk indicators.
         const response = await axios.get(`https://api.open-meteo.com/v1/forecast`, {
             params: {
                 latitude: location.latitude,
@@ -67,6 +60,7 @@ const fetchAlerts = async (location: Location | null): Promise<WeatherAlert[]> =
                     description: "",
                     onset: data.hourly.time[i],
                     expires: data.hourly.time[Math.min(i + 6, data.hourly.time.length - 1)],
+                    source: "forecast",
                 });
             }
 
@@ -80,6 +74,7 @@ const fetchAlerts = async (location: Location | null): Promise<WeatherAlert[]> =
                     description: "",
                     onset: data.hourly.time[i],
                     expires: data.hourly.time[Math.min(i + 6, data.hourly.time.length - 1)],
+                    source: "forecast",
                 });
             }
 
@@ -93,6 +88,7 @@ const fetchAlerts = async (location: Location | null): Promise<WeatherAlert[]> =
                     description: "",
                     onset: data.hourly.time[i],
                     expires: data.hourly.time[Math.min(i + 6, data.hourly.time.length - 1)],
+                    source: "forecast",
                 });
             }
 
@@ -106,6 +102,7 @@ const fetchAlerts = async (location: Location | null): Promise<WeatherAlert[]> =
                     description: "",
                     onset: data.hourly.time[i],
                     expires: data.hourly.time[Math.min(i + 6, data.hourly.time.length - 1)],
+                    source: "forecast",
                 });
             }
 
@@ -119,6 +116,7 @@ const fetchAlerts = async (location: Location | null): Promise<WeatherAlert[]> =
                     description: "",
                     onset: data.hourly.time[i],
                     expires: data.hourly.time[Math.min(i + 3, data.hourly.time.length - 1)],
+                    source: "forecast",
                 });
             }
         }

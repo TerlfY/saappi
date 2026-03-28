@@ -3,9 +3,9 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 interface UnitContextType {
     unit: "metric" | "imperial";
     toggleUnit: () => void;
-    getTemperature: (celsius: number | null | undefined, decimals?: number) => number;
-    getSpeed: (ms: number | null | undefined) => number;
-    getPrecip: (mm: number | null | undefined) => string;
+    getTemperature: (celsius: number | null | undefined, decimals?: number) => number | null;
+    getSpeed: (ms: number | null | undefined) => number | null;
+    getPrecip: (mm: number | null | undefined) => string | null;
     formatDate: (dateStr: string, options?: { includeYear?: boolean }) => string;
     formatTime: (dateInput: string | Date, options?: { hourOnly?: boolean }) => string;
     unitLabels: {
@@ -50,15 +50,16 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
         setUnit((prev) => (prev === "metric" ? "imperial" : "metric"));
     };
 
-    const normalizeNumber = (value: number | null | undefined, fallback = 0) => {
+    const normalizeNumber = (value: number | null | undefined) => {
         if (typeof value === "number" && Number.isFinite(value)) {
             return value;
         }
-        return fallback;
+        return null;
     };
 
     const getTemperature = (celsius: number | null | undefined, decimals = 0) => {
         const safeCelsius = normalizeNumber(celsius);
+        if (safeCelsius === null) return null;
         let value = safeCelsius;
         if (unit === "imperial") {
             value = (safeCelsius * 9) / 5 + 32;
@@ -72,6 +73,7 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
 
     const getSpeed = (ms: number | null | undefined) => {
         const safeMs = normalizeNumber(ms);
+        if (safeMs === null) return null;
         if (unit === "imperial") {
             // m/s to mph
             return Math.round(safeMs * 2.23694);
@@ -82,6 +84,7 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
 
     const getPrecip = (mm: number | null | undefined) => {
         const safeMm = normalizeNumber(mm);
+        if (safeMm === null) return null;
         if (unit === "imperial") {
             // mm to inches
             return (safeMm / 25.4).toFixed(2);

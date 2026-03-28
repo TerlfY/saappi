@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert } from "react-bootstrap";
+import { Alert, Badge } from "react-bootstrap";
 import { WeatherAlert } from "./useWeatherAlerts";
 import { useLanguage } from "./LanguageContext";
 
@@ -10,18 +10,18 @@ interface WeatherAlertsProps {
 
 const alertTranslations: Record<string, Record<string, { headline: string; description: string }>> = {
     en: {
-        extreme_cold: { headline: "🥶 Extreme Cold Warning", description: "Dangerously cold temperatures expected." },
-        strong_wind: { headline: "💨 Strong Wind Warning", description: "Strong wind gusts expected." },
-        heavy_rain: { headline: "🌧️ Heavy Rain Warning", description: "Heavy rainfall expected." },
-        heavy_snow: { headline: "❄️ Heavy Snow Warning", description: "Heavy snowfall expected." },
-        thunderstorm: { headline: "⛈️ Thunderstorm Warning", description: "Thunderstorm activity expected." },
+        extreme_cold: { headline: "Extreme cold likely", description: "Forecast thresholds suggest dangerously cold temperatures." },
+        strong_wind: { headline: "Strong wind likely", description: "Forecast thresholds suggest gusty wind conditions." },
+        heavy_rain: { headline: "Heavy rain likely", description: "Forecast thresholds suggest heavy rainfall." },
+        heavy_snow: { headline: "Heavy snow likely", description: "Forecast thresholds suggest heavy snowfall." },
+        thunderstorm: { headline: "Thunderstorm likely", description: "Forecast thresholds suggest thunderstorm activity." },
     },
     fi: {
-        extreme_cold: { headline: "🥶 Ankaran pakkasen varoitus", description: "Vaarallisen kylmiä lämpötiloja odotettavissa." },
-        strong_wind: { headline: "💨 Kovien tuulien varoitus", description: "Voimakkaita tuulenpuuskia odotettavissa." },
-        heavy_rain: { headline: "🌧️ Rankkasadevaroitus", description: "Runsasta sadetta odotettavissa." },
-        heavy_snow: { headline: "❄️ Lumisadevaroitus", description: "Runsasta lumisadetta odotettavissa." },
-        thunderstorm: { headline: "⛈️ Ukkosmyrskyvaroitus", description: "Ukkosrintamia odotettavissa." },
+        extreme_cold: { headline: "Kova pakkanen mahdollinen", description: "Ennustekynnykset viittaavat erittäin kylmiin lämpötiloihin." },
+        strong_wind: { headline: "Voimakas tuuli mahdollinen", description: "Ennustekynnykset viittaavat puuskaisiin tuuliin." },
+        heavy_rain: { headline: "Runsas sade mahdollinen", description: "Ennustekynnykset viittaavat rankkasateeseen." },
+        heavy_snow: { headline: "Runsas lumi mahdollinen", description: "Ennustekynnykset viittaavat runsaisiin lumisateisiin." },
+        thunderstorm: { headline: "Ukkosmyrsky mahdollinen", description: "Ennustekynnykset viittaavat ukkosaktiivisuuteen." },
     },
 };
 
@@ -33,10 +33,10 @@ const severityConfig: Record<string, { variant: string; icon: string }> = {
     Unknown: { variant: "secondary", icon: "❓" },
 };
 
-const formatAlertTime = (isoString: string, timezone: string) => {
+const formatAlertTime = (isoString: string, timezone: string, locale: string) => {
     try {
         const date = new Date(isoString);
-        return date.toLocaleString("fi-FI", {
+        return date.toLocaleString(locale, {
             timeZone: timezone || "Europe/Helsinki",
             weekday: "short",
             hour: "2-digit",
@@ -48,7 +48,7 @@ const formatAlertTime = (isoString: string, timezone: string) => {
 };
 
 const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts, timezone }) => {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
     if (!alerts || alerts.length === 0) return null;
@@ -67,6 +67,7 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts, timezone }) => {
                 const trans = alertTranslations[language]?.[alert.event] || alertTranslations.en[alert.event];
                 const headline = trans?.headline || alert.event;
                 const description = trans?.description || "";
+                const locale = language === "en" ? "en-US" : "fi-FI";
 
                 return (
                     <Alert
@@ -83,9 +84,13 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts, timezone }) => {
                         }}
                     >
                         <div className="flex-grow-1">
-                            <strong>{headline}</strong>
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <span aria-hidden="true">{config.icon}</span>
+                                <strong>{headline}</strong>
+                                <Badge bg="secondary">{t("forecastBasedRisk")}</Badge>
+                            </div>
                             <div className="text-muted" style={{ fontSize: "0.8rem" }}>
-                                {description} {formatAlertTime(alert.onset, timezone)} → {formatAlertTime(alert.expires, timezone)}
+                                {description} {t("forecastBasedRiskNote")} {formatAlertTime(alert.onset, timezone, locale)} → {formatAlertTime(alert.expires, timezone, locale)}
                             </div>
                         </div>
                     </Alert>

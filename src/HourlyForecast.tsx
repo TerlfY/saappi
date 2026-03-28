@@ -177,14 +177,23 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
         </Tooltip>
     );
 
+    const formatWithSuffix = (value: string | number | null | undefined, suffix: string) => {
+        if (value === null || value === undefined) return "—";
+        return `${value} ${suffix}`;
+    };
+
     const formatDateLabel = (dateStr: string) => {
         const date = new Date(dateStr);
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const todayStr = today.toISOString().slice(0, 10);
-        const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+        const formatter = new Intl.DateTimeFormat("sv-SE", {
+            timeZone: timezone || undefined,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+        });
+        const todayStr = formatter.format(new Date());
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrowStr = formatter.format(tomorrowDate);
 
         if (dateStr === todayStr) return t("today");
         if (dateStr === tomorrowStr) return t("tomorrow");
@@ -220,9 +229,9 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [availableDates, effectiveActiveDate, scrollToDate]);
 
-    if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Loading hourly forecast...</p></Container>;
-    if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>Error loading hourly forecast.</p></Container>;
-    if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>No hourly data available.</p></Container>;
+    if (loading) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>{t("loading")}</p></Container>;
+    if (error) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>{t("hourlyDataUnavailable")}</p></Container>;
+    if (!hourlyData || hourlyData.length === 0) return <Container className="d-flex justify-content-center align-items-center" style={{ height: "100%" }}><p>{t("hourlyDataUnavailable")}</p></Container>;
 
     return (
         <Container className={`hourly-forecast-container p-0 ${darkMode ? "dark-mode" : ""}`}>
@@ -311,13 +320,17 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
 
                             return (
                                 <div key={`icon-${hourData.time}`} className={`grid-cell icon-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                    <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
-                                        <img
-                                            className="hourlyIcons"
-                                            src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
-                                            alt="Weather Icon"
-                                        />
-                                    </OverlayTrigger>
+                                    {hourData.values.weatherCode !== null && hourData.values.weatherCode !== undefined ? (
+                                        <OverlayTrigger placement="top" delay={{ show: 250, hide: 400 }} overlay={renderTooltip(hourData.values.weatherCode)}>
+                                            <img
+                                                className="hourlyIcons"
+                                                src={getIcon(hourData.values.weatherCode, isDay, hourData.values.cloudCover)}
+                                                alt="Weather Icon"
+                                            />
+                                        </OverlayTrigger>
+                                    ) : (
+                                        <span aria-label={t("hourlyDataUnavailable")}>—</span>
+                                    )}
                                 </div>
                             );
                         })}
@@ -329,7 +342,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
 
                             return (
                                 <div key={`temp-${hourData.time}`} className={`grid-cell temp-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
-                                    {getTemperature(hourData.values.temperature)}{unitLabels.temperature}
+                                    {formatWithSuffix(getTemperature(hourData.values.temperature), unitLabels.temperature)}
                                 </div>
                             );
                         })}
@@ -344,12 +357,12 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                                     <div className="d-flex flex-column align-items-center">
                                         <span
                                             className="wind-arrow"
-                                            style={{ transform: `rotate(${hourData.values.windDirection || 0}deg)` }}
+                                            style={{ transform: `rotate(${hourData.values.windDirection ?? 0}deg)` }}
                                         >
                                             ↓
                                         </span>
                                         <span className="wind-speed" style={{ fontSize: "0.8rem" }}>
-                                            {getSpeed(hourData.values.windSpeed)} <span style={{ fontSize: "0.6rem" }}>{unitLabels.speed}</span>
+                                            {formatWithSuffix(getSpeed(hourData.values.windSpeed), unitLabels.speed)} <span style={{ fontSize: "0.6rem" }}>{unitLabels.speed}</span>
                                         </span>
                                     </div>
                                 </div>
@@ -362,26 +375,26 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                             const isPast = currentHourIso && hourData.time < currentHourIso;
                             const amount = hourData.values.precipitation;
                             const prob = hourData.values.precipitationProbability;
-                            const snowAmount = hourData.values.snowfall || 0;
+                            const snowAmount = hourData.values.snowfall ?? 0;
 
                             return (
                                 <div key={`precip-${hourData.time}`} className={`grid-cell precip-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
                                     <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%", gap: "2px" }}>
-                                        {amount > 0 && snowAmount === 0 ? (
+                                        {amount !== null && amount !== undefined && amount > 0 && snowAmount === 0 ? (
                                             <OverlayTrigger
                                                 placement="top"
                                                 overlay={(props) => (
                                                     <Tooltip id={`prob-tooltip-${hourData.time}`} {...props}>
-                                                        💧 {prob}%
+                                                        💧 {prob ?? "—"}%
                                                     </Tooltip>
                                                 )}
                                             >
-                                                <span className="precip-amount" style={{ fontSize: "0.75rem", color: "#aaddff", fontWeight: 500, cursor: "help", borderBottom: prob > 0 ? "1px dotted rgba(170, 221, 255, 0.5)" : "none" }}>
-                                                    {getPrecip(amount)}{unitLabels.precip}
+                                                <span className="precip-amount" style={{ fontSize: "0.75rem", color: "#aaddff", fontWeight: 500, cursor: "help", borderBottom: (prob ?? 0) > 0 ? "1px dotted rgba(170, 221, 255, 0.5)" : "none" }}>
+                                                    {formatWithSuffix(getPrecip(amount), unitLabels.precip)}
                                                 </span>
                                             </OverlayTrigger>
                                         ) : (
-                                            prob >= 20 && snowAmount === 0 && (
+                                            prob !== null && prob !== undefined && prob >= 20 && snowAmount === 0 && (
                                                 <span className="precip-prob">💧{prob}%</span>
                                             )
                                         )}
@@ -391,10 +404,10 @@ const HourlyForecast: React.FC<HourlyForecastProps> = React.memo(({ hourlyData, 
                         })}
 
                         {/* Row 6: Snowfall (Conditional) */}
-                        {visibleHours.some(h => (h.values.snowfall || 0) > 0) && visibleHours.map((hourData) => {
+                        {visibleHours.some(h => (h.values.snowfall ?? 0) > 0) && visibleHours.map((hourData) => {
                             const isCurrent = currentHourIso && hourData.time.startsWith(currentHourIso.slice(0, 13));
                             const isPast = currentHourIso && hourData.time < currentHourIso;
-                            const amount = hourData.values.snowfall || 0;
+                            const amount = hourData.values.snowfall ?? 0;
 
                             return (
                                 <div key={`snow-${hourData.time}`} className={`grid-cell snow-cell ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}>
